@@ -46,12 +46,40 @@ const userSchema = new mongoose.Schema(
       ],
       default: "CUSTOMER",
     },
+    createdBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
 
-    status: {
-      type: String,
-      enum: ["ACTIVE", "INACTIVE", "BLOCKED"],
-      default: "ACTIVE",
-    },
+updatedBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
+
+branchId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Branch",
+  default: null,
+},
+
+companyId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Company",
+  default: null,
+},
+
+lastLogin: {
+  type: Date,
+  default: null,
+},
+
+   status: {
+  type: String,
+  enum: ["ACTIVE", "INACTIVE", "BLOCKED", "DELETED"],
+  default: "ACTIVE",
+},
 
     profileImage: {
       type: String,
@@ -62,6 +90,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    employeeCode: {
+  type: String,
+  unique: true,
+},
+
+isDeleted: {
+  type: Boolean,
+  default: false,
+},
   },
   {
     timestamps: true,
