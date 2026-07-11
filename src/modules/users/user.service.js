@@ -112,3 +112,34 @@ export const registerUser = async (userData) => {
 
   return user;
 };
+// ===============================
+// Update Customer Profile
+// ===============================
+export const updateCustomerProfile = async (
+  userId,
+  profileData
+) => {
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      gender: profileData.gender,
+      dob: profileData.dob,
+      address: profileData.address,
+      city: profileData.city,
+      state: profileData.state,
+      pincode: profileData.pincode,
+    },
+    {
+      new: true,
+    }
+  );
+
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+
+  return user;
+};

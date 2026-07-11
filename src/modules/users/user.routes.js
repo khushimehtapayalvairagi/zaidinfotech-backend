@@ -9,6 +9,8 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+   updateCustomerProfile,
+     getProfile,
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -22,6 +24,17 @@ const router = express.Router();
 ====================================================
 */
 
+router.get(
+  "/profile",
+   verifyToken,
+  getProfile
+);
+
+router.put(
+ "/profile",
+ verifyToken,
+ updateCustomerProfile
+);
 // Create User
 router.post(
   "/",

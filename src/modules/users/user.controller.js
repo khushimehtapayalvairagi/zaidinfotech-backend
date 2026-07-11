@@ -130,3 +130,56 @@ export const register = async (req, res) => {
     });
   }
 };
+// ===============================
+// Update Customer Profile
+// ===============================
+export const updateCustomerProfile = async (req, res) => {
+  try {
+
+    const userId = req.user.id;
+
+    const user = await userService.updateCustomerProfile(
+      userId,
+      req.body
+    );
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Customer Profile Updated Successfully",
+      data: user,
+    });
+
+
+  } catch (error) {
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+// ===============================
+// Get Logged In User Profile
+// ===============================
+export const getProfile = async (req, res) => {
+  try {
+
+    const user = await userService.getProfile(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: user,
+    });
+
+  } catch (error) {
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
