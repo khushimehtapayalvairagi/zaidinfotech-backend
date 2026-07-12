@@ -22,15 +22,27 @@ export const countUsers = async () => {
 
 // Get All Users
 export const findAll = async ({ skip, limit, search }) => {
+  // const query = {
+  //   isDeleted: false,
+  //   $or: [
+  //     { firstName: { $regex: search, $options: "i" } },
+  //     { lastName: { $regex: search, $options: "i" } },
+  //     { email: { $regex: search, $options: "i" } },
+  //     { employeeCode: { $regex: search, $options: "i" } },
+  //   ],
+  // };
+
+
+
   const query = {
-    isDeleted: false,
-    $or: [
-      { firstName: { $regex: search, $options: "i" } },
-      { lastName: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-      { employeeCode: { $regex: search, $options: "i" } },
-    ],
-  };
+  isDeleted: false,
+  $or: [
+    { firstName: { $regex: search, $options: "i" } },
+    { lastName: { $regex: search, $options: "i" } },
+    { email: { $regex: search, $options: "i" } },
+    { employeeId: { $regex: search, $options: "i" } },
+  ],
+};
 
   const users = await User.find(query)
     .select("-password")

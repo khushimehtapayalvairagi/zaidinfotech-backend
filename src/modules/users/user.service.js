@@ -26,9 +26,20 @@ export const createUser = async (data) => {
   data.password = hashedPassword;
 
   // Employee Code Generate
+  // const totalUsers = await userRepository.countUsers();
+
+  // data.employeeCode = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+
+// Employee ID Generate (Only Staff)
+
+if (data.role !== "CUSTOMER") {
+
   const totalUsers = await userRepository.countUsers();
 
-  data.employeeCode = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+  data.employeeId = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+
+}
+
 
   return await userRepository.create(data);
 };
@@ -84,34 +95,67 @@ export const deleteUser = async (id) => {
 
   return user;
 };
+
+
 export const registerUser = async (userData) => {
+
   const { email, phone, password } = userData;
 
-  // Check Email
   const existingEmail = await User.findOne({ email });
 
   if (existingEmail) {
     throw new Error("Email already exists");
   }
 
-  // Check Phone
   const existingPhone = await User.findOne({ phone });
 
   if (existingPhone) {
     throw new Error("Phone number already exists");
   }
 
-  // Hash Password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create User
-  const user = await User.create({
+  const data = {
     ...userData,
     password: hashedPassword,
-  });
+    role: "CUSTOMER",
+    department: "CUSTOMER",
+  };
+
+  const user = await User.create(data);
 
   return user;
 };
+
+
+// export const registerUser = async (userData) => {
+//   const { email, phone, password } = userData;
+
+//   // Check Email
+//   const existingEmail = await User.findOne({ email });
+
+//   if (existingEmail) {
+//     throw new Error("Email already exists");
+//   }
+
+//   // Check Phone
+//   const existingPhone = await User.findOne({ phone });
+
+//   if (existingPhone) {
+//     throw new Error("Phone number already exists");
+//   }
+
+//   // Hash Password
+//   const hashedPassword = await bcrypt.hash(password, 10);
+
+//   // Create User
+//   const user = await User.create({
+//     ...userData,
+//     password: hashedPassword,
+//   });
+
+//   return user;
+// };
 // ===============================
 // Update Customer Profile
 // ===============================
