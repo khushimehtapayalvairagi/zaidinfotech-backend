@@ -1,0 +1,11 @@
+export const PRODUCT_STATUS = {
+
+    ACTIVE: "ACTIVE",
+
+    INACTIVE: "INACTIVE",
+
+    OUT_OF_STOCK: "OUT_OF_STOCK",
+
+    DISCONTINUED: "DISCONTINUED"
+
+};
