@@ -183,3 +183,29 @@ export const getProfile = async (req, res) => {
 
   }
 };
+
+// ===============================
+// Get Employee List
+// ===============================
+
+export const getEmployees = async (req, res) => {
+
+  try {
+
+    const employees = await userService.getEmployees();
+
+    res.status(200).json({
+      success: true,
+      data: employees
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};

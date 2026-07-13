@@ -1,16 +1,18 @@
+
+
+
 import express from "express";
-import { register } from "./user.controller.js";
-
-
 
 import {
+  register,
   createUser,
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
-   updateCustomerProfile,
-     getProfile,
+  updateCustomerProfile,
+  getProfile,
+  getEmployees,
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -20,22 +22,54 @@ const router = express.Router();
 
 /*
 ====================================================
+                PUBLIC ROUTES
+====================================================
+*/
+
+// Customer Register
+router.post("/register", register);
+
+/*
+====================================================
+                PROFILE
+====================================================
+*/
+
+// Logged In User Profile
+router.get(
+  "/profile",
+  verifyToken,
+  getProfile
+);
+
+// Update Profile
+router.put(
+  "/profile",
+  verifyToken,
+  updateCustomerProfile
+);
+
+/*
+====================================================
+                EMPLOYEE
+====================================================
+*/
+
+// Employee List
+router.get(
+  "/employees",
+  verifyToken,
+  allowRoles("SUPER_ADMIN", "ADMIN"),
+  getEmployees
+);
+
+/*
+====================================================
                 USER MANAGEMENT
 ====================================================
 */
 
-router.get(
-  "/profile",
-   verifyToken,
-  getProfile
-);
-
-router.put(
- "/profile",
- verifyToken,
- updateCustomerProfile
-);
-// Create User
+// Create User / Employee
 router.post(
   "/",
   verifyToken,
@@ -67,15 +101,12 @@ router.put(
   updateUser
 );
 
-// Soft Delete User
+// Delete User
 router.delete(
   "/:id",
   verifyToken,
   allowRoles("SUPER_ADMIN", "ADMIN"),
   deleteUser
 );
-
-
-router.post("/register", register);
 
 export default router;

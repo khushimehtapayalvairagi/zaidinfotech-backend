@@ -83,3 +83,25 @@ export const softDelete = async (id) => {
     { new: true }
   );
 };
+
+// ===============================
+// Get All Employees
+// ===============================
+export const findEmployees = async () => {
+
+  const employees = await User.find({
+    role: {
+      $in: [
+        "RECEPTIONIST",
+        "TECHNICIAN",
+        "INVENTORY",
+        "ACCOUNTANT"
+      ]
+    },
+    isDeleted: false
+  }).select("-password");
+
+  console.log("Employees =>", employees);
+
+  return employees;
+};

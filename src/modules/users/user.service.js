@@ -201,3 +201,16 @@ export const getProfile = async (userId) => {
 
   return user;
 };
+
+
+// ===============================
+// Get Employees
+// ===============================
+
+export const getEmployees = async () => {
+
+  const employees = await userRepository.findEmployees();
+
+  return employees;
+
+};
