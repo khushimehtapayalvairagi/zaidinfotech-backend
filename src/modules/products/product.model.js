@@ -173,16 +173,18 @@ const productSchema = new mongoose.Schema(
 
     // Product Status
 
-    status:{
-        type:String,
-       enum:[
-PRODUCT_STATUS.ACTIVE,
-PRODUCT_STATUS.INACTIVE,
-PRODUCT_STATUS.OUT_OF_STOCK,
-PRODUCT_STATUS.DISCONTINUED
-],
-       
-    },
+  status:{
+    type:String,
+
+    enum:[
+        PRODUCT_STATUS.ACTIVE,
+        PRODUCT_STATUS.INACTIVE,
+        PRODUCT_STATUS.OUT_OF_STOCK,
+        PRODUCT_STATUS.DISCONTINUED
+    ],
+
+    default: PRODUCT_STATUS.ACTIVE
+},
 
 
 

@@ -9,7 +9,7 @@ import categoryRoutes from "./modules/categories/category.routes.js";
 import brandRoutes from "./modules/brands/brand.routes.js";
 import productRoutes from "./modules/products/product.routes.js";
 
-
+import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 
 
 const app = express();
@@ -33,5 +33,5 @@ app.use("/api/auth1", authRoutes);
 app.use("/api/categories",categoryRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/products",productRoutes);
-
+app.use("/api/inventory",inventoryRoutes);
 export default app;
