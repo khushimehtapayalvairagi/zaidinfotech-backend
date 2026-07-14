@@ -13,12 +13,12 @@ import {
 
 import {
     verifyToken
-} from "../../common/middlewares/auth.middleware.js";
+} from "../../common/middleware/auth.middleware.js";
 
 
 import {
     allowRoles
-} from "../../common/middlewares/role.middleware.js";
+} from "../../common/middleware/role.middleware.js";
 
 
 
@@ -32,7 +32,7 @@ const router = express.Router();
 router.post(
     "/",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     createInventory
 );
 
@@ -43,7 +43,7 @@ router.post(
 router.get(
     "/",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     getAllInventory
 );
 
@@ -54,7 +54,7 @@ router.get(
 router.get(
     "/:id",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     getInventoryById
 );
 
@@ -65,7 +65,7 @@ router.get(
 router.put(
     "/:id",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     updateInventory
 );
 
@@ -76,7 +76,7 @@ router.put(
 router.delete(
     "/:id",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     deleteInventory
 );
 
@@ -87,7 +87,7 @@ router.delete(
 router.patch(
     "/add-stock",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     addStock
 );
 
@@ -98,7 +98,7 @@ router.patch(
 router.patch(
     "/remove-stock",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles("ADMIN",INVENTORY),
     removeStock
 );
 
