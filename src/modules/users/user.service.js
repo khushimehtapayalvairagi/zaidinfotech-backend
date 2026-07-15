@@ -119,7 +119,7 @@ export const registerUser = async (userData) => {
     ...userData,
     password: hashedPassword,
     role: "CUSTOMER",
-    department: "CUSTOMER",
+    
   };
 
   const user = await User.create(data);
@@ -212,5 +212,32 @@ export const getEmployees = async () => {
   const employees = await userRepository.findEmployees();
 
   return employees;
+
+};
+// ===============================
+// Update Employee Status
+// ===============================
+
+export const updateEmployeeStatus = async (
+
+  id,
+
+  status
+
+) => {
+
+  const employee =
+    await userRepository.updateEmployeeStatus(
+      id,
+      status
+    );
+
+  if (!employee) {
+
+    throw new Error("Employee not found");
+
+  }
+
+  return employee;
 
 };

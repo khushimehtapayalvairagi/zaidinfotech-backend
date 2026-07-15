@@ -131,19 +131,7 @@ const productSchema = new mongoose.Schema(
 
 
 
-    // Basic Stock (Temporary)
-    // Later Inventory Module me shift hoga
-
-    stock:{
-        type:Number,
-        default:0
-    },
-
-
-    minimumStock:{
-        type:Number,
-        default:0
-    },
+   
 
 
 

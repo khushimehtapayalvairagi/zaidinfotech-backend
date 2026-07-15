@@ -13,6 +13,7 @@ import {
   updateCustomerProfile,
   getProfile,
   getEmployees,
+  updateEmployeeStatus
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -34,7 +35,25 @@ router.post("/register", register);
                 PROFILE
 ====================================================
 */
+ 
 
+router.put(
+
+"/status/:id",
+
+verifyToken,
+
+allowRoles(
+
+"SUPER_ADMIN",
+
+"ADMIN"
+
+),
+
+updateEmployeeStatus
+
+);
 // Logged In User Profile
 router.get(
   "/profile",

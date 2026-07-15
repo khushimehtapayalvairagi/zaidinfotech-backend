@@ -105,3 +105,52 @@ export const findEmployees = async () => {
 
   return employees;
 };
+
+// ===============================
+// Update Employee Status
+// ===============================
+
+export const updateEmployeeStatus = async (
+
+  req,
+
+  res
+
+) => {
+
+  try {
+
+    const employee =
+      await userService.updateEmployeeStatus(
+
+        req.params.id,
+
+        req.body.status
+
+      );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message: "Employee Status Updated",
+
+      data: employee,
+
+    });
+
+  }
+
+  catch (error) {
+
+    return res.status(400).json({
+
+      success: false,
+
+      message: error.message,
+
+    });
+
+  }
+
+};

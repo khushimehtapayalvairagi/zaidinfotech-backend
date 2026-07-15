@@ -12,40 +12,75 @@ deleteCategoryService
 
 
 
-export const createCategory = async(req,res)=>{
+// export const createCategory = async(req,res)=>{
 
-try{
-
-
-const category =
-await createCategoryService(
-req.body,
-req.user.id
-);
+// try{
 
 
-res.status(201).json({
-
-success:true,
-message:"Category Created",
-data:category
-
-});
+// const category =
+// await createCategoryService(
+// req.body,
+// req.user.id
+// );
 
 
-}
-catch(error){
+// res.status(201).json({
 
-res.status(500).json({
-message:error.message
-});
+// success:true,
+// message:"Category Created",
+// data:category
 
-}
+// });
 
+
+// }
+// catch(error){
+
+// res.status(500).json({
+// message:error.message
+// });
+
+// }
+
+
+// };
+
+
+export const createCategory = async (req, res) => {
+
+  try {
+
+    if (req.file) {
+
+      req.body.image = `/uploads/categories/${req.file.filename}`;
+
+    }
+
+    const category = await createCategoryService(
+      req.body,
+      req.user.id
+    );
+
+    res.status(201).json({
+
+      success: true,
+      message: "Category Created Successfully",
+      data: category
+
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+
+      success: false,
+      message: error.message
+
+    });
+
+  }
 
 };
-
-
 
 
 
@@ -112,41 +147,79 @@ message:error.message
 
 
 
-export const updateCategory = async(req,res)=>{
+// export const updateCategory = async(req,res)=>{
 
 
-try{
+// try{
 
 
-const category =
-await updateCategoryService(
-req.params.id,
-req.body
-);
+// const category =
+// await updateCategoryService(
+// req.params.id,
+// req.body
+// );
 
 
-res.json({
+// res.json({
 
-success:true,
-data:category
+// success:true,
+// data:category
 
-});
+// });
 
 
-}
-catch(error){
+// }
+// catch(error){
 
-res.status(500).json({
-message:error.message
-});
+// res.status(500).json({
+// message:error.message
+// });
 
-}
+// }
 
+
+// };
+
+
+export const updateCategory = async (req, res) => {
+
+  try {
+
+    if (req.file) {
+
+      req.body.image =
+        `/uploads/categories/${req.file.filename}`;
+
+    }
+
+    const category =
+      await updateCategoryService(
+        req.params.id,
+        req.body
+      );
+
+    res.json({
+
+      success: true,
+      message: "Category Updated Successfully",
+      data: category
+
+    });
+
+  }
+
+  catch (error) {
+
+    res.status(500).json({
+
+      success: false,
+      message: error.message
+
+    });
+
+  }
 
 };
-
-
-
 
 
 

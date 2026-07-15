@@ -13,9 +13,9 @@ getShopProducts
 
 } from "./product.controller.js";
 import {
-createProductValidation
+    createProductValidation,
+    updateProductValidation
 } from "./product.validation.js";
-
 
 import {
 validate
@@ -25,7 +25,8 @@ validate
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
 import { allowRoles } from "../../common/middleware/role.middleware.js";
 
-import upload from "../../common/middleware/upload.middleware.js";
+import {productUpload} from "../../common/middleware/upload.middleware.js";
+
 const router = express.Router();
 
 
@@ -44,11 +45,10 @@ router.post(
     verifyToken,
     allowRoles("ADMIN"),
     validate(createProductValidation),
-    upload.array("images",5),
+    productUpload.array("images",5),
     createProduct
 
 );
-
 
 
 
@@ -82,10 +82,9 @@ router.put(
     "/:id",
     verifyToken,
     allowRoles("ADMIN"),
+    validate(updateProductValidation),
     updateProduct
 );
-
-
 
 
 // Delete Product

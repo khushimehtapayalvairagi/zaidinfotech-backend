@@ -1,24 +1,34 @@
 import express from "express";
 
-import {
-    createInventory,
-    getAllInventory,
-    getInventoryById,
-    updateInventory,
-    deleteInventory,
-    addStock,
-    removeStock
-} from "./inventory.controller.js";
-
 
 import {
-    verifyToken
-} from "../../common/middleware/auth.middleware.js";
+
+createInventory,
+getAllInventory,
+getInventoryById,
+updateInventory,
+deleteInventory,
+addStock,
+removeStock,
+reserveStock,
+releaseReservedStock,
+returnStock
+
+}
+from "./inventory.controller.js";
+
 
 
 import {
-    allowRoles
-} from "../../common/middleware/role.middleware.js";
+verifyToken
+}
+from "../../common/middleware/auth.middleware.js";
+
+
+import {
+allowRoles
+}
+from "../../common/middleware/role.middleware.js";
 
 
 
@@ -26,81 +36,113 @@ const router = express.Router();
 
 
 
-// Create Inventory
-// Only ADMIN
+
+const inventoryRoles = [
+
+"ADMIN",
+
+"INVENTORY"
+
+];
+
+
+
+
 
 router.post(
-    "/",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    createInventory
+"/",
+verifyToken,
+allowRoles(...inventoryRoles),
+createInventory
+);
+router.patch(
+"/return-stock",
+verifyToken,
+allowRoles(...inventoryRoles),
+returnStock
 );
 
-
-
-// Get All Inventory
 
 router.get(
-    "/",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    getAllInventory
+"/",
+verifyToken,
+allowRoles(...inventoryRoles),
+getAllInventory
 );
 
 
-
-// Get Single Inventory
 
 router.get(
-    "/:id",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    getInventoryById
+"/:id",
+verifyToken,
+allowRoles(...inventoryRoles),
+getInventoryById
 );
 
 
-
-// Update Inventory
 
 router.put(
-    "/:id",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    updateInventory
+"/:id",
+verifyToken,
+allowRoles(...inventoryRoles),
+updateInventory
 );
 
 
-
-// Delete Inventory
 
 router.delete(
-    "/:id",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    deleteInventory
+"/:id",
+verifyToken,
+allowRoles(...inventoryRoles),
+deleteInventory
 );
 
 
 
-// Add Stock
+
 
 router.patch(
-    "/add-stock",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    addStock
+"/add-stock",
+verifyToken,
+allowRoles(...inventoryRoles),
+addStock
 );
 
 
 
-// Remove Stock
 
 router.patch(
-    "/remove-stock",
-    verifyToken,
-    allowRoles("ADMIN",INVENTORY),
-    removeStock
+"/remove-stock",
+verifyToken,
+allowRoles(...inventoryRoles),
+removeStock
 );
+
+
+
+
+
+// Order Pending
+
+router.patch(
+"/reserve-stock",
+verifyToken,
+allowRoles(...inventoryRoles),
+reserveStock
+);
+
+
+
+
+// Order Cancel
+
+router.patch(
+"/release-stock",
+verifyToken,
+allowRoles(...inventoryRoles),
+releaseReservedStock
+);
+
 
 
 

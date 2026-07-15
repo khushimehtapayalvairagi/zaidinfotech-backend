@@ -10,46 +10,91 @@ getShopProductsService
 
 } from "./product.service.js";
 
+
 import {
+
 successResponse,
 errorResponse
+
 } from "../../common/utils/apiResponse.js";
 
 
-// ============================
+
+
+// =================================
 // Create Product (ADMIN)
-// ============================
+// =================================
 
-export const createProduct = async(req,res)=>{
+export const createProduct = async (req,res)=>{
 
-    try{
+try {
 
 
-        const product =
-        await createProductService(
-            req.body,
-            req.user.id
-        );
+if(req.files && req.files.length > 0){
+
+req.body.images = req.files.map((file)=>({
+
+url:`/uploads/products/${file.filename}`,
+
+alt:file.originalname
+
+}));
+
+}
+
+
+
+if(req.body.specifications){
+
+req.body.specifications =
+JSON.parse(req.body.specifications);
+
+}
+
+
+
+req.body.pricing={
+
+purchasePrice:Number(req.body.purchasePrice || 0),
+
+sellingPrice:Number(req.body.sellingPrice || 0),
+
+mrp:Number(req.body.mrp || 0),
+
+discount:Number(req.body.discount || 0),
+
+gst:Number(req.body.gst || 0)
+
+};
+
+
+
+const product =
+await createProductService(
+req.body,
+req.user.id
+);
+
 
 
 return successResponse(
-    res,
-    201,
-    "Product created successfully",
-    product
+res,
+201,
+"Product created successfully",
+product
 );
 
 
+}
+catch(error){
 
-    }
-    catch(error){
-
-      return errorResponse(
-    res,
-    400,
-    error.message
+return errorResponse(
+res,
+400,
+error.message
 );
-    }
+
+}
 
 };
 
@@ -57,11 +102,9 @@ return successResponse(
 
 
 
-
-
-// ============================
+// =================================
 // Get All Products (ADMIN)
-// ============================
+// =================================
 
 export const getProducts = async(req,res)=>{
 
@@ -69,30 +112,38 @@ export const getProducts = async(req,res)=>{
 
 
         const products =
+
         await getProductsService();
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            data:products
+            200,
 
-        });
+            "Products fetched successfully",
 
+            products
+
+        );
 
 
     }
     catch(error){
 
-        res.status(500).json({
 
-            success:false,
+        return errorResponse(
 
-            message:error.message
+            res,
 
-        });
+            500,
+
+            error.message
+
+        );
+
 
     }
 
@@ -103,50 +154,54 @@ export const getProducts = async(req,res)=>{
 
 
 
-
-
-// ============================
+// =================================
 // Get Product By ID
-// ============================
+// =================================
 
 export const getProductById = async(req,res)=>{
-
 
     try{
 
 
         const product =
+
         await getProductService(
+
             req.params.id
+
         );
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            data:product
+            200,
 
-        });
+            "Product fetched successfully",
 
+            product
+
+        );
 
 
     }
     catch(error){
 
 
-        res.status(404).json({
+        return errorResponse(
 
-            success:false,
+            res,
 
-            message:error.message
+            404,
 
-        });
+            error.message
+
+        );
 
 
     }
-
 
 };
 
@@ -157,17 +212,17 @@ export const getProductById = async(req,res)=>{
 
 
 
-// ============================
-// Update Product (ADMIN)
-// ============================
+// =================================
+// Update Product
+// =================================
 
 export const updateProduct = async(req,res)=>{
-
 
     try{
 
 
         const product =
+
         await updateProductService(
 
             req.params.id,
@@ -178,34 +233,35 @@ export const updateProduct = async(req,res)=>{
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            message:
+            200,
+
             "Product updated successfully",
 
-            data:product
+            product
 
-        });
-
+        );
 
 
     }
     catch(error){
 
 
-        res.status(400).json({
+        return errorResponse(
 
-            success:false,
+            res,
 
-            message:error.message
+            400,
 
-        });
+            error.message
+
+        );
 
 
     }
-
 
 };
 
@@ -216,12 +272,11 @@ export const updateProduct = async(req,res)=>{
 
 
 
-// ============================
-// Delete Product (ADMIN)
-// ============================
+// =================================
+// Delete Product
+// =================================
 
 export const deleteProduct = async(req,res)=>{
-
 
     try{
 
@@ -234,28 +289,30 @@ export const deleteProduct = async(req,res)=>{
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            message:
+            200,
+
             "Product deleted successfully"
 
-        });
-
+        );
 
 
     }
     catch(error){
 
 
-        res.status(500).json({
+        return errorResponse(
 
-            success:false,
+            res,
 
-            message:error.message
+            500,
 
-        });
+            error.message
+
+        );
 
 
     }
@@ -269,18 +326,17 @@ export const deleteProduct = async(req,res)=>{
 
 
 
-
-// ============================
+// =================================
 // Search Product
-// ============================
+// =================================
 
 export const searchProduct = async(req,res)=>{
-
 
     try{
 
 
         const result =
+
         await searchProductService(
 
             req.query.keyword
@@ -289,31 +345,35 @@ export const searchProduct = async(req,res)=>{
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            data:result
+            200,
 
-        });
+            "Search result",
 
+            result
+
+        );
 
 
     }
     catch(error){
 
 
-        res.status(500).json({
+        return errorResponse(
 
-            success:false,
+            res,
 
-            message:error.message
+            500,
 
-        });
+            error.message
+
+        );
 
 
     }
-
 
 };
 
@@ -324,46 +384,49 @@ export const searchProduct = async(req,res)=>{
 
 
 
-
-// ============================
+// =================================
 // Customer Shop Products
-// ============================
+// =================================
 
 export const getShopProducts = async(req,res)=>{
-
 
     try{
 
 
         const products =
+
         await getShopProductsService();
 
 
 
-        res.status(200).json({
+        return successResponse(
 
-            success:true,
+            res,
 
-            data:products
+            200,
 
-        });
+            "Shop products fetched successfully",
 
+            products
+
+        );
 
 
     }
     catch(error){
 
 
-        res.status(500).json({
+        return errorResponse(
 
-            success:false,
+            res,
 
-            message:error.message
+            500,
 
-        });
+            error.message
+
+        );
 
 
     }
-
 
 };

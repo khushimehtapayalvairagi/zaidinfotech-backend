@@ -1,59 +1,70 @@
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 
+const createUploader = (folderName) => {
 
-const storage = multer.diskStorage({
+    const uploadPath = `uploads/${folderName}`;
 
-    destination:(req,file,cb)=>{
+    if (!fs.existsSync(uploadPath)) {
 
-        cb(null,"uploads/products");
-
-    },
-
-
-    filename:(req,file,cb)=>{
-
-        cb(
-            null,
-            Date.now()+"-"+file.originalname
-        );
+        fs.mkdirSync(uploadPath, {
+            recursive: true
+        });
 
     }
 
-});
+    const storage = multer.diskStorage({
 
+        destination(req, file, cb) {
 
+            cb(null, uploadPath);
 
-const fileFilter=(req,file,cb)=>{
+        },
 
+        filename(req, file, cb) {
 
-    if(
-        file.mimetype.startsWith("image")
-    ){
+            const ext = path.extname(file.originalname);
 
-        cb(null,true);
+            cb(
+                null,
+                Date.now() + ext
+            );
 
-    }
-    else{
+        }
 
-        cb(
-            new Error("Only images allowed"),
-            false
-        );
+    });
 
-    }
+    const fileFilter = (req, file, cb) => {
+
+        if (file.mimetype.startsWith("image/")) {
+
+            cb(null, true);
+
+        }
+
+        else {
+
+            cb(
+                new Error("Only Images Allowed"),
+                false
+            );
+
+        }
+
+    };
+
+    return multer({
+
+        storage,
+        fileFilter
+
+    });
 
 };
 
+export const categoryUpload = createUploader("categories");
 
+export const brandUpload = createUploader("brands");
 
-const upload = multer({
-
-storage,
-
-fileFilter
-
-});
-
-
-
-export default upload;
+export const productUpload = createUploader("products");

@@ -25,7 +25,7 @@ const inventorySchema = new mongoose.Schema(
 
 
 
-    // Current Available Stock
+    // Total Available Stock
 
     currentStock:{
 
@@ -39,7 +39,7 @@ const inventorySchema = new mongoose.Schema(
 
 
 
-    // Order / Rental ke liye Reserved Stock
+    // Customer order placed but not delivered
 
     reservedStock:{
 
@@ -53,13 +53,13 @@ const inventorySchema = new mongoose.Schema(
 
 
 
-    // Minimum Stock Alert
+    // Minimum stock alert
 
     minimumStock:{
 
         type:Number,
 
-        default:0,
+        default:5,
 
         min:0
 
@@ -67,35 +67,31 @@ const inventorySchema = new mongoose.Schema(
 
 
 
-    // Maximum Stock Limit
+    // Maximum stock capacity
 
     maximumStock:{
 
         type:Number,
 
-        default:0,
-
-        min:0
+        default:0
 
     },
 
 
 
-    // Product Unit
+    // Unit
 
     unit:{
 
         type:String,
 
-        default:"piece",
-
-        trim:true
+        default:"piece"
 
     },
 
 
 
-    // Store Location (future warehouse ke liye)
+    // Store location
 
     location:{
 
@@ -129,7 +125,7 @@ const inventorySchema = new mongoose.Schema(
 
 
 
-    // Last Updated By Admin
+    // Last Updated User
 
     lastUpdatedBy:{
 
@@ -156,12 +152,37 @@ const inventorySchema = new mongoose.Schema(
 {
     timestamps:true
 }
-
 );
 
 
 
-const Inventory = mongoose.model(
+// Available Stock Calculate
+
+inventorySchema.virtual(
+    "availableStock"
+)
+.get(function(){
+
+
+    return this.currentStock -
+    this.reservedStock;
+
+
+});
+
+
+
+inventorySchema.set(
+    "toJSON",
+    {
+        virtuals:true
+    }
+);
+
+
+
+const Inventory =
+mongoose.model(
     "Inventory",
     inventorySchema
 );

@@ -1,66 +1,105 @@
-import * as inventoryRepository from "./inventory.repository.js";
+import * as inventoryRepository 
+from "./inventory.repository.js";
+
 
 import {
     INVENTORY_STATUS
-} from "../../common/constants/inventoryStatus.js";
+}
+from "../../common/constants/inventoryStatus.js";
+
+import {
+    createStockTransactionService
+}
+from "./stockTransaction/stockTransaction.service.js";
+
+// ==============================
+// Calculate Inventory Status
+// ==============================
+
+const calculateStatus = (
+    currentStock,
+    minimumStock
+)=>{
+
+
+    if(currentStock <= 0){
+
+        return INVENTORY_STATUS.OUT_OF_STOCK;
+
+    }
+
+
+    if(currentStock <= minimumStock){
+
+        return INVENTORY_STATUS.LOW_STOCK;
+
+    }
+
+
+    return INVENTORY_STATUS.IN_STOCK;
+
+};
 
 
 
+
+
+// ==============================
 // Create Inventory
+// ==============================
 
 export const createInventoryService = async(data)=>{
 
 
     const existingInventory =
-        await inventoryRepository.getInventoryByProductId(
-            data.product
-        );
+    await inventoryRepository
+    .getInventoryByProductId(
+        data.product
+    );
+
 
 
     if(existingInventory){
 
         throw new Error(
-            "Inventory already exists for this product"
+            "Inventory already exists"
         );
 
     }
 
 
 
-    if(data.currentStock > data.minimumStock){
-
-        data.status = INVENTORY_STATUS.IN_STOCK;
-
-    }
-    else if(data.currentStock > 0){
-
-        data.status = INVENTORY_STATUS.LOW_STOCK;
-
-    }
-    else{
-
-        data.status = INVENTORY_STATUS.OUT_OF_STOCK;
-
-    }
-
-
-
-    return await inventoryRepository.createInventory(
-        data
+    data.status =
+    calculateStatus(
+        data.currentStock,
+        data.minimumStock
     );
 
+
+
+    return await inventoryRepository
+    .createInventory(data);
+
+
 };
 
 
 
 
 
+
+
+// ==============================
 // Get All Inventory
+// ==============================
 
-export const getAllInventoryService = async()=>{
+export const getAllInventoryService =
+async()=>{
 
 
-    return await inventoryRepository.getAllInventory();
+    return await inventoryRepository
+    .getAllInventory();
+
 
 };
 
@@ -68,13 +107,20 @@ export const getAllInventoryService = async()=>{
 
 
 
-// Get Inventory By Id
 
-export const getInventoryByIdService = async(id)=>{
+
+
+// ==============================
+// Get Inventory By Id
+// ==============================
+
+export const getInventoryByIdService =
+async(id)=>{
 
 
     const inventory =
-        await inventoryRepository.getInventoryById(id);
+    await inventoryRepository
+    .getInventoryById(id);
 
 
 
@@ -85,6 +131,7 @@ export const getInventoryByIdService = async(id)=>{
         );
 
     }
+
 
 
     return inventory;
@@ -95,16 +142,24 @@ export const getInventoryByIdService = async(id)=>{
 
 
 
-// Update Inventory
 
-export const updateInventoryService = async(
+
+
+
+// ==============================
+// Update Inventory
+// ==============================
+
+export const updateInventoryService =
+async(
     id,
     data
 )=>{
 
 
     const inventory =
-        await inventoryRepository.getInventoryById(id);
+    await inventoryRepository
+    .getInventoryById(id);
 
 
 
@@ -118,66 +173,56 @@ export const updateInventoryService = async(
 
 
 
-    if(data.currentStock !== undefined){
 
-
-        if(
-            data.currentStock >
-            (data.minimumStock || inventory.minimumStock)
-        ){
-
-            data.status =
-            INVENTORY_STATUS.IN_STOCK;
-
-        }
-        else if(data.currentStock > 0){
-
-            data.status =
-            INVENTORY_STATUS.LOW_STOCK;
-
-        }
-        else{
-
-            data.status =
-            INVENTORY_STATUS.OUT_OF_STOCK;
-
-        }
-
-    }
+    const stock =
+    data.currentStock ??
+    inventory.currentStock;
 
 
 
-    return await inventoryRepository.updateInventory(
+    const minimumStock =
+    data.minimumStock ??
+    inventory.minimumStock;
+
+
+
+    data.status =
+    calculateStatus(
+        stock,
+        minimumStock
+    );
+
+
+
+
+    return await inventoryRepository
+    .updateInventory(
         id,
         data
     );
 
+
 };
 
 
 
 
 
+
+
+
+
+// ==============================
 // Delete Inventory
+// ==============================
 
-export const deleteInventoryService = async(id)=>{
-
-
-    const inventory =
-        await inventoryRepository.getInventoryById(id);
+export const deleteInventoryService =
+async(id)=>{
 
 
+    return await inventoryRepository
+    .deleteInventory(id);
 
-    if(!inventory){
-
-        throw new Error(
-            "Inventory not found"
-        );
-
-    }
-
-
-    return await inventoryRepository.deleteInventory(id);
 
 };
 
@@ -185,9 +230,15 @@ export const deleteInventoryService = async(id)=>{
 
 
 
-// Add Stock
 
-export const addStockService = async(
+
+
+
+// ==============================
+// Add Stock
+// ==============================
+export const addStockService =
+async(
     productId,
     quantity,
     userId
@@ -195,9 +246,10 @@ export const addStockService = async(
 
 
     const inventory =
-        await inventoryRepository
-        .getInventoryByProductId(productId);
-
+    await inventoryRepository
+    .getInventoryByProductId(
+        productId
+    );
 
 
     if(!inventory){
@@ -210,43 +262,34 @@ export const addStockService = async(
 
 
 
-    const newStock =
-        inventory.currentStock + quantity;
+    const previousStock =
+    inventory.currentStock;
 
 
 
-    let status;
+    const updatedStock =
+    previousStock + quantity;
 
 
 
-    if(newStock > inventory.minimumStock){
-
-        status =
-        INVENTORY_STATUS.IN_STOCK;
-
-    }
-    else if(newStock > 0){
-
-        status =
-        INVENTORY_STATUS.LOW_STOCK;
-
-    }
-    else{
-
-        status =
-        INVENTORY_STATUS.OUT_OF_STOCK;
-
-    }
+    const status =
+    calculateStatus(
+        updatedStock,
+        inventory.minimumStock
+    );
 
 
 
-    return await inventoryRepository.updateInventory(
+
+    const updatedInventory =
+    await inventoryRepository
+    .updateInventory(
 
         inventory._id,
 
         {
 
-            currentStock:newStock,
+            currentStock:updatedStock,
 
             status,
 
@@ -256,24 +299,69 @@ export const addStockService = async(
 
     );
 
+
+
+
+
+    // Create Stock History
+
+    await createStockTransactionService({
+
+        product:inventory.product,
+
+        inventory:inventory._id,
+
+        type:"STOCK_IN",
+
+        quantity:quantity,
+
+        previousStock:previousStock,
+
+        updatedStock:updatedStock,
+
+        description:
+        "Stock added by Inventory Manager",
+
+        createdBy:userId
+
+    });
+
+
+
+
+
+    return updatedInventory;
+
+
 };
 
 
 
 
 
-// Remove Stock
 
-export const removeStockService = async(
+
+
+// ==============================
+// Remove Stock
+// Order / Repair use
+// ==============================
+
+export const removeStockService =
+async(
     productId,
     quantity,
-    userId
+    userId,
+    transactionType="STOCK_OUT",
+    description="Stock removed"
 )=>{
 
 
     const inventory =
-        await inventoryRepository
-        .getInventoryByProductId(productId);
+    await inventoryRepository
+    .getInventoryByProductId(
+        productId
+    );
 
 
 
@@ -287,58 +375,350 @@ export const removeStockService = async(
 
 
 
+
+    const availableStock =
+    inventory.currentStock -
+    inventory.reservedStock;
+
+
+
     if(
-        inventory.currentStock < quantity
+        availableStock < quantity
     ){
 
         throw new Error(
-            "Insufficient stock"
+            "Not enough stock available"
         );
 
     }
 
 
 
-    const newStock =
-        inventory.currentStock - quantity;
+
+    const previousStock =
+    inventory.currentStock;
 
 
 
-    let status;
-
-
-
-    if(newStock > inventory.minimumStock){
-
-        status =
-        INVENTORY_STATUS.IN_STOCK;
-
-    }
-    else if(newStock > 0){
-
-        status =
-        INVENTORY_STATUS.LOW_STOCK;
-
-    }
-    else{
-
-        status =
-        INVENTORY_STATUS.OUT_OF_STOCK;
-
-    }
+    const updatedStock =
+    previousStock - quantity;
 
 
 
 
-    return await inventoryRepository.updateInventory(
+    const status =
+    calculateStatus(
+        updatedStock,
+        inventory.minimumStock
+    );
+
+
+
+
+
+    const updatedInventory =
+    await inventoryRepository
+    .updateInventory(
 
         inventory._id,
 
         {
 
-            currentStock:newStock,
+            currentStock:updatedStock,
 
             status,
+
+            lastUpdatedBy:userId
+
+        }
+
+    );
+
+
+
+
+
+
+    // Automatic History
+
+    await createStockTransactionService({
+
+        product:inventory.product,
+
+        inventory:inventory._id,
+
+
+        type:transactionType,
+
+
+        quantity:quantity,
+
+
+        previousStock:previousStock,
+
+
+        updatedStock:updatedStock,
+
+
+        description:description,
+
+
+        createdBy:userId
+
+    });
+
+
+
+
+
+    return updatedInventory;
+
+
+};
+
+// ==============================
+// Return Stock
+// Order Return / Rental Return
+// ==============================
+
+
+export const returnStockService =
+async(
+    productId,
+    quantity,
+    userId,
+    description="Stock returned"
+)=>{
+
+
+    const inventory =
+    await inventoryRepository
+    .getInventoryByProductId(
+        productId
+    );
+
+
+
+    if(!inventory){
+
+        throw new Error(
+            "Inventory not found"
+        );
+
+    }
+
+
+
+
+    const previousStock =
+    inventory.currentStock;
+
+
+
+    const updatedStock =
+    previousStock + quantity;
+
+
+
+    const status =
+    calculateStatus(
+        updatedStock,
+        inventory.minimumStock
+    );
+
+
+
+
+
+    const updatedInventory =
+    await inventoryRepository
+    .updateInventory(
+
+        inventory._id,
+
+        {
+
+            currentStock:updatedStock,
+
+            status,
+
+            lastUpdatedBy:userId
+
+        }
+
+    );
+
+
+
+
+
+
+    // Create History
+
+    await createStockTransactionService({
+
+        product:inventory.product,
+
+        inventory:inventory._id,
+
+        type:"RETURN",
+
+        quantity:quantity,
+
+        previousStock:previousStock,
+
+        updatedStock:updatedStock,
+
+        description:description,
+
+        createdBy:userId
+
+    });
+
+
+
+
+
+
+    return updatedInventory;
+
+
+};
+
+
+
+
+
+
+
+
+
+// ==============================
+// Reserve Stock
+// Order Pending
+// ==============================
+
+export const reserveStockService =
+async(
+    productId,
+    quantity,
+    userId
+)=>{
+
+
+    const inventory =
+    await inventoryRepository
+    .getInventoryByProductId(
+        productId
+    );
+
+
+
+    if(!inventory){
+
+        throw new Error(
+            "Inventory not found"
+        );
+
+    }
+
+
+
+    const availableStock =
+    inventory.currentStock -
+    inventory.reservedStock;
+
+
+
+
+    if(
+        availableStock < quantity
+    ){
+
+        throw new Error(
+            "Product not available"
+        );
+
+    }
+
+
+
+
+    return await inventoryRepository
+    .updateInventory(
+
+        inventory._id,
+
+        {
+
+            $inc:{
+
+                reservedStock:quantity
+
+            },
+
+            lastUpdatedBy:userId
+
+        }
+
+    );
+
+
+};
+
+
+
+
+
+
+
+
+
+// ==============================
+// Release Reserved Stock
+// Order Cancel
+// ==============================
+
+export const releaseReservedStockService =
+async(
+    productId,
+    quantity,
+    userId
+)=>{
+
+
+    const inventory =
+    await inventoryRepository
+    .getInventoryByProductId(
+        productId
+    );
+
+
+
+    if(!inventory){
+
+        throw new Error(
+            "Inventory not found"
+        );
+
+    }
+
+
+
+
+    return await inventoryRepository
+    .updateInventory(
+
+        inventory._id,
+
+        {
+
+            $inc:{
+
+                reservedStock:-quantity
+
+            },
+
 
             lastUpdatedBy:userId
 

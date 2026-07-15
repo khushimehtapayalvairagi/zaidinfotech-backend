@@ -6,25 +6,71 @@ import {
   deleteBrandService,
 } from "./brand.service.js";
 
-export const createBrand = async (req, res) => {
-  try {
-    const brand = await createBrandService(
-      req.body,
-      req.user.id
-    );
+// export const createBrand = async (req, res) => {
+//   try {
+//     const brand = await createBrandService(
+//       req.body,
+//       req.user.id
+//     );
 
-    res.status(201).json({
-      success: true,
-      message: "Brand created successfully",
-      data: brand,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
+//     res.status(201).json({
+//       success: true,
+//       message: "Brand created successfully",
+//       data: brand,
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+export const createBrand = async (req, res) => {
+
+    try {
+
+        if (req.file) {
+
+            req.body.logo =
+                `/uploads/brands/${req.file.filename}`;
+
+        }
+
+        const brand = await createBrandService(
+
+            req.body,
+
+            req.user.id
+
+        );
+
+        res.status(201).json({
+
+            success: true,
+
+            message: "Brand Created Successfully",
+
+            data: brand
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
 };
+
 
 export const getBrands = async (req, res) => {
   try {

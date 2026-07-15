@@ -1,9 +1,13 @@
 import Inventory from "./inventory.model.js";
 
 
-// Create Inventory
 
-export const createInventory = async (data) => {
+// ==============================
+// Create Inventory
+// ==============================
+
+export const createInventory = async(data)=>{
+
 
     return await Inventory.create(data);
 
@@ -11,32 +15,51 @@ export const createInventory = async (data) => {
 
 
 
-// Get All Inventory
 
-export const getAllInventory = async () => {
+
+// ==============================
+// Get All Inventory
+// ==============================
+
+export const getAllInventory = async()=>{
+
 
     return await Inventory.find({
+
         isDeleted:false
+
     })
+
     .populate(
         "product",
         "name sku images pricing"
     )
+
     .populate(
         "lastUpdatedBy",
         "name email"
     )
+
     .sort({
+
         createdAt:-1
+
     });
+
 
 };
 
 
 
-// Get Single Inventory
 
-export const getInventoryById = async (id) => {
+
+
+
+// ==============================
+// Get Inventory By Id
+// ==============================
+
+export const getInventoryById = async(id)=>{
 
 
     return await Inventory.findOne({
@@ -46,10 +69,12 @@ export const getInventoryById = async (id) => {
         isDeleted:false
 
     })
+
     .populate(
         "product",
         "name sku images pricing"
     )
+
     .populate(
         "lastUpdatedBy",
         "name email"
@@ -60,9 +85,18 @@ export const getInventoryById = async (id) => {
 
 
 
-// Find Inventory By Product
 
-export const getInventoryByProductId = async(productId)=>{
+
+
+
+
+
+// ==============================
+// Get Inventory By Product
+// ==============================
+
+export const getInventoryByProductId =
+async(productId)=>{
 
 
     return await Inventory.findOne({
@@ -78,9 +112,21 @@ export const getInventoryByProductId = async(productId)=>{
 
 
 
-// Update Inventory
 
-export const updateInventory = async(
+
+
+
+
+
+// ==============================
+// Update Inventory
+// Supports:
+// normal update
+// $inc
+// ==============================
+
+export const updateInventory =
+async(
     id,
     data
 )=>{
@@ -93,7 +139,9 @@ export const updateInventory = async(
         data,
 
         {
+
             new:true
+
         }
 
     );
@@ -103,9 +151,19 @@ export const updateInventory = async(
 
 
 
-// Soft Delete Inventory
 
-export const deleteInventory = async(id)=>{
+
+
+
+
+
+// ==============================
+// Delete Inventory
+// Soft Delete
+// ==============================
+
+export const deleteInventory =
+async(id)=>{
 
 
     return await Inventory.findByIdAndUpdate(
@@ -113,42 +171,15 @@ export const deleteInventory = async(id)=>{
         id,
 
         {
+
             isDeleted:true
+
         },
 
         {
+
             new:true
-        }
 
-    );
-
-
-};
-
-
-
-// Update Stock
-
-export const updateStock = async(
-    productId,
-    quantity
-)=>{
-
-
-    return await Inventory.findOneAndUpdate(
-
-        {
-            product:productId
-        },
-
-        {
-            $inc:{
-                currentStock:quantity
-            }
-        },
-
-        {
-            new:true
         }
 
     );

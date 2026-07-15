@@ -1,4 +1,5 @@
 import Product from "./product.model.js";
+import Inventory from "../inventory/inventory.model.js";
 
 
 // Create Product
@@ -214,7 +215,17 @@ export const searchProductsDB = async(keyword)=>{
 
 };
 
+export const getProductByBarcodeDB = async (barcode) => {
 
+    return await Product.findOne({
+
+        barcode,
+
+        isDeleted: false
+
+    });
+
+};
 
 
 // Customer Shop Products
@@ -222,39 +233,117 @@ export const searchProductsDB = async(keyword)=>{
 export const getShopProductsDB = async()=>{
 
 
-    return await Product.find({
+const products =
+await Product.find({
 
-        isDeleted:false,
+    isDeleted:false,
 
-        status:"ACTIVE"
+    status:"ACTIVE"
 
-    })
+})
 
-    .select({
+.populate(
+    "category",
+    "name slug"
+)
 
-        name:1,
+.populate(
+    "brand",
+    "name"
+)
 
-        slug:1,
+.lean();
 
-        images:1,
 
-        pricing:1,
 
-        brand:1,
 
-        category:1
+const result =
+await Promise.all(
 
-    })
+products.map(async(product)=>{
 
-    .populate(
-        "brand",
-        "name logo"
-    )
 
-    .populate(
-        "category",
-        "name"
-    );
+const inventory =
+await Inventory.findOne({
+
+product:product._id,
+
+isDeleted:false
+
+})
+.lean();
+
+
+
+return {
+
+
+_id:product._id,
+
+
+name:product.name,
+
+
+slug:product.slug,
+
+
+images:product.images,
+
+
+
+pricing:{
+
+sellingPrice:
+product.pricing.sellingPrice,
+
+mrp:
+product.pricing.mrp,
+
+discount:
+product.pricing.discount
+
+},
+
+
+
+category:
+product.category,
+
+
+brand:
+product.brand,
+
+
+
+
+// Inventory Data
+
+availability:
+
+inventory && 
+inventory.currentStock -
+inventory.reservedStock > 0
+
+?
+
+"IN_STOCK"
+
+:
+
+"OUT_OF_STOCK"
+
+
+
+};
+
+
+})
+
+);
+
+
+
+return result;
 
 
 };

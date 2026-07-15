@@ -10,15 +10,26 @@ import {
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
 import { allowRoles } from "../../common/middleware/role.middleware.js";
-
+import { brandUpload } from "../../common/middleware/upload.middleware.js";
 const router = express.Router();
 
+// router.post(
+//   "/",
+//   verifyToken,
+//   allowRoles("ADMIN"),
+//   createBrand
+// );
+
+
+
 router.post(
-  "/",
-  verifyToken,
-  allowRoles("ADMIN"),
-  createBrand
+    "/",
+    verifyToken,
+    allowRoles("ADMIN"),
+    brandUpload.single("logo"),
+    createBrand
 );
+
 
 router.get(
   "/",

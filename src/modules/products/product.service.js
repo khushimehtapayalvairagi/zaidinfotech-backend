@@ -10,273 +10,258 @@ import {
     getShopProductsDB
 } from "./product.repository.js";
 
-
 import Category from "../categories/category.model.js";
-
 import Brand from "../brands/brand.model.js";
-
+import Inventory from "../inventory/inventory.model.js";
 
 import generateSlug from "../../common/utils/generateSlug.js";
-
 import generateSKU from "../../common/utils/generateSKU.js";
-
-
+import {
+   
+    getProductByBarcodeDB
+} from "./product.repository.js";
 
 /*
- Create Product
+=========================================
+Create Product
+=========================================
 */
 
-export const createProductService = async(
+export const createProductService = async (
     data,
-    userId
-)=>{
+    userId,
+    files = []
+) => {
 
-
-    // Duplicate Product Check
+    // =========================
+    // Duplicate Product
+    // =========================
 
     const existingProduct =
-    await getProductByNameDB(data.name);
+        await getProductByNameDB(data.name);
 
+    if (existingProduct) {
+        throw new Error("Product already exists");
+    }
 
+    // =========================
+    // Duplicate Barcode
+    // =========================
 
-    if(existingProduct){
+    if (data.barcode) {
 
-        throw new Error(
-            "Product already exists"
-        );
+      const barcodeExists =
+await getProductByBarcodeDB(data.barcode);
+
+        if (barcodeExists) {
+            throw new Error("Barcode already exists");
+        }
 
     }
 
-
-
-    // Category Check
+    // =========================
+    // Category Validation
+    // =========================
 
     const category =
-    await Category.findById(
-        data.category
-    );
+        await Category.findById(data.category);
 
-
-
-    if(!category){
-
-        throw new Error(
-            "Category not found"
-        );
-
+    if (!category) {
+        throw new Error("Category not found");
     }
 
-
-
-    // Brand Check
+    // =========================
+    // Brand Validation
+    // =========================
 
     const brand =
-    await Brand.findById(
-        data.brand
+        await Brand.findById(data.brand);
+
+    if (!brand) {
+        throw new Error("Brand not found");
+    }
+
+    // =========================
+    // Slug
+    // =========================
+
+    data.slug = generateSlug(data.name);
+
+    // =========================
+    // SKU
+    // =========================
+
+    const products =
+        await getProductsDB();
+
+    data.sku = generateSKU(
+        category.name,
+        brand.name,
+        products.length + 1
     );
 
+    // =========================
+    // Images
+    // =========================
 
+    if (files.length > 0) {
 
-    if(!brand){
+        data.images = files.map(file => ({
 
-        throw new Error(
-            "Brand not found"
-        );
+            url: file.path,
+
+            alt: data.name
+
+        }));
 
     }
 
-
-
-    // Generate Slug
-
-    data.slug =
-    generateSlug(
-        data.name
-    );
-
-
-
-
-    // Count Products for SKU
-
-    const productCount =
-    await getProductsDB();
-
-
-
-    const skuNumber =
-    productCount.length + 1;
-
-
-
-    // Generate SKU
-
-    data.sku =
-    generateSKU(
-
-        category.name,
-
-        brand.name,
-
-        skuNumber
-
-    );
-
-
-
+    // =========================
     // Created By
+    // =========================
 
-    data.createdBy =
-    userId;
+    data.createdBy = userId;
 
-
-
-    return await createProductDB(
-        data
-    );
-
-
-};
-
-
-
-
-
-/*
- Get All Products
-*/
-
-
-export const getProductsService =
-async()=>{
-
-
-    return await getProductsDB();
-
-
-};
-
-
-
-
-
-/*
- Get Product By ID
-*/
-
-
-export const getProductService =
-async(id)=>{
-
+    // =========================
+    // Save Product
+    // =========================
 
     const product =
-    await getProductByIdDB(id);
+        await createProductDB(data);
 
+    // =========================
+    // Auto Inventory Create
+    // =========================
 
+    await Inventory.create({
 
-    if(!product){
+        product: product._id,
 
-        throw new Error(
-            "Product not found"
-        );
+        currentStock: 0,
 
-    }
+        reservedStock: 0,
 
+        minimumStock: 0,
+
+        maximumStock: 0,
+
+        warehouseLocation: "",
+
+        createdBy: userId
+
+    });
 
     return product;
 
+};
+
+/*
+=========================================
+Get Products
+=========================================
+*/
+
+export const getProductsService = async () => {
+
+    return await getProductsDB();
 
 };
 
-
-
-
-
 /*
- Update Product
+=========================================
+Get Product
+=========================================
 */
 
+export const getProductService = async (id) => {
 
-export const updateProductService =
-async(
-    id,
-    data
-)=>{
+    const product =
+        await getProductByIdDB(id);
 
+    if (!product) {
 
-    if(data.name){
-
-        data.slug =
-        generateSlug(
-            data.name
-        );
+        throw new Error("Product not found");
 
     }
 
-
-
-    return await updateProductDB(
-        id,
-        data
-    );
-
+    return product;
 
 };
 
-
-
-
-
 /*
- Delete Product
+=========================================
+Update Product
+=========================================
 */
 
+export const updateProductService = async (
+    id,
+    data
+) => {
 
-export const deleteProductService =
-async(id)=>{
+    if (data.name) {
 
+        data.slug =
+            generateSlug(data.name);
 
-    return await deleteProductDB(
-        id
-    );
+    }
 
+    const product =
+        await updateProductDB(id, data);
+
+    if (!product) {
+
+        throw new Error("Product not found");
+
+    }
+
+    return product;
 
 };
 
-
-
-
-
 /*
- Search Product
+=========================================
+Delete Product
+=========================================
 */
 
+export const deleteProductService = async (id) => {
 
-export const searchProductService =
-async(keyword)=>{
+    const product =
+        await deleteProductDB(id);
 
+    if (!product) {
 
-    return await searchProductsDB(
-        keyword
-    );
+        throw new Error("Product not found");
 
+    }
+
+    return product;
 
 };
 
-
-
-
-
 /*
- Customer Shop Products
+=========================================
+Search Product
+=========================================
 */
 
+export const searchProductService = async (
+    keyword
+) => {
 
-export const getShopProductsService =
-async()=>{
+    return await searchProductsDB(keyword);
 
+};
+
+/*
+=========================================
+Customer Shop Products
+=========================================
+*/
+
+export const getShopProductsService = async () => {
 
     return await getShopProductsDB();
-
 
 };

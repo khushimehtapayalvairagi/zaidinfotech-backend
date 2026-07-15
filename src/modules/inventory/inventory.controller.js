@@ -1,72 +1,98 @@
-import * as inventoryService from "./inventory.service.js";
+import * as inventoryService 
+from "./inventory.service.js";
+
 
 import {
-    successResponse,
-    errorResponse
-} from "../../common/utils/apiResponse.js";
+successResponse,
+errorResponse
+}
+from "../../common/utils/apiResponse.js";
 
 
 
+
+// ==============================
 // Create Inventory
+// ==============================
 
 export const createInventory = async(req,res)=>{
-
-    try {
-
-
-        const inventory =
-            await inventoryService.createInventoryService(
-                {
-                    ...req.body,
-                    lastUpdatedBy:req.user._id
-                }
-            );
-
-
-        return successResponse(
-            res,
-            201,
-            "Inventory created successfully",
-            inventory
-        );
-
-
-    }
-    catch(error){
-
-        return errorResponse(
-            res,
-            400,
-            error.message
-        );
-
-    }
-
-};
-
-
-
-
-
-// Get All Inventory
-
-export const getAllInventory = async(req,res)=>{
-
 
     try{
 
 
         const inventory =
-            await inventoryService
-            .getAllInventoryService();
+        await inventoryService
+        .createInventoryService({
+
+            ...req.body,
+
+            lastUpdatedBy:req.user.id
+
+        });
 
 
 
         return successResponse(
+
             res,
-            200,
-            "Inventory fetched successfully",
+
+            201,
+
+            "Inventory created successfully",
+
             inventory
+
+        );
+
+
+    }
+    catch(error){
+
+        return errorResponse(
+
+            res,
+
+            400,
+
+            error.message
+
+        );
+
+    }
+
+};
+
+
+
+
+
+
+
+// ==============================
+// Get All Inventory
+// ==============================
+
+export const getAllInventory = async(req,res)=>{
+
+    try{
+
+
+        const inventory =
+        await inventoryService
+        .getAllInventoryService();
+
+
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Inventory fetched successfully",
+
+            inventory
+
         );
 
 
@@ -75,13 +101,17 @@ export const getAllInventory = async(req,res)=>{
 
 
         return errorResponse(
+
             res,
+
             500,
+
             error.message
+
         );
 
-    }
 
+    }
 
 };
 
@@ -89,7 +119,12 @@ export const getAllInventory = async(req,res)=>{
 
 
 
-// Get Inventory By Id
+
+
+
+// ==============================
+// Get Inventory By ID
+// ==============================
 
 export const getInventoryById = async(req,res)=>{
 
@@ -98,29 +133,37 @@ export const getInventoryById = async(req,res)=>{
 
 
         const inventory =
-            await inventoryService
-            .getInventoryByIdService(
-                req.params.id
-            );
+        await inventoryService
+        .getInventoryByIdService(
+            req.params.id
+        );
 
 
 
         return successResponse(
+
             res,
+
             200,
+
             "Inventory fetched successfully",
+
             inventory
+
         );
 
 
     }
     catch(error){
 
-
         return errorResponse(
+
             res,
+
             404,
+
             error.message
+
         );
 
     }
@@ -132,7 +175,14 @@ export const getInventoryById = async(req,res)=>{
 
 
 
+
+
+
+
+
+// ==============================
 // Update Inventory
+// ==============================
 
 export const updateInventory = async(req,res)=>{
 
@@ -141,23 +191,35 @@ export const updateInventory = async(req,res)=>{
 
 
         const inventory =
-            await inventoryService
-            .updateInventoryService(
-                req.params.id,
-                {
-                    ...req.body,
-                    lastUpdatedBy:req.user._id
-                }
-            );
+        await inventoryService
+        .updateInventoryService(
+
+            req.params.id,
+
+            {
+
+            ...req.body,
+
+            lastUpdatedBy:req.user.id
+
+            }
+
+        );
 
 
 
         return successResponse(
+
             res,
+
             200,
+
             "Inventory updated successfully",
+
             inventory
+
         );
+
 
 
     }
@@ -165,10 +227,15 @@ export const updateInventory = async(req,res)=>{
 
 
         return errorResponse(
+
             res,
+
             400,
+
             error.message
+
         );
+
 
     }
 
@@ -179,7 +246,13 @@ export const updateInventory = async(req,res)=>{
 
 
 
+
+
+
+
+// ==============================
 // Delete Inventory
+// ==============================
 
 export const deleteInventory = async(req,res)=>{
 
@@ -187,19 +260,21 @@ export const deleteInventory = async(req,res)=>{
     try{
 
 
-        const inventory =
-            await inventoryService
-            .deleteInventoryService(
-                req.params.id
-            );
+        await inventoryService
+        .deleteInventoryService(
+            req.params.id
+        );
 
 
 
         return successResponse(
+
             res,
+
             200,
-            "Inventory deleted successfully",
-            inventory
+
+            "Inventory deleted successfully"
+
         );
 
 
@@ -208,9 +283,13 @@ export const deleteInventory = async(req,res)=>{
 
 
         return errorResponse(
+
             res,
+
             400,
+
             error.message
+
         );
 
     }
@@ -222,7 +301,13 @@ export const deleteInventory = async(req,res)=>{
 
 
 
+
+
+
+
+// ==============================
 // Add Stock
+// ==============================
 
 export const addStock = async(req,res)=>{
 
@@ -231,28 +316,42 @@ export const addStock = async(req,res)=>{
 
 
         const {
+
             productId,
+
             quantity
+
         } = req.body;
 
 
 
+
         const inventory =
-            await inventoryService
-            .addStockService(
-                productId,
-                quantity,
-                req.user._id
-            );
+        await inventoryService
+        .addStockService(
+
+            productId,
+
+            quantity,
+
+            req.user.id
+
+        );
 
 
 
         return successResponse(
+
             res,
+
             200,
+
             "Stock added successfully",
+
             inventory
+
         );
+
 
 
     }
@@ -260,10 +359,15 @@ export const addStock = async(req,res)=>{
 
 
         return errorResponse(
+
             res,
+
             400,
+
             error.message
+
         );
+
 
     }
 
@@ -274,7 +378,13 @@ export const addStock = async(req,res)=>{
 
 
 
+
+
+
+
+// ==============================
 // Remove Stock
+// ==============================
 
 export const removeStock = async(req,res)=>{
 
@@ -283,27 +393,113 @@ export const removeStock = async(req,res)=>{
 
 
         const {
+
             productId,
+
             quantity
+
+        } = req.body;
+
+
+
+
+        const inventory =
+        await inventoryService
+        .removeStockService(
+
+            productId,
+
+            quantity,
+
+            req.user.id
+
+        );
+
+
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Stock removed successfully",
+
+            inventory
+
+        );
+
+
+    }
+    catch(error){
+
+        return errorResponse(
+
+            res,
+
+            400,
+
+            error.message
+
+        );
+
+    }
+
+};
+
+
+
+
+
+
+
+
+
+// ==============================
+// Reserve Stock
+// Order Pending
+// ==============================
+
+export const reserveStock = async(req,res)=>{
+
+
+    try{
+
+
+        const {
+
+            productId,
+
+            quantity
+
         } = req.body;
 
 
 
         const inventory =
-            await inventoryService
-            .removeStockService(
-                productId,
-                quantity,
-                req.user._id
-            );
+        await inventoryService
+        .reserveStockService(
+
+            productId,
+
+            quantity,
+
+            req.user.id
+
+        );
 
 
 
         return successResponse(
+
             res,
+
             200,
-            "Stock removed successfully",
+
+            "Stock reserved successfully",
+
             inventory
+
         );
 
 
@@ -312,12 +508,169 @@ export const removeStock = async(req,res)=>{
 
 
         return errorResponse(
+
             res,
+
             400,
+
             error.message
+
         );
 
+
     }
+
+
+};
+
+
+
+
+
+
+
+
+
+// ==============================
+// Release Reserved Stock
+// Order Cancel
+// ==============================
+
+export const releaseReservedStock = async(req,res)=>{
+
+
+    try{
+
+
+        const {
+
+            productId,
+
+            quantity
+
+        } = req.body;
+
+
+
+        const inventory =
+        await inventoryService
+        .releaseReservedStockService(
+
+            productId,
+
+            quantity,
+
+            req.user.id
+
+        );
+
+
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Reserved stock released",
+
+            inventory
+
+        );
+
+
+    }
+    catch(error){
+
+
+        return errorResponse(
+
+            res,
+
+            400,
+
+            error.message
+
+        );
+
+
+    }
+
+
+};
+
+// ==============================
+// Return Stock
+// ==============================
+
+
+export const returnStock = async(req,res)=>{
+
+
+try{
+
+
+const {
+
+productId,
+
+quantity,
+
+description
+
+}=req.body;
+
+
+
+
+const inventory =
+await inventoryService
+.returnStockService(
+
+productId,
+
+quantity,
+
+req.user.id,
+
+description
+
+);
+
+
+
+
+return successResponse(
+
+res,
+
+200,
+
+"Stock returned successfully",
+
+inventory
+
+);
+
+
+
+}
+catch(error){
+
+
+return errorResponse(
+
+res,
+
+400,
+
+error.message
+
+);
+
+
+}
+
 
 
 };

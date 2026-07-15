@@ -1,176 +1,106 @@
 import Joi from "joi";
 
-
-
 export const createProductValidation = Joi.object({
 
-    name:{
-        type:String
-    },
+    // Basic Information
+    name: Joi.string()
+        .trim()
+        .min(2)
+        .max(150)
+        .required(),
 
+    barcode: Joi.string()
+        .allow("")
+        .optional(),
+
+    category: Joi.string()
+        .required(),
+
+    brand: Joi.string()
+        .required(),
+
+    description: Joi.string()
+        .allow("")
+        .optional(),
+
+    shortDescription: Joi.string()
+        .allow("")
+        .optional(),
+
+    // Pricing
+    pricing: Joi.object({
+
+        purchasePrice: Joi.number()
+            .min(0)
+            .required(),
+
+        sellingPrice: Joi.number()
+            .min(0)
+            .required(),
+
+        mrp: Joi.number()
+            .min(0)
+            .required(),
+
+        discount: Joi.number()
+            .min(0)
+            .default(0),
+
+        gst: Joi.number()
+            .min(0)
+            .default(0)
+
+    }).required(),
+
+    // SEO
+    metaTitle: Joi.string()
+        .allow("")
+        .optional(),
+
+    metaDescription: Joi.string()
+        .allow("")
+        .optional(),
+
+    // Specifications
+    specifications: Joi.object()
+        .default({})
 
 });
 
 
-export const productValidation = Joi.object({
 
-    name: Joi.string()
-        .trim()
-        .min(2)
-        .required()
-        .messages({
+export const updateProductValidation = Joi.object({
 
-            "string.empty":
-            "Product name is required",
+    name: Joi.string().trim(),
 
-            "any.required":
-            "Product name is required"
+    barcode: Joi.string().allow(""),
 
-        }),
+    category: Joi.string(),
 
+    brand: Joi.string(),
 
+    description: Joi.string().allow(""),
 
-    category: Joi.string()
-        .required()
-        .messages({
+    shortDescription: Joi.string().allow(""),
 
-            "any.required":
-            "Category is required"
+    pricing: Joi.object({
 
-        }),
+        purchasePrice: Joi.number(),
 
+        sellingPrice: Joi.number(),
 
+        mrp: Joi.number(),
 
-    brand: Joi.string()
-        .required()
-        .messages({
+        discount: Joi.number(),
 
-            "any.required":
-            "Brand is required"
+        gst: Joi.number()
 
-        }),
+    }),
 
+    metaTitle: Joi.string().allow(""),
 
+    metaDescription: Joi.string().allow(""),
 
-    description:Joi.string()
-        .allow("")
-        .optional(),
-
-
-
-    shortDescription:Joi.string()
-        .allow("")
-        .optional(),
-
-
-
-    images:Joi.array()
-        .items(
-            Joi.object({
-
-                url:Joi.string()
-                    .required(),
-
-                alt:Joi.string()
-                    .allow("")
-
-            })
-        )
-        .optional(),
-
-
-
-
-    pricing:Joi.object({
-
-
-        purchasePrice:Joi.number()
-            .min(0)
-            .default(0),
-
-
-
-        sellingPrice:Joi.number()
-            .positive()
-            .required()
-            .messages({
-
-                "number.base":
-                "Selling price must be number",
-
-                "any.required":
-                "Selling price is required"
-
-            }),
-
-
-
-        mrp:Joi.number()
-            .min(0)
-            .optional(),
-
-
-
-        discount:Joi.number()
-            .min(0)
-            .max(100)
-            .optional(),
-
-
-
-        gst:Joi.number()
-            .min(0)
-            .max(100)
-            .optional()
-
-
-    })
-    .required(),
-
-
-
-
-    stock:Joi.number()
-        .min(0)
-        .default(0),
-
-
-
-
-    minimumStock:Joi.number()
-        .min(0)
-        .default(0),
-
-
-
-
-    specifications:Joi.object()
-        .optional(),
-
-
-
-
-    metaTitle:Joi.string()
-        .allow("")
-        .optional(),
-
-
-
-    metaDescription:Joi.string()
-        .allow("")
-        .optional(),
-
-
-
-
-    status:Joi.string()
-        .valid(
-            "ACTIVE",
-            "INACTIVE",
-            "OUT_OF_STOCK",
-            "DISCONTINUED"
-        )
-        .optional()
-
+    specifications: Joi.object()
 
 });
