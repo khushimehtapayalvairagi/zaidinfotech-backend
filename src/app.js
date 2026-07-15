@@ -3,6 +3,7 @@ import cors from "cors";
 import path from "path";
 import userRoutes from "./modules/users/user.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import addressRoutes from "./modules/addresses/address.routes.js";
 
 import categoryRoutes from "./modules/categories/category.routes.js";
 
@@ -49,6 +50,7 @@ app.use("/api/brands", brandRoutes);
 app.use("/api/products",productRoutes);
 app.use("/api/inventory",inventoryRoutes);
 app.use("/api/stock-transactions",stockTransactionRoutes);
+app.use("/api/addresses",addressRoutes);
 export default app;
 
 
