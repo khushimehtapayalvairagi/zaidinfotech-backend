@@ -67,7 +67,11 @@ gst:Number(req.body.gst || 0)
 
 };
 
-
+req.body.slug = req.body.name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "");
 
 const product =
 await createProductService(

@@ -61,8 +61,25 @@ router.get(
     getProducts
 );
 
+// ==========================
+// CUSTOMER SHOP ROUTE
+// ==========================
 
 
+router.get(
+    "/shop",
+    getShopProducts
+);
+
+
+// Search Product
+
+router.get(
+    "/search",
+    verifyToken,
+    allowRoles("ADMIN"),
+    searchProduct
+);
 
 // Get Single Product
 
@@ -99,28 +116,12 @@ router.delete(
 
 
 
-// Search Product
-
-router.get(
-    "/search",
-    verifyToken,
-    allowRoles("ADMIN"),
-    searchProduct
-);
 
 
 
 
 
-// ==========================
-// CUSTOMER SHOP ROUTE
-// ==========================
 
-
-router.get(
-    "/shop",
-    getShopProducts
-);
 
 
 

@@ -40,6 +40,9 @@ export const createProductService = async (
     const existingProduct =
         await getProductByNameDB(data.name);
 
+    // const existingProduct =
+    // await getProductByNameDB(data.productName);
+
     if (existingProduct) {
         throw new Error("Product already exists");
     }
@@ -111,6 +114,7 @@ await getProductByBarcodeDB(data.barcode);
             url: file.path,
 
             alt: data.name
+            // alt: data.productName
 
         }));
 
@@ -199,12 +203,12 @@ export const updateProductService = async (
     data
 ) => {
 
-    if (data.name) {
+    // if (data.name) {
 
-        data.slug =
-            generateSlug(data.name);
+    //     data.slug =
+    //         generateSlug(data.name);
 
-    }
+    // }
 
     const product =
         await updateProductDB(id, data);
