@@ -11,7 +11,7 @@ import brandRoutes from "./modules/brands/brand.routes.js";
 import productRoutes from "./modules/products/product.routes.js";
 import  cartRoutes  from "./modules/cart/cart.routes.js"
 import wishlistRoutes from "./modules/wishlist/wishlist.routes.js";
-
+import orderRoutes from "./modules/orders/order.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import stockTransactionRoutes from "./modules/inventory/stockTransaction/stockTransaction.routes.js";
 
@@ -55,6 +55,7 @@ app.use("/api/stock-transactions",stockTransactionRoutes);
 app.use("/api/addresses",addressRoutes);
 app.use("/api/cart",cartRoutes);
 app.use("/api/wishlist",wishlistRoutes);
+app.use("/api/orders",orderRoutes);
 export default app;
 
 
