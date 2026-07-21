@@ -14,6 +14,7 @@ import wishlistRoutes from "./modules/wishlist/wishlist.routes.js";
 import orderRoutes from "./modules/orders/order.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import stockTransactionRoutes from "./modules/inventory/stockTransaction/stockTransaction.routes.js";
+import paymentRoutes from "./modules/payments/payment.routes.js";
 
 
 const app = express();
@@ -56,6 +57,7 @@ app.use("/api/addresses",addressRoutes);
 app.use("/api/cart",cartRoutes);
 app.use("/api/wishlist",wishlistRoutes);
 app.use("/api/orders",orderRoutes);
+app.use("/api/payments",paymentRoutes);
 export default app;
 
 
