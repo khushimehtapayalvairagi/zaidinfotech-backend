@@ -6,63 +6,45 @@ import * as wishlistService from "./wishlist.service.js";
 // ADD PRODUCT TO WISHLIST
 // =======================================
 
-export const addToWishlist = async(req,res)=>{
+export const addToWishlist = async (req, res) => {
 
+    try {
 
-    try{
+        console.log("==========================");
+        console.log("REQ.USER =", req.user);
+        console.log("BODY =", req.body);
 
+        const userId = req.user?._id || req.user?.id;
 
-        const userId = req.user._id;
-
+        console.log("USER ID =", userId);
 
         const { productId } = req.body;
 
+        console.log("PRODUCT ID =", productId);
 
-
-        const wishlist =
-
-        await wishlistService.addProductToWishlist(
-
+        const wishlist = await wishlistService.addProductToWishlist(
             userId,
-
             productId
-
         );
 
-
-
         res.status(200).json({
-
-            success:true,
-
-            message:
-            "Product added to wishlist",
-
+            success: true,
+            message: "Product added to wishlist",
             wishlist
-
         });
 
+    } catch (error) {
 
-
-    }
-
-    catch(error){
-
+        console.log(error);
 
         res.status(400).json({
-
-            success:false,
-
-            message:error.message
-
+            success: false,
+            message: error.message
         });
-
 
     }
 
-
 };
-
 
 
 
