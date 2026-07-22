@@ -184,6 +184,25 @@ orderStatus:{
         type:String
 
     },
+    
+    orderSource: {
+    type: String,
+    enum: [
+        "ONLINE",
+        "WALK_IN"
+    ],
+    default: "ONLINE"
+},
+   
+deliveryType: {
+    type: String,
+    enum: [
+        "PICKUP",
+        "HOME_DELIVERY"
+    ],
+    default: "PICKUP"
+},
+            
 
 
     // Delivery information
