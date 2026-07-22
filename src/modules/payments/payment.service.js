@@ -11,21 +11,29 @@ import {
 // CREATE PAYMENT
 // =======================================
 
-export const createPayment = async(paymentData)=>{
+export const createPayment = async (paymentData) => {
 
+    // Generate Receipt Number
+    paymentData.receiptNumber = await generateReceiptNumber();
 
-    const payment =
+    // Default Currency
+    if (!paymentData.currency) {
+        paymentData.currency = "INR";
+    }
 
-    await paymentRepository.createPayment(
-        paymentData
-    );
-
-
-    return payment;
+    return await paymentRepository.createPayment(paymentData);
 
 };
 
+const generateReceiptNumber = async () => {
 
+    const count = await paymentRepository.getPaymentCount();
+
+    const nextNumber = count + 1;
+
+    return `PAY${new Date().getFullYear()}${String(nextNumber).padStart(6, "0")}`;
+
+};
 
 
 // =======================================
@@ -129,9 +137,13 @@ export const markPaymentSuccess = async(
 
     paymentId,
 
-    transactionId,
+   transactionId,
 
-    gatewayResponse
+gatewayPaymentId,
+
+gateway,
+
+gatewayResponse
 
 )=>{
 
@@ -154,17 +166,21 @@ export const markPaymentSuccess = async(
 
 
 
-    return await paymentRepository.updatePaymentStatus(
+  return await paymentRepository.updatePaymentStatus(
 
-        paymentId,
+    paymentId,
 
-        PAYMENT_STATUS.SUCCESS,
+    PAYMENT_STATUS.SUCCESS,
 
-        transactionId,
+    transactionId,
 
-        gatewayResponse
+    gatewayPaymentId,
 
-    );
+    gateway,
+
+    gatewayResponse
+
+);
 
 };
 
@@ -202,21 +218,15 @@ export const markPaymentFailed = async(
 
 
 
-    return await paymentRepository.updatePaymentStatus(
+   return await paymentRepository.updatePaymentStatus(
 
-        paymentId,
+    paymentId,
 
-        PAYMENT_STATUS.FAILED,
+    PAYMENT_STATUS.FAILED,
 
-        "",
+    failureReason
 
-        {
-
-            reason
-
-        }
-
-    );
+);
 
 };
 
@@ -233,7 +243,15 @@ export const refundPayment = async(paymentId)=>{
     const payment =
 
     await paymentRepository.getPaymentById(
-        paymentId
+       refundPayment(
+
+paymentId,
+
+refundReason,
+
+refundedAmount
+
+)
     );
 
 
@@ -248,12 +266,16 @@ export const refundPayment = async(paymentId)=>{
 
 
 
-    return await paymentRepository.updateRefundStatus(
+  return await paymentRepository.updateRefundStatus(
 
-        paymentId,
+    paymentId,
 
-        PAYMENT_STATUS.REFUNDED
+    PAYMENT_STATUS.REFUNDED,
 
-    );
+    refundReason,
+
+    refundedAmount
+
+);
 
 };

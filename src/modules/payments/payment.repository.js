@@ -41,12 +41,13 @@ export const getPaymentByReference = async (
 
     return await Payment.findOne({
 
-        paymentFor,
+    paymentFor,
 
+    referenceId,
 
-        referenceId
+    isDeleted:false
 
-    });
+});
 
 };
 
@@ -58,11 +59,13 @@ export const getPaymentByReference = async (
 
 export const getUserPayments = async (userId) => {
 
-    return await Payment.find({
+ Payment.find({
 
-        user: userId
+    user:userId,
 
-    }).sort({
+    isDeleted:false
+
+}).sort({
 
         createdAt: -1
 
@@ -120,7 +123,9 @@ export const updatePaymentStatus = async (
 
             gatewayResponse,
 
-            paidAt: new Date()
+          paymentDate:new Date(),
+
+           paidAt:new Date()
 
         },
 
@@ -152,13 +157,17 @@ export const updateRefundStatus = async (
 
         paymentId,
 
-        {
+   {
 
-            paymentStatus,
+paymentStatus,
 
-            refundedAt: new Date()
+refundReason,
 
-        },
+refundedAmount,
+
+refundedAt:new Date()
+
+},
 
         {
 

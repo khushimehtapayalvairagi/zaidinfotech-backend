@@ -247,11 +247,15 @@ export const paymentSuccess = async(req,res)=>{
 
         const {
 
-            transactionId,
+transactionId,
 
-            gatewayResponse
+gatewayPaymentId,
 
-        } = req.body;
+gateway,
+
+gatewayResponse
+
+}= req.body;
 
 
 
@@ -318,7 +322,7 @@ export const paymentFailed = async(req,res)=>{
 
         const {
 
-            reason
+            failureReason
 
         } = req.body;
 
@@ -388,6 +392,7 @@ export const refundPayment = async(req,res)=>{
         await paymentService.refundPayment(
 
             id
+            
 
         );
 

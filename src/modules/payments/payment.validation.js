@@ -87,12 +87,14 @@ export const createPaymentValidation = Joi.object({
 
 export const paymentSuccessValidation = Joi.object({
 
+     gateway:Joi.string(),
 
+       gatewayPaymentId:Joi.string(),
     transactionId:Joi.string()
 
     .allow(""),
 
-
+  
 
 
     gatewayResponse:Joi.object()
@@ -116,7 +118,7 @@ export const paymentSuccessValidation = Joi.object({
 export const paymentFailedValidation = Joi.object({
 
 
-    reason:Joi.string()
+    failureReason:Joi.string()
 
     .allow("")
 
@@ -137,7 +139,9 @@ export const paymentFailedValidation = Joi.object({
 export const refundPaymentValidation = Joi.object({
 
 
-    reason:Joi.string()
+    refundReason:Joi.string(),
+
+refundedAmount:Joi.string()
 
     .allow("")
 

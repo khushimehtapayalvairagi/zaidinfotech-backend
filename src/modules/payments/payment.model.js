@@ -5,179 +5,153 @@ import { PAYMENT_METHOD } from "../../common/constants/paymentMethod.js";
 import { PAYMENT_FOR } from "../../common/constants/paymentFor.js";
 
 const paymentSchema = new mongoose.Schema(
-
-{
-
-    // User who made payment
-
-    user:{
-
-        type:mongoose.Schema.Types.ObjectId,
-
-        ref:"User",
-
-        required:true
-
-    },
-
-
-
-    // ORDER / REPAIR / RENTAL
-
-    paymentFor:{
-
-        type:String,
-
-        enum:Object.values(PAYMENT_FOR),
-
-        required:true
-
-    },
-
-
-
-    // Reference Id
-
-    referenceId:{
-
-        type:mongoose.Schema.Types.ObjectId,
-
-        required:true
-
-    },
-
-
-
-    // Amount
-
-    amount:{
-
-        type:Number,
-
-        required:true,
-
-        min:0
-
-    },
-
-
-
-    // Payment Method
-
-    paymentMethod:{
-
-        type:String,
-
-        enum:Object.values(PAYMENT_METHOD),
-
-        required:true
-
-    },
-
-
-
-    // Payment Status
-
-    paymentStatus:{
-
-        type:String,
-
-        enum:Object.values(PAYMENT_STATUS),
-
-        default:PAYMENT_STATUS.PENDING
-
-    },
-
-
-
-    // Gateway Transaction Id
-
-    transactionId:{
-
-        type:String,
-
-        default:""
-
-    },
-
-
-
-    // Gateway Name
-
-    gateway:{
-
-        type:String,
-
-        default:""
-
-    },
-
-
-
-    // Gateway Response
-
-    gatewayResponse:{
-
-        type:Object,
-
-        default:{}
-
-    },
-
-
-
-    // Failure Reason
-
-    failureReason:{
-
-        type:String,
-
-        default:""
-
-    },
-
-
-
-    // Paid Time
-
-    paidAt:{
-
-        type:Date
-
-    },
-
-
-
-    // Refund Time
-
-    refundedAt:{
-
-        type:Date
-
-    }
-
-
+    {
+
+        // Customer
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
+        // ORDER / REPAIR / RENTAL
+        paymentFor: {
+            type: String,
+            enum: Object.values(PAYMENT_FOR),
+            required: true
+        },
+
+        // Order Id / Repair Id / Rental Id
+        referenceId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            index: true
+        },
+
+        // Receipt Number
+        receiptNumber: {
+            type: String,
+            unique: true,
+            required: true,
+            trim: true
+        },
+
+        // Amount
+        amount: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+
+        // Currency
+        currency: {
+            type: String,
+            default: "INR",
+            uppercase: true
+        },
+
+        // Payment Method
+        paymentMethod: {
+            type: String,
+            enum: Object.values(PAYMENT_METHOD),
+            required: true
+        },
+
+        // Payment Status
+        paymentStatus: {
+            type: String,
+            enum: Object.values(PAYMENT_STATUS),
+            default: PAYMENT_STATUS.PENDING
+        },
+
+        // Payment Gateway
+        gateway: {
+            type: String,
+            default: ""
+        },
+
+        // Gateway Transaction Id
+        transactionId: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        // Gateway Payment Id
+        gatewayPaymentId: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        // Complete Gateway Response
+        gatewayResponse: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
+        },
+
+        // Failure Reason
+        failureReason: {
+            type: String,
+            default: ""
+        },
+
+        isDeleted:{
+
+    type:Boolean,
+
+    default:false
 
 },
 
-{
+        // Refund Amount
+        refundedAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-    timestamps:true
+        // Refund Reason
+        refundReason: {
+            type: String,
+            default: ""
+        },
 
-}
+        // Payment Date
+        paymentDate: {
+            type: Date
+        },
 
+        // Paid At
+        paidAt: {
+            type: Date
+        },
+
+        // Refunded At
+        refundedAt: {
+            type: Date
+        }
+
+    },
+    {
+        timestamps: true
+    }
 );
+
+// Helpful indexes
+paymentSchema.index({
+    paymentFor: 1,
+    referenceId: 1
+});
+
+
 
 
 
 const Payment = mongoose.model(
-
     "Payment",
-
     paymentSchema
-
 );
-
-
 
 export default Payment;
