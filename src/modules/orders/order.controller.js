@@ -312,3 +312,38 @@ export const updatePaymentStatus = async(
     }
 
 };
+
+// =======================================
+// GET ALL ORDERS
+// =======================================
+
+export const getAllOrders = async (req, res) => {
+
+    try {
+
+        const orders =
+            await orderService.getAllOrders();
+
+        res.status(200).json({
+
+            success: true,
+
+            orders
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(400).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};

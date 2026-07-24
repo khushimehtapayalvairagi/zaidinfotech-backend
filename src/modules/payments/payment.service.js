@@ -143,6 +143,8 @@ gatewayPaymentId,
 
 gateway,
 
+
+
 gatewayResponse
 
 )=>{
@@ -215,18 +217,25 @@ export const markPaymentFailed = async(
         );
 
     }
-
-
-
-   return await paymentRepository.updatePaymentStatus(
+return await paymentRepository.updatePaymentFailed(
 
     paymentId,
 
-    PAYMENT_STATUS.FAILED,
-
-    failureReason
+    reason
 
 );
+
+
+
+//    return await paymentRepository.updatePaymentStatus(
+
+//     paymentId,
+
+//     PAYMENT_STATUS.FAILED,
+
+//     failureReason
+
+// );
 
 };
 
@@ -237,45 +246,95 @@ export const markPaymentFailed = async(
 // REFUND PAYMENT
 // =======================================
 
-export const refundPayment = async(paymentId)=>{
+// export const refundPayment = async(paymentId)=>{
 
 
-    const payment =
+//     const payment =
 
-    await paymentRepository.getPaymentById(
-       refundPayment(
+//     await paymentRepository.getPaymentById(
+//        refundPayment(
 
-paymentId,
+// paymentId,
 
-refundReason,
+// refundReason,
 
-refundedAmount
+// refundedAmount
 
-)
-    );
-
-
-
-    if(!payment){
-
-        throw new Error(
-            "Payment not found"
-        );
-
-    }
+// )
+//     );
 
 
 
-  return await paymentRepository.updateRefundStatus(
+//     if(!payment){
+
+//         throw new Error(
+//             "Payment not found"
+//         );
+
+//     }
+
+
+
+//   return await paymentRepository.updateRefundStatus(
+
+//     paymentId,
+
+//     PAYMENT_STATUS.REFUNDED,
+
+//     refundReason,
+
+//     refundedAmount
+
+// );
+
+// };
+
+export const refundPayment = async (
 
     paymentId,
-
-    PAYMENT_STATUS.REFUNDED,
 
     refundReason,
 
     refundedAmount
 
-);
+)=>{
+
+    const payment = await paymentRepository.getPaymentById(
+
+        paymentId
+
+    );
+
+    if(!payment){
+
+        throw new Error("Payment not found");
+
+    }
+
+    return await paymentRepository.updateRefundStatus(
+
+        paymentId,
+
+        PAYMENT_STATUS.REFUNDED,
+
+        refundReason,
+
+        refundedAmount
+
+    );
+
+};
+
+// =======================================
+// GET PAYMENT COUNT
+// =======================================
+
+export const getPaymentCount = async () => {
+
+    return await Payment.countDocuments({
+
+        isDeleted: false
+
+    });
 
 };

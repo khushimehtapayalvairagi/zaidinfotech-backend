@@ -81,63 +81,49 @@ const orderSchema = new mongoose.Schema(
 
     // Delivery Address Snapshot
 
-    shippingAddress:{
+   shippingAddress:{
 
-
-        name:{
-
-            type:String,
-
-            required:true
-
-        },
-
-
-        mobile:{
-
-            type:String,
-
-            required:true
-
-        },
-
-
-        streetAddress:{
-
-            type:String,
-
-            required:true
-
-        },
-
-
-        city:{
-
-            type:String,
-
-            required:true
-
-        },
-
-
-        state:{
-
-            type:String,
-
-            required:true
-
-        },
-
-
-        pincode:{
-
-            type:String,
-
-            required:true
-
-        }
-
+    fullName:{
+        type:String,
+        required:true
     },
+
+    phone:{
+        type:String,
+        required:true
+    },
+
+    addressLine:{
+        type:String,
+        required:true
+    },
+
+    city:{
+        type:String,
+        required:true
+    },
+
+    state:{
+        type:String,
+        required:true
+    },
+
+    pincode:{
+        type:String,
+        required:true
+    },
+
+    country:{
+        type:String,
+        default:"India"
+    },
+
+    landmark:{
+        type:String,
+        default:""
+    }
+
+},
 
 
 
@@ -192,15 +178,6 @@ orderStatus:{
         "WALK_IN"
     ],
     default: "ONLINE"
-},
-   
-deliveryType: {
-    type: String,
-    enum: [
-        "PICKUP",
-        "HOME_DELIVERY"
-    ],
-    default: "PICKUP"
 },
             
 

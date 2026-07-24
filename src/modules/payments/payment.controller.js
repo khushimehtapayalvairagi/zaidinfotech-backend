@@ -261,15 +261,29 @@ gatewayResponse
 
         const payment =
 
+        // await paymentService.markPaymentSuccess(
+
+        //     id,
+
+        //     transactionId,
+
+        //     gatewayResponse
+
+        // );
+
         await paymentService.markPaymentSuccess(
 
-            id,
+    id,
 
-            transactionId,
+    transactionId,
 
-            gatewayResponse
+    gatewayPaymentId,
 
-        );
+    gateway,
+
+    gatewayResponse
+
+);
 
 
 
@@ -334,7 +348,7 @@ export const paymentFailed = async(req,res)=>{
 
             id,
 
-            reason
+               failureReason
 
         );
 
@@ -382,19 +396,37 @@ export const refundPayment = async(req,res)=>{
 
     try{
 
+        const {
 
-        const {id}=req.params;
+    refundReason,
+
+    refundedAmount
+
+} = req.body;
+
+const payment = await paymentService.refundPayment(
+
+    id,
+
+    refundReason,
+
+    refundedAmount
+
+);
+
+
+        // const {id}=req.params;
 
 
 
-        const payment =
+        // const payment =
 
-        await paymentService.refundPayment(
+        // await paymentService.refundPayment(
 
-            id
+        //     id
             
 
-        );
+        // );
 
 
 

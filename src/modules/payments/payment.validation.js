@@ -141,7 +141,13 @@ export const refundPaymentValidation = Joi.object({
 
     refundReason:Joi.string(),
 
-refundedAmount:Joi.string()
+// refundedAmount:Joi.string()
+
+refundedAmount: Joi.number()
+
+.min(0)
+
+.required()
 
     .allow("")
 

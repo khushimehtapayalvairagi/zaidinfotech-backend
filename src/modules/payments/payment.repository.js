@@ -57,15 +57,32 @@ export const getPaymentByReference = async (
 // GET USER PAYMENTS
 // =======================================
 
+// export const getUserPayments = async (userId) => {
+
+//  Payment.find({
+
+//     user:userId,
+
+//     isDeleted:false
+
+// }).sort({
+
+//         createdAt: -1
+
+//     });
+
+// };
+
+
 export const getUserPayments = async (userId) => {
 
- Payment.find({
+    return await Payment.find({
 
-    user:userId,
+        user: userId,
 
-    isDeleted:false
+        isDeleted: false
 
-}).sort({
+    }).sort({
 
         createdAt: -1
 
@@ -99,15 +116,63 @@ export const getAllPayments = async () => {
 // UPDATE PAYMENT STATUS
 // =======================================
 
+// export const updatePaymentStatus = async (
+
+//     paymentId,
+
+//     paymentStatus,
+
+//     transactionId = "",
+
+//     gatewayResponse = {}
+
+// ) => {
+
+//     return await Payment.findByIdAndUpdate(
+
+//         paymentId,
+
+//         {
+
+//             paymentStatus,
+
+//             transactionId,
+
+//             gatewayResponse,
+
+//           paymentDate:new Date(),
+
+//            paidAt:new Date()
+
+//         },
+
+//         {
+
+//             new: true
+
+//         }
+
+//     );
+
+// };
+
+
 export const updatePaymentStatus = async (
 
     paymentId,
 
     paymentStatus,
 
-    transactionId = "",
+    transactionId,
 
-    gatewayResponse = {}
+    gatewayPaymentId,
+
+    gateway,
+
+    gatewayResponse,
+
+
+    failureReason
 
 ) => {
 
@@ -121,11 +186,19 @@ export const updatePaymentStatus = async (
 
             transactionId,
 
+            gatewayPaymentId,
+
+            gateway,
+
             gatewayResponse,
 
-          paymentDate:new Date(),
+            paymentDate: new Date(),
 
-           paidAt:new Date()
+            paidAt: new Date(),
+
+            paymentStatus: "FAILED",
+
+            failureReason
 
         },
 
@@ -141,15 +214,55 @@ export const updatePaymentStatus = async (
 
 
 
+
 // =======================================
 // UPDATE REFUND STATUS
 // =======================================
+
+// export const updateRefundStatus = async (
+
+//     paymentId,
+
+//     paymentStatus
+
+// ) => {
+
+//     return await Payment.findByIdAndUpdate(
+
+//         paymentId,
+
+//    {
+
+// paymentStatus,
+
+// refundReason,
+
+// refundedAmount,
+
+// refundedAt:new Date()
+
+// },
+
+//         {
+
+//             new: true
+
+//         }
+
+//     );
+
+// };
+
 
 export const updateRefundStatus = async (
 
     paymentId,
 
-    paymentStatus
+    paymentStatus,
+
+    refundReason,
+
+    refundedAmount
 
 ) => {
 
@@ -157,17 +270,17 @@ export const updateRefundStatus = async (
 
         paymentId,
 
-   {
+        {
 
-paymentStatus,
+            paymentStatus,
 
-refundReason,
+            refundReason,
 
-refundedAmount,
+            refundedAmount,
 
-refundedAt:new Date()
+            refundedAt: new Date()
 
-},
+        },
 
         {
 

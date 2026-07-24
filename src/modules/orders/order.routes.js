@@ -11,7 +11,9 @@ import {
 
     updateOrderStatus,
 
-    updatePaymentStatus
+    updatePaymentStatus,
+
+    getAllOrders
 
 
 } from "./order.controller.js";
@@ -79,7 +81,15 @@ router.get(
 );
 
 
+router.get(
 
+    "/",
+
+    verifyToken,
+
+    getAllOrders
+
+);
 
 // =======================================
 // GET SINGLE ORDER
