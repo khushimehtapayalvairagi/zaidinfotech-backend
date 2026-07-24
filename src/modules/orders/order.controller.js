@@ -49,19 +49,19 @@ export const createOrder = async(req,res)=>{
 
     }
 
-    catch(error){
+   catch(error){
 
+    console.log("CREATE ORDER ERROR 👉", error);
 
-        res.status(400).json({
+    res.status(400).json({
 
-            success:false,
+        success:false,
 
-            message:error.message
+        message:error.message
 
-        });
+    });
 
-
-    }
+}
 
 };
 
