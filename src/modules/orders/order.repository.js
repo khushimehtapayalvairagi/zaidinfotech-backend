@@ -7,16 +7,30 @@ import Order from "./order.model.js";
 // Create New Order
 // =======================================
 
-export const createOrder = async(orderData)=>{
+// export const createOrder = async(orderData)=>{
 
+
+//     const order = new Order(orderData);
+
+
+//     return await order.save();
+
+// };
+
+
+
+
+// =======================================
+// CREATE ORDER
+// =======================================
+
+export const createOrder = async (orderData) => {
 
     const order = new Order(orderData);
-
 
     return await order.save();
 
 };
-
 
 
 

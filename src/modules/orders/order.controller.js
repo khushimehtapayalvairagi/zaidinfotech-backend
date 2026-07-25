@@ -7,64 +7,120 @@ import * as orderService from "./order.service.js";
 // CREATE ORDER
 // =======================================
 
-export const createOrder = async(req,res)=>{
+// export const createOrder = async(req,res)=>{
 
 
-    try{
+//     try{
 
 
+//         const userId = req.user._id;
+
+
+//         const orderData = {
+
+//             ...req.body,
+
+//             user:userId
+
+//         };
+
+
+
+//         const order =
+
+//         await orderService.createOrder(
+//             orderData
+//         );
+
+
+
+//         res.status(201).json({
+
+//             success:true,
+
+//             message:
+//             "Order created successfully",
+
+//             order
+
+//         });
+
+
+
+//     }
+
+//    catch(error){
+
+//     console.log("CREATE ORDER ERROR 👉", error);
+
+//     res.status(400).json({
+
+//         success:false,
+
+//         message:error.message
+
+//     });
+
+// }
+
+// };
+
+
+// =======================================
+// CREATE ORDER
+// =======================================
+
+export const createOrder = async (req, res) => {
+
+    try {
+
+        // Logged-in user
         const userId = req.user._id;
 
-
+        // Request body + logged-in user
         const orderData = {
 
             ...req.body,
 
-            user:userId
+            user: userId
 
         };
 
+        console.log("CREATE ORDER DATA:");
+        console.log(orderData);
 
-
-        const order =
-
-        await orderService.createOrder(
+        const order = await orderService.createOrder(
             orderData
         );
 
-
-
         res.status(201).json({
 
-            success:true,
+            success: true,
 
-            message:
-            "Order created successfully",
+            message: "Order created successfully",
 
             order
 
         });
 
+    }
 
+    catch (error) {
+
+        console.log("CREATE ORDER ERROR:");
+        console.log(error);
+
+        res.status(400).json({
+
+            success: false,
+
+            message: error.message
+
+        });
 
     }
 
-   catch(error){
-
-    console.log("CREATE ORDER ERROR 👉", error);
-
-    res.status(400).json({
-
-        success:false,
-
-        message:error.message
-
-    });
-
-}
-
 };
-
 
 
 
