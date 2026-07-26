@@ -257,3 +257,148 @@ export const updateEmployeeStatus = async (
   }
 
 };
+
+
+
+
+// ===============================
+// Update Employee Salary
+// ===============================
+
+export const updateSalary = async(req,res)=>{
+
+try{
+
+
+const employee =
+await userService.updateSalary(
+
+req.params.id,
+
+req.body.salaryDetails
+
+);
+
+
+res.status(200).json({
+
+success:true,
+
+message:"Salary updated successfully",
+
+data:employee
+
+});
+
+
+}
+catch(error){
+
+res.status(400).json({
+
+success:false,
+
+message:error.message
+
+});
+
+}
+
+
+};
+
+
+
+
+
+// ===============================
+// Add Salary History
+// ===============================
+
+export const addSalaryHistory = async(req,res)=>{
+
+try{
+
+
+const employee =
+await userService.addSalaryHistory(
+
+req.params.id,
+
+req.body
+
+);
+
+
+
+res.status(200).json({
+
+success:true,
+
+message:"Salary payment added",
+
+data:employee
+
+});
+
+
+}
+catch(error){
+
+res.status(400).json({
+
+success:false,
+
+message:error.message
+
+});
+
+}
+
+};
+
+
+
+
+
+// ===============================
+// Get Salary History
+// ===============================
+
+export const getSalaryHistory = async(req,res)=>{
+
+
+try{
+
+
+const employee =
+await userService.getSalaryHistory(
+req.params.id
+);
+
+
+
+res.status(200).json({
+
+success:true,
+
+data:employee
+
+});
+
+
+}
+catch(error){
+
+res.status(400).json({
+
+success:false,
+
+message:error.message
+
+});
+
+}
+
+
+};

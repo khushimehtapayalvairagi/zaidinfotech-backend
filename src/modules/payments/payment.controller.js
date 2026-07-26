@@ -1,6 +1,173 @@
 import * as paymentService from "./payment.service.js";
+import Order from "../orders/order.model.js";
 
 
+//Create Razorpay Order
+// =======================================
+// CREATE RAZORPAY ORDER
+// =======================================
+
+export const createRazorpayOrder = async (req, res) => {
+
+    try {
+
+        const {
+            orderId
+        } = req.body;
+
+
+        if (!orderId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Order ID is required"
+
+            });
+
+        }
+
+
+        // IMPORTANT:
+        // Apne order service/model ke according
+        // yahan order fetch karna hoga.
+
+        // const Order =
+        //     (await import("../orders/order.model.js"))
+        //         .default;
+
+
+        const order =
+            await Order.findById(orderId);
+
+
+        if (!order) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Order not found"
+
+            });
+
+        }
+
+
+        const razorpayOrder =
+            await paymentService.createRazorpayPaymentOrder(
+
+                order.totalAmount,
+
+                `order_${order._id}`
+
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Razorpay order created successfully",
+
+            order: razorpayOrder
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "CREATE RAZORPAY ORDER ERROR:",
+            error
+        );
+
+        return res.status(400).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};
+
+
+
+// =======================================
+// VERIFY RAZORPAY PAYMENT
+// =======================================
+
+export const verifyRazorpayPaymentController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+
+            paymentId,
+
+            razorpayOrderId,
+
+            razorpayPaymentId,
+
+            razorpaySignature
+
+        } = req.body;
+
+
+        const payment =
+            await paymentService.verifyRazorpayPaymentService({
+
+                paymentId,
+
+                razorpayOrderId,
+
+                razorpayPaymentId,
+
+                razorpaySignature
+
+            });
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Payment verified successfully",
+
+            payment
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "VERIFY RAZORPAY PAYMENT ERROR:",
+            error
+        );
+
+        return res.status(400).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};
 
 
 // =======================================
@@ -396,6 +563,7 @@ export const refundPayment = async(req,res)=>{
 
     try{
 
+        const { id } = req.params;
         const {
 
     refundReason,

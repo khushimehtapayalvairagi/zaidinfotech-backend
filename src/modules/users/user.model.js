@@ -120,11 +120,76 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    joiningDate: {
-      type: Date,
-      default: null,
+
+salaryDetails: {
+
+    salaryType: {
+        type: String,
+        enum: [
+            "MONTHLY",
+            "DAILY"
+        ],
+        default: "MONTHLY"
     },
 
+    amount: {
+        type: Number,
+        default: 0
+    },
+
+    joiningDate: {
+        type: Date
+    }
+
+},
+
+
+salaryHistory: [
+
+    {
+
+        month: {
+            type: String,
+            required: true
+        },
+
+        amount: {
+            type: Number,
+            required: true
+        },
+
+        paymentDate: {
+            type: Date
+        },
+
+        paymentMode: {
+            type: String,
+            enum: [
+                "CASH",
+                "BANK",
+                "UPI"
+            ]
+        },
+
+        status: {
+            type: String,
+            enum: [
+                "PAID",
+                "PENDING"
+            ],
+            default: "PENDING"
+        },
+
+        remark: {
+            type: String,
+            default: ""
+        }
+
+    }
+
+],
+
+  
     // ==================================================
     // Account Status
     // ==================================================

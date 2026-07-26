@@ -16,6 +16,7 @@ import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import stockTransactionRoutes from "./modules/inventory/stockTransaction/stockTransaction.routes.js";
 import paymentRoutes from "./modules/payments/payment.routes.js";
 import shipmentRoutes from "./modules/shipment/shipment.routes.js";
+import offerRoutes from "./modules/offer/offer.routes.js";
 
 
 const app = express();
@@ -58,6 +59,7 @@ app.use("/api/addresses",addressRoutes);
 app.use("/api/cart",cartRoutes);
 app.use("/api/wishlist",wishlistRoutes);
 app.use("/api/orders",orderRoutes);
+app.use("/api/offers",offerRoutes);
 app.use("/api/payments",paymentRoutes);
 app.use("/api/shipment",shipmentRoutes);
 export default app;

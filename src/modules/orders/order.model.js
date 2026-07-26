@@ -15,6 +15,7 @@ const orderSchema = new mongoose.Schema(
 
         ref:"User",
 
+        
         required:true
 
     },
@@ -23,59 +24,92 @@ const orderSchema = new mongoose.Schema(
 
     // Products purchased
 
-    orderItems:[
+  orderItems:[
 
-        {
+{
 
-            product:{
+    product:{
 
-                type:mongoose.Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
 
-                ref:"Product",
+        ref:"Product",
 
-                required:true
+        required:true
 
-            },
-
-
-            title:{
-
-                type:String,
-
-                required:true
-
-            },
+    },
 
 
-            quantity:{
+    title:{
 
-                type:Number,
+        type:String,
 
-                required:true,
+        required:true
 
-                min:1
-
-            },
+    },
 
 
-            price:{
+    quantity:{
 
-                type:Number,
+        type:Number,
 
-                required:true
+        required:true,
 
-            },
+        min:1
+
+    },
 
 
-            imageUrl:{
+    // Product original price
+    originalPrice:{
 
-                type:String
+        type:Number,
 
-            }
+        required:true
 
-        }
+    },
 
-    ],
+
+    // Offer discount amount
+    discountAmount:{
+
+        type:Number,
+
+        default:0
+
+    },
+
+
+    // Final price after offer
+    price:{
+
+        type:Number,
+
+        required:true
+
+    },
+
+
+    // Applied offer reference
+    offer:{
+
+        type:mongoose.Schema.Types.ObjectId,
+
+        ref:"Offer",
+
+        default:null
+
+    },
+
+
+    imageUrl:{
+
+        type:String
+
+    }
+
+}
+
+],
 
 
 

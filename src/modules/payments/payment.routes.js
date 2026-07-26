@@ -4,21 +4,19 @@ import express from "express";
 import {
 
     createPayment,
-
     getPaymentById,
-
     getMyPayments,
-
     getAllPayments,
-
     paymentSuccess,
-
     paymentFailed,
-
-    refundPayment
-
+    refundPayment,
+    createRazorpayOrder,
+    verifyRazorpayPaymentController
 
 } from "./payment.controller.js";
+
+
+
 
 
 
@@ -47,7 +45,34 @@ import { verifyToken } from "../../common/middleware/auth.middleware.js";
 const router = express.Router();
 
 
+// =======================================
+// CREATE RAZORPAY ORDER
+// =======================================
 
+router.post(
+
+    "/razorpay/order",
+
+    verifyToken,
+
+    createRazorpayOrder
+
+);
+
+
+// =======================================
+// VERIFY RAZORPAY PAYMENT
+// =======================================
+
+router.post(
+
+    "/razorpay/verify",
+
+    verifyToken,
+
+    verifyRazorpayPaymentController
+
+);
 
 // =======================================
 // CREATE PAYMENT

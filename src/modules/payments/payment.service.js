@@ -3,8 +3,111 @@ import * as paymentRepository from "./payment.repository.js";
 import {
     PAYMENT_STATUS
 } from "../../common/constants/paymentStatus.js";
+import {
+    createRazorpayOrder,
+    verifyRazorpayPayment
+} from "./razorpay.service.js";
+
+// =======================================
+// CREATE RAZORPAY ORDER
+// =======================================
+
+export const createRazorpayPaymentOrder = async (
+
+    amount,
+    receipt
+
+) => {
+
+    return await createRazorpayOrder({
+
+        amount,
+
+        receipt
+
+    });
+
+};
 
 
+// =======================================
+// VERIFY RAZORPAY PAYMENT
+// =======================================
+
+export const verifyRazorpayPaymentService = async ({
+
+    paymentId,
+
+    razorpayOrderId,
+
+    razorpayPaymentId,
+
+    razorpaySignature
+
+}) => {
+
+
+    const payment =
+        await paymentRepository.getPaymentById(
+            paymentId
+        );
+
+
+    if (!payment) {
+
+        throw new Error(
+            "Payment not found"
+        );
+
+    }
+
+
+    const isValid =
+        verifyRazorpayPayment({
+
+            razorpayOrderId,
+
+            razorpayPaymentId,
+
+            razorpaySignature
+
+        });
+
+
+    if (!isValid) {
+
+        throw new Error(
+            "Invalid Razorpay payment signature"
+        );
+
+    }
+
+
+    return await paymentRepository.updatePaymentStatus(
+
+        paymentId,
+
+        PAYMENT_STATUS.SUCCESS,
+
+        razorpayPaymentId,
+
+        razorpayPaymentId,
+
+        "RAZORPAY",
+
+        {
+
+            razorpayOrderId,
+
+            razorpayPaymentId,
+
+            razorpaySignature
+
+        }
+
+    );
+
+};
 
 
 // =======================================
@@ -330,8 +433,9 @@ export const refundPayment = async (
 // =======================================
 
 export const getPaymentCount = async () => {
+       return await paymentRepository.getPaymentCount({
 
-    return await Payment.countDocuments({
+    // return await Payment.countDocuments({
 
         isDeleted: false
 

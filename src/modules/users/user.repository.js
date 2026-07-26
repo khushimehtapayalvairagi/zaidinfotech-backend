@@ -154,3 +154,72 @@ export const updateEmployeeStatus = async (
   }
 
 };
+
+
+
+
+
+// ===============================
+// Update Employee Salary
+// ===============================
+
+export const updateSalary = async (id, salaryData) => {
+
+    return await User.findByIdAndUpdate(
+        id,
+        {
+            salaryDetails: salaryData
+        },
+        {
+            new:true
+        }
+    );
+
+};
+
+
+
+// ===============================
+// Add Salary History
+// ===============================
+
+export const addSalaryHistory = async (
+    id,
+    salaryData
+) => {
+
+    return await User.findByIdAndUpdate(
+
+        id,
+
+        {
+            $push:{
+                salaryHistory: salaryData
+            }
+        },
+
+        {
+            new:true
+        }
+
+    );
+
+};
+
+
+
+// ===============================
+// Get Salary History
+// ===============================
+
+export const getSalaryHistory = async(id)=>{
+
+    const user = await User.findById(id)
+    .select(
+        "firstName lastName employeeId salaryHistory salaryDetails"
+    );
+
+
+    return user;
+
+};

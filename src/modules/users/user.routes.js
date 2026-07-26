@@ -13,7 +13,11 @@ import {
   updateCustomerProfile,
   getProfile,
   getEmployees,
-  updateEmployeeStatus
+  updateEmployeeStatus,
+  getSalaryHistory,
+  addSalaryHistory,
+  updateSalary
+
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -126,6 +130,59 @@ router.delete(
   verifyToken,
   allowRoles("SUPER_ADMIN", "ADMIN"),
   deleteUser
+);
+
+
+router.put(
+"/:id/salary",
+
+verifyToken,
+
+allowRoles(
+"SUPER_ADMIN",
+"ADMIN"
+),
+
+updateSalary
+
+);
+
+
+
+
+// Add Salary Payment History
+
+router.post(
+"/:id/salary-history",
+
+verifyToken,
+
+allowRoles(
+"SUPER_ADMIN",
+"ADMIN"
+),
+
+addSalaryHistory
+
+);
+
+
+
+
+// Get Salary History
+
+router.get(
+"/:id/salary-history",
+
+verifyToken,
+
+allowRoles(
+"SUPER_ADMIN",
+"ADMIN"
+),
+
+getSalaryHistory
+
 );
 
 export default router;

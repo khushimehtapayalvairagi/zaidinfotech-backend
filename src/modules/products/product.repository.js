@@ -1,5 +1,6 @@
 import Product from "./product.model.js";
 import Inventory from "../inventory/inventory.model.js";
+import Offer from "../offer/offer.model.js";
 
 
 // Create Product
@@ -229,121 +230,56 @@ export const getProductByBarcodeDB = async (barcode) => {
 
 
 // Customer Shop Products
+export const getShopProductsDB = async () => {
 
-export const getShopProductsDB = async()=>{
+    const products = await Product.find({
+        status:"ACTIVE",
+        isDeleted:false
+    })
+    .populate("category")
+    .populate("brand");
 
 
-const products =
-await Product.find({
+    const activeOffers = await Offer.find({
 
-    isDeleted:false,
+        status:"ACTIVE",
 
-    status:"ACTIVE"
+        startDate:{
+            $lte:new Date()
+        },
 
-})
+        endDate:{
+            $gte:new Date()
+        }
 
-.populate(
-    "category",
-    "name slug"
-)
-
-.populate(
-    "brand",
-    "name"
-)
-
-.lean();
-
+    });
 
 
 
-const result =
-await Promise.all(
-
-products.map(async(product)=>{
+    const productsWithOffer = products.map(product => {
 
 
-const inventory =
-await Inventory.findOne({
-
-product:product._id,
-
-isDeleted:false
-
-})
-.lean();
+        const offer = activeOffers.find(
+            offer =>
+            offer.products.some(
+                id => id.toString() === product._id.toString()
+            )
+        );
 
 
+        return {
 
-return {
+            ...product.toObject(),
 
+            offer: offer || null
 
-_id:product._id,
-
-
-name:product.name,
-
-
-slug:product.slug,
+        };
 
 
-images:product.images,
+    });
 
 
 
-pricing:{
-
-sellingPrice:
-product.pricing.sellingPrice,
-
-mrp:
-product.pricing.mrp,
-
-discount:
-product.pricing.discount
-
-},
-
-
-
-category:
-product.category,
-
-
-brand:
-product.brand,
-
-
-
-
-// Inventory Data
-
-availability:
-
-inventory && 
-inventory.currentStock -
-inventory.reservedStock > 0
-
-?
-
-"IN_STOCK"
-
-:
-
-"OUT_OF_STOCK"
-
-
-
-};
-
-
-})
-
-);
-
-
-
-return result;
-
+    return productsWithOffer;
 
 };

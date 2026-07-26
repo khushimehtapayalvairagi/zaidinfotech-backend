@@ -13,6 +13,9 @@ export const createPayment = async (paymentData) => {
     return await payment.save();
 
 };
+export const getPaymentCount = async () => {
+    return await Payment.countDocuments();
+};
 
 
 
@@ -176,39 +179,22 @@ export const updatePaymentStatus = async (
 
 ) => {
 
-    return await Payment.findByIdAndUpdate(
-
-        paymentId,
-
-        {
-
-            paymentStatus,
-
-            transactionId,
-
-            gatewayPaymentId,
-
-            gateway,
-
-            gatewayResponse,
-
-            paymentDate: new Date(),
-
-            paidAt: new Date(),
-
-            paymentStatus: "FAILED",
-
-            failureReason
-
-        },
-
-        {
-
-            new: true
-
-        }
-
-    );
+  return await Payment.findByIdAndUpdate(
+    paymentId,
+    {
+        paymentStatus,
+        transactionId,
+        gatewayPaymentId,
+        gateway,
+        gatewayResponse,
+        paymentDate: new Date(),
+        paidAt: new Date(),
+        failureReason
+    },
+    {
+        new: true
+    }
+);
 
 };
 

@@ -26,6 +26,9 @@ export const getCartByUserDB = async (userId) => {
                 path: "category",
                 select: "name slug"
             },
+              {
+     path:"offer"
+   },
 
             {
                 path: "brand",

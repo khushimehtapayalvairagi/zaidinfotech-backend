@@ -14,6 +14,26 @@ const cartItemSchema = new mongoose.Schema(
       default: 1,
       min: 1,
     },
+    price:{
+ type:Number,
+ required:true
+},
+
+
+ originalPrice:{
+  type:Number
+ },
+
+
+ discountAmount:{
+  type:Number,
+  default:0
+ },
+
+
+ finalPrice:{
+  type:Number
+ }
   },
   {
     _id: false,

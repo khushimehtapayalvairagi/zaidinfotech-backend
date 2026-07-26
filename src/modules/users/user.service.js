@@ -241,3 +241,95 @@ export const updateEmployeeStatus = async (
   return employee;
 
 };
+
+
+
+// ===============================
+// Update Employee Salary
+// ===============================
+
+export const updateSalary = async(
+    id,
+    salaryData
+)=>{
+
+
+    const employee =
+    await userRepository.updateSalary(
+        id,
+        salaryData
+    );
+
+
+    if(!employee){
+
+        throw new Error(
+            "Employee not found"
+        );
+
+    }
+
+
+    return employee;
+
+};
+
+
+
+
+// ===============================
+// Add Salary History
+// ===============================
+
+export const addSalaryHistory = async(
+    id,
+    salaryData
+)=>{
+
+
+    const employee =
+    await userRepository.addSalaryHistory(
+        id,
+        salaryData
+    );
+
+
+    if(!employee){
+
+        throw new Error(
+            "Employee not found"
+        );
+
+    }
+
+
+    return employee;
+
+};
+
+
+
+
+// ===============================
+// Get Salary History
+// ===============================
+
+export const getSalaryHistory = async(id)=>{
+
+
+    const employee =
+    await userRepository.getSalaryHistory(id);
+
+
+    if(!employee){
+
+        throw new Error(
+            "Employee not found"
+        );
+
+    }
+
+
+    return employee;
+
+};
