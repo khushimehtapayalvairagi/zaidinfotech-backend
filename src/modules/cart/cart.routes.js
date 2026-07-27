@@ -5,6 +5,8 @@ import {
 
     addToCart,
     getCart,
+    updateCartQuantity,
+    removeCartItem,
     clearCart
 
 } from "./cart.controller.js";
@@ -72,6 +74,36 @@ router.get(
 
 );
 
+
+// =================================
+// Update Cart Quantity
+// =================================
+
+router.put(
+
+    "/item/:productId",
+
+    verifyToken,
+
+    updateCartQuantity
+
+);
+
+
+
+// =================================
+// Remove Cart Item
+// =================================
+
+router.delete(
+
+    "/item/:productId",
+
+    verifyToken,
+
+    removeCartItem
+
+);
 
 
 

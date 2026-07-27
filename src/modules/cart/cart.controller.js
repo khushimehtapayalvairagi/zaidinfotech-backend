@@ -2,6 +2,8 @@ import {
 
     addToCartService,
     getCartService,
+    updateCartQuantityService,
+    removeCartItemService,
     clearCartService
 
 } from "./cart.service.js";
@@ -131,7 +133,126 @@ export const getCart = async(req,res)=>{
 };
 
 
+// =================================
+// Update Cart Quantity
+// =================================
 
+export const updateCartQuantity = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            productId
+        } = req.params;
+
+
+        const {
+            quantity
+        } = req.body;
+
+
+        const cart =
+            await updateCartQuantityService(
+
+                req.user.id,
+
+                productId,
+
+                Number(quantity)
+
+            );
+
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Cart quantity updated successfully",
+
+            cart
+
+        );
+
+    }
+
+    catch (error) {
+
+        return errorResponse(
+
+            res,
+
+            400,
+
+            error.message
+
+        );
+
+    }
+
+};
+
+
+
+// =================================
+// Remove Cart Item
+// =================================
+
+export const removeCartItem = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            productId
+        } = req.params;
+
+
+        const cart =
+            await removeCartItemService(
+
+                req.user.id,
+
+                productId
+
+            );
+
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Product removed from cart successfully",
+
+            cart
+
+        );
+
+    }
+
+    catch (error) {
+
+        return errorResponse(
+
+            res,
+
+            400,
+
+            error.message
+
+        );
+
+    }
+
+};
 
 
 

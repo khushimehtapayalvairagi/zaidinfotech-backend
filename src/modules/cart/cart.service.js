@@ -26,7 +26,10 @@ export const addToCartService = async (
 
         product,
 
-        quantity
+        quantity,
+        originalPrice,
+        discountAmount,
+        finalPrice,
 
     } = data;
 
@@ -181,6 +184,177 @@ export const getCartService = async(
 
 };
 
+
+// =================================
+// Update Cart Quantity
+// =================================
+
+export const updateCartQuantityService = async (
+    userId,
+    productId,
+    quantity
+) => {
+
+    // Quantity validation
+    if (
+        !Number.isInteger(quantity) ||
+        quantity < 1
+    ) {
+
+        throw new Error(
+            "Quantity must be at least 1"
+        );
+
+    }
+
+
+    // Product check
+    const product =
+        await Product.findById(productId);
+
+
+    if (!product) {
+
+        throw new Error(
+            "Product not found"
+        );
+
+    }
+
+
+    // Inventory check
+    const inventory =
+        await Inventory.findOne({
+
+            product: productId,
+
+            isDeleted: false
+
+        });
+
+
+    if (!inventory) {
+
+        throw new Error(
+            "Inventory not found"
+        );
+
+    }
+
+
+    const availableStock =
+        inventory.currentStock -
+        inventory.reservedStock;
+
+
+    if (quantity > availableStock) {
+
+        throw new Error(
+            `Only ${availableStock} item(s) available in stock`
+        );
+
+    }
+
+
+    // Get cart
+    const cart =
+        await getCartByUserDB(userId);
+
+
+    if (!cart) {
+
+        throw new Error(
+            "Cart not found"
+        );
+
+    }
+
+
+    // Find item
+    const cartItem =
+        cart.items.find(
+
+            item =>
+                item.product._id.toString() ===
+                productId.toString()
+
+        );
+
+
+    if (!cartItem) {
+
+        throw new Error(
+            "Product not found in cart"
+        );
+
+    }
+
+
+    // Update quantity
+    cartItem.quantity =
+        quantity;
+
+
+    await saveCartDB(cart);
+
+
+    // Return updated populated cart
+    return await getCartByUserDB(userId);
+
+};
+
+export const removeCartItemService = async (
+    userId,
+    productId
+) => {
+
+    const cart =
+        await getCartByUserDB(userId);
+
+
+    if (!cart) {
+
+        throw new Error(
+            "Cart not found"
+        );
+
+    }
+
+
+    const oldLength =
+        cart.items.length;
+
+
+    cart.items =
+        cart.items.filter(
+
+            item =>
+                item.product._id.toString() !==
+                productId.toString()
+
+        );
+
+
+    if (
+        cart.items.length ===
+        oldLength
+    ) {
+
+        throw new Error(
+            "Product not found in cart"
+        );
+
+    }
+
+
+    await saveCartDB(cart);
+
+
+    return await getCartByUserDB(userId);
+
+};
+
+
 // =================================
 // Clear Cart
 // =================================
@@ -196,3 +370,23 @@ export const clearCartService = async(
     );
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
