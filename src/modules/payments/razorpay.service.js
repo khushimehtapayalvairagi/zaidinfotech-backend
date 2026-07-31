@@ -1,45 +1,142 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-
 import dotenv from "dotenv";
+
 dotenv.config();
 
-// console.log("KEY_ID:", process.env.RAZORPAY_KEY_ID);
-// console.log("KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET);
 
-const razorpay = new Razorpay({
+// =======================================
+// ENV
+// =======================================
 
-    key_id: process.env.RAZORPAY_KEY_ID,
+const razorpayKeyId =
+    process.env.RAZORPAY_KEY_ID;
 
-    key_secret: process.env.RAZORPAY_KEY_SECRET
+const razorpayKeySecret =
+    process.env.RAZORPAY_KEY_SECRET;
 
-});
+
+if (!razorpayKeyId) {
+
+    throw new Error(
+        "RAZORPAY_KEY_ID is missing in backend .env"
+    );
+
+}
+
+if (!razorpayKeySecret) {
+
+    throw new Error(
+        "RAZORPAY_KEY_SECRET is missing in backend .env"
+    );
+
+}
+
+
+// =======================================
+// RAZORPAY INSTANCE
+// =======================================
+
+const razorpay =
+    new Razorpay({
+
+        key_id:
+            razorpayKeyId,
+
+        key_secret:
+            razorpayKeySecret,
+
+    });
 
 
 // =======================================
 // CREATE RAZORPAY ORDER
 // =======================================
 
-
 export const createRazorpayOrder = async ({
+
     amount,
-    receipt
+
+    receipt,
+
 }) => {
 
-    const options = {
+    try {
 
-        amount: Math.round(amount * 100),
+        const numericAmount =
+            Number(amount);
 
-        currency: "INR",
+        if (
+            !Number.isFinite(numericAmount) ||
+            numericAmount <= 0
+        ) {
 
-        receipt
+            throw new Error(
+                "Invalid payment amount"
+            );
 
-    };
+        }
 
-    const razorpayOrder =
-        await razorpay.orders.create(options);
+        if (!receipt) {
 
-    return razorpayOrder;
+            throw new Error(
+                "Receipt is required"
+            );
+
+        }
+
+        const options = {
+
+            amount:
+                Math.round(
+                    numericAmount * 100
+                ),
+
+            currency:
+                "INR",
+
+            receipt:
+                String(receipt),
+
+        };
+
+        console.log(
+            "RAZORPAY CREATE ORDER OPTIONS =",
+            options
+        );
+
+        const razorpayOrder =
+            await razorpay.orders.create(
+                options
+            );
+
+        console.log(
+            "RAZORPAY CREATED ORDER =",
+            razorpayOrder
+        );
+
+        return razorpayOrder;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "RAZORPAY CREATE ORDER ERROR =",
+            error.response?.data ||
+            error.message ||
+            error
+        );
+
+        throw new Error(
+
+            error.response?.data?.error?.description ||
+            error.message ||
+            "Unable to create Razorpay order"
+
+        );
+
+    }
 
 };
 
@@ -54,26 +151,50 @@ export const verifyRazorpayPayment = ({
 
     razorpayPaymentId,
 
-    razorpaySignature
+    razorpaySignature,
 
 }) => {
 
-  
-       const body = `${razorpayOrderId}|${razorpayPaymentId}`;
+    try {
 
-    const expectedSignature =
-        crypto
+        if (
+            !razorpayOrderId ||
+            !razorpayPaymentId ||
+            !razorpaySignature
+        ) {
 
-            .createHmac(
-                "sha256",
-                process.env.RAZORPAY_KEY_SECRET
-            )
+            return false;
 
-            .update(body)
+        }
 
-            .digest("hex");
+        const body =
+            `${razorpayOrderId}|${razorpayPaymentId}`;
 
+        const expectedSignature =
+            crypto
+                .createHmac(
+                    "sha256",
+                    razorpayKeySecret
+                )
+                .update(body)
+                .digest("hex");
 
-    return expectedSignature === razorpaySignature;
+        return (
+            expectedSignature ===
+            razorpaySignature
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "RAZORPAY VERIFY ERROR =",
+            error.message
+        );
+
+        return false;
+
+    }
 
 };

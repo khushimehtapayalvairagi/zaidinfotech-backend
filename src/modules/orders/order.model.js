@@ -1,249 +1,547 @@
-import mongoose from "mongoose";
-import { ORDER_STATUS } from "../../common/constants/orderStatus.js";
+// import mongoose from "mongoose";
+// import { ORDER_STATUS } from "../../common/constants/orderStatus.js";
 
 
 
-const orderSchema = new mongoose.Schema(
+// const orderSchema = new mongoose.Schema(
 
-{
+// {
 
-    // Customer who placed order
+//     // Customer who placed order
 
-    user:{
+//     user:{
 
-        type:mongoose.Schema.Types.ObjectId,
+//         type:mongoose.Schema.Types.ObjectId,
 
-        ref:"User",
+//         ref:"User",
 
         
-        required:true
+//         required:true
 
-    },
+//     },
 
 
 
-    // Products purchased
+//     // Products purchased
 
-  orderItems:[
+//   orderItems:[
 
-{
+// {
 
-    product:{
+//     product:{
 
-        type:mongoose.Schema.Types.ObjectId,
+//         type:mongoose.Schema.Types.ObjectId,
 
-        ref:"Product",
+//         ref:"Product",
 
-        required:true
+//         required:true
 
-    },
+//     },
 
 
-    title:{
+//     title:{
 
-        type:String,
+//         type:String,
 
-        required:true
+//         required:true
 
-    },
+//     },
 
 
-    quantity:{
+//     quantity:{
 
-        type:Number,
+//         type:Number,
 
-        required:true,
+//         required:true,
 
-        min:1
+//         min:1
 
-    },
+//     },
 
 
-    // Product original price
-    originalPrice:{
+//     // Product original price
+//     originalPrice:{
 
-        type:Number,
+//         type:Number,
 
-        required:true
+//         required:true
 
-    },
+//     },
 
 
-    // Offer discount amount
-    discountAmount:{
+//     // Offer discount amount
+//     discountAmount:{
 
-        type:Number,
+//         type:Number,
 
-        default:0
+//         default:0
 
-    },
+//     },
 
 
-    // Final price after offer
-    price:{
+//     // Final price after offer
+//     price:{
 
-        type:Number,
+//         type:Number,
 
-        required:true
+//         required:true
 
-    },
+//     },
 
 
-    // Applied offer reference
-    offer:{
+//     // Applied offer reference
+//     offer:{
 
-        type:mongoose.Schema.Types.ObjectId,
+//         type:mongoose.Schema.Types.ObjectId,
 
-        ref:"Offer",
+//         ref:"Offer",
 
-        default:null
+//         default:null
 
-    },
+//     },
 
 
-    imageUrl:{
+//     imageUrl:{
 
-        type:String
+//         type:String
 
-    }
+//     }
 
-}
+// }
 
-],
+// ],
 
 
 
-    // Delivery Address Snapshot
+//     // Delivery Address Snapshot
 
-   shippingAddress:{
+//    shippingAddress:{
 
-    fullName:{
-        type:String,
-        required:true
-    },
+//     fullName:{
+//         type:String,
+//         required:true
+//     },
 
-    phone:{
-        type:String,
-        required:true
-    },
+//     phone:{
+//         type:String,
+//         required:true
+//     },
 
-    addressLine:{
-        type:String,
-        required:true
-    },
+//     addressLine:{
+//         type:String,
+//         required:true
+//     },
 
-    city:{
-        type:String,
-        required:true
-    },
+//     city:{
+//         type:String,
+//         required:true
+//     },
 
-    state:{
-        type:String,
-        required:true
-    },
+//     state:{
+//         type:String,
+//         required:true
+//     },
 
-    pincode:{
-        type:String,
-        required:true
-    },
+//     pincode:{
+//         type:String,
+//         required:true
+//     },
 
-    country:{
-        type:String,
-        default:"India"
-    },
+//     country:{
+//         type:String,
+//         default:"India"
+//     },
 
-    landmark:{
-        type:String,
-        default:""
-    }
+//     landmark:{
+//         type:String,
+//         default:""
+//     }
 
-},
+// },
 
 
 
-    // Total Amount
+//     // Total Amount
 
-    totalAmount:{
+//     totalAmount:{
 
-        type:Number,
+//         type:Number,
 
-        required:true
+//         required:true
 
-    },
+//     },
 
+//   coupon: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "Coupon",
+//     default: null
+// },
 
+// // Coupon Code Snapshot
+// couponCode: {
+//     type: String,
+//     default: ""
+// },
 
-    // Order Status
+// // Coupon Discount
+// couponDiscount: {
+//     type: Number,
+//     default: 0
+// },
 
+//     // Order Status
 
+// // Final Amount After Coupon
+// finalAmount: {
 
+//     type: Number,
 
-orderStatus:{
-    type:String,
-    enum:Object.values(ORDER_STATUS),
-    default:ORDER_STATUS.PENDING
-},
+//     required: true
 
+// },
 
 
-    // Payment Status
+// orderStatus:{
+//     type:String,
+//     enum:Object.values(ORDER_STATUS),
+//     default:ORDER_STATUS.PENDING
+// },
 
-    paymentStatus:{
 
-        type:String,
 
-        default:"PENDING"
+//     // Payment Status
 
-    },
+//     paymentStatus:{
 
+//         type:String,
 
-    // Payment Reference (future gateway)
+//         default:"PENDING"
 
-    paymentId:{
+//     },
 
-        type:String
 
-    },
+//     // Payment Reference (future gateway)
+
+//     paymentId:{
+
+//         type:String
+
+//     },
     
-    orderSource: {
-    type: String,
-    enum: [
-        "ONLINE",
-        "WALK_IN"
-    ],
-    default: "ONLINE"
-},
+//     orderSource: {
+//     type: String,
+//     enum: [
+//         "ONLINE",
+//         "WALK_IN"
+//     ],
+//     default: "ONLINE"
+// },
             
 
 
-    // Delivery information
+//     // Delivery information
 
-    deliveryDate:{
+//     deliveryDate:{
 
-        type:Date
+//         type:Date
 
-    }
+//     }
 
 
-},
+// },
 
-{
+// {
 
-    timestamps:true
+//     timestamps:true
 
-}
+// }
 
+
+// );
+
+
+
+// const Order = mongoose.model(
+
+//     "Order",
+
+//     orderSchema
+
+// );
+
+
+// export default Order;
+
+
+import mongoose from "mongoose";
+
+import {
+  ORDER_STATUS
+} from "../../common/constants/orderStatus.js";
+
+
+// ======================================================
+// ORDER SCHEMA
+// ======================================================
+
+const orderSchema = new mongoose.Schema(
+
+  {
+
+    // ====================================================
+    // CUSTOMER
+    // ====================================================
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+
+    // ====================================================
+    // WALK-IN SALE PERSON
+    // ====================================================
+
+    soldBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+
+    // ====================================================
+    // ORDER ITEMS
+    // ====================================================
+
+    orderItems: [
+
+      {
+
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+
+
+        title: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+
+
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+
+
+        // Original product price
+        originalPrice: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+
+
+        // Discount
+        discountAmount: {
+          type: Number,
+          default: 0,
+          min: 0,
+        },
+
+
+        // Final selling price
+        price: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+
+
+        // Offer
+        offer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Offer",
+          default: null,
+        },
+
+
+        // Product image
+        imageUrl: {
+          type: String,
+          default: "",
+        },
+
+      },
+
+    ],
+
+
+    // ====================================================
+    // SHIPPING ADDRESS
+    // ====================================================
+
+    shippingAddress: {
+
+      fullName: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      phone: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      addressLine: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      city: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      state: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      pincode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+
+      country: {
+        type: String,
+        default: "India",
+      },
+
+
+      landmark: {
+        type: String,
+        default: "",
+      },
+
+    },
+
+
+    // ====================================================
+    // TOTAL
+    // ====================================================
+
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+
+    // ====================================================
+    // ORDER STATUS
+    // ====================================================
+
+    orderStatus: {
+      type: String,
+
+      enum: Object.values(
+        ORDER_STATUS
+      ),
+
+      default:
+        ORDER_STATUS.PENDING,
+    },
+
+
+    // ====================================================
+    // PAYMENT STATUS
+    // ====================================================
+
+    paymentStatus: {
+
+      type: String,
+
+      enum: [
+        "PENDING",
+        "PAID",
+        "FAILED",
+        "REFUNDED",
+      ],
+
+      default: "PENDING",
+
+    },
+
+
+    // Razorpay payment ID
+    paymentId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+
+    // ====================================================
+    // ORDER SOURCE
+    // ====================================================
+
+    orderSource: {
+
+      type: String,
+
+      enum: [
+        "ONLINE",
+        "WALK_IN",
+      ],
+
+      default: "ONLINE",
+
+    },
+
+
+    // ====================================================
+    // DELIVERY
+    // ====================================================
+
+    deliveryDate: {
+      type: Date,
+      default: null,
+    },
+
+  },
+
+  {
+    timestamps: true,
+  }
 
 );
 
 
+// ======================================================
+// MODEL
+// ======================================================
 
 const Order = mongoose.model(
-
-    "Order",
-
-    orderSchema
-
+  "Order",
+  orderSchema
 );
 
 

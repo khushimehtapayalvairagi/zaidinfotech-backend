@@ -1,188 +1,104 @@
 import Inventory from "./inventory.model.js";
 
+// =======================================
+// CREATE INVENTORY
+// =======================================
 
+export const createInventory = async (data) => {
+  return await Inventory.create(data);
+};
 
-// ==============================
-// Create Inventory
-// ==============================
+// =======================================
+// GET ALL INVENTORY
+// =======================================
 
-export const createInventory = async(data)=>{
+export const getAllInventory = async () => {
 
+    return await Inventory.find()
 
-    return await Inventory.create(data);
+        .populate({
+            path: "product",
+            populate: [
+                {
+                    path: "brand",
+                    select: "name"
+                },
+                {
+                    path: "category",
+                    select: "name"
+                }
+            ]
+        })
+
+        .sort({
+            createdAt: -1
+        });
 
 };
 
+// =======================================
+// GET INVENTORY BY ID
+// =======================================
 
-
-
-
-// ==============================
-// Get All Inventory
-// ==============================
-
-export const getAllInventory = async()=>{
-
-
-    return await Inventory.find({
-
-        isDeleted:false
-
-    })
+export const getInventoryById = async (id) => {
+  return await Inventory.findOne({
+    _id: id,
+    isDeleted: false,
+  })
 
     .populate(
-        "product",
-        "name sku images pricing"
+      "product",
+      "name sku images pricing brand category"
     )
 
     .populate(
-        "lastUpdatedBy",
-        "name email"
-    )
-
-    .sort({
-
-        createdAt:-1
-
-    });
-
-
-};
-
-
-
-
-
-
-
-// ==============================
-// Get Inventory By Id
-// ==============================
-
-export const getInventoryById = async(id)=>{
-
-
-    return await Inventory.findOne({
-
-        _id:id,
-
-        isDeleted:false
-
-    })
-
-    .populate(
-        "product",
-        "name sku images pricing"
-    )
-
-    .populate(
-        "lastUpdatedBy",
-        "name email"
+      "lastUpdatedBy",
+      "name firstName lastName email role"
     );
-
-
 };
 
+// =======================================
+// GET INVENTORY BY PRODUCT ID
+// =======================================
 
-
-
-
-
-
-
-
-// ==============================
-// Get Inventory By Product
-// ==============================
-
-export const getInventoryByProductId =
-async(productId)=>{
-
-
-    return await Inventory.findOne({
-
-        product:productId,
-
-        isDeleted:false
-
-    });
-
-
+export const getInventoryByProductId = async (
+  productId
+) => {
+  return await Inventory.findOne({
+    product: productId,
+    isDeleted: false,
+  });
 };
 
+// =======================================
+// UPDATE INVENTORY
+// =======================================
 
-
-
-
-
-
-
-
-// ==============================
-// Update Inventory
-// Supports:
-// normal update
-// $inc
-// ==============================
-
-export const updateInventory =
-async(
+export const updateInventory = async (
+  id,
+  data
+) => {
+  return await Inventory.findByIdAndUpdate(
     id,
-    data
-)=>{
-
-
-    return await Inventory.findByIdAndUpdate(
-
-        id,
-
-        data,
-
-        {
-
-            new:true
-
-        }
-
-    );
-
-
+    data,
+    {
+      new: true,
+    }
+  );
 };
 
+// =======================================
+// DELETE INVENTORY
+// =======================================
 
-
-
-
-
-
-
-
-// ==============================
-// Delete Inventory
-// Soft Delete
-// ==============================
-
-export const deleteInventory =
-async(id)=>{
-
-
-    return await Inventory.findByIdAndUpdate(
-
-        id,
-
-        {
-
-            isDeleted:true
-
-        },
-
-        {
-
-            new:true
-
-        }
-
-    );
-
-
+export const deleteInventory = async (id) => {
+  return await Inventory.findByIdAndUpdate(
+    id,
+    {
+      isDeleted: true,
+    },
+    {
+      new: true,
+    }
+  );
 };

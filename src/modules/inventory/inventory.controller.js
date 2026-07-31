@@ -9,7 +9,116 @@ errorResponse
 from "../../common/utils/apiResponse.js";
 
 
+import Inventory from "./inventory.model.js";
 
+// ======================================================
+// PUBLIC SHOP INVENTORY
+// Customer ke liye stock dekhne ka API
+// ======================================================
+
+export const getShopInventory = async (req, res) => {
+    try {
+
+        const inventory = await Inventory.find({
+            isDeleted: false
+        })
+        .populate({
+            path: "product",
+            select: "_id name sku"
+        })
+        .lean();
+
+        const data = inventory.map((item) => {
+
+            const currentStock =
+                Number(item.currentStock || 0);
+
+            const reservedStock =
+                Number(item.reservedStock || 0);
+
+            const availableStock =
+                Math.max(
+                    currentStock - reservedStock,
+                    0
+                );
+
+            let status = "OUT_OF_STOCK";
+
+            if (availableStock > 0) {
+
+                if (
+                    item.minimumStock !== undefined &&
+                    availableStock <= Number(item.minimumStock)
+                ) {
+
+                    status = "LOW_STOCK";
+
+                } else {
+
+                    status = "IN_STOCK";
+
+                }
+
+            }
+
+            return {
+
+                _id: item._id,
+
+                product: item.product,
+
+                currentStock,
+
+                reservedStock,
+
+                availableStock,
+
+                minimumStock:
+                    Number(item.minimumStock || 0),
+
+                maximumStock:
+                    Number(item.maximumStock || 0),
+
+                status
+
+            };
+
+        });
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Shop inventory fetched successfully",
+
+            data
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "SHOP INVENTORY ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to fetch shop inventory",
+
+            error:
+                error.message
+
+        });
+
+    }
+};
 
 // ==============================
 // Create Inventory

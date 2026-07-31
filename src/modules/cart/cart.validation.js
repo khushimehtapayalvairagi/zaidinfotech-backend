@@ -1,38 +1,95 @@
+// import Joi from "joi";
+
+
+
+// // =================================
+// // Add To Cart Validation
+// // =================================
+
+// export const addToCartValidation = Joi.object({
+
+//     product: Joi.string()
+//         .required()
+//         .messages({
+
+//             "any.required":
+//             "Product id is required"
+
+//         }),
+
+
+//     quantity: Joi.number()
+//         .integer()
+//         .min(1)
+//         .required()
+//         .messages({
+
+//             "number.base":
+//             "Quantity must be a number",
+
+//             "number.min":
+//             "Quantity must be at least 1",
+
+//             "any.required":
+//             "Quantity is required"
+
+//         })
+
+// });
+
+
+
+
+
+
+
+
+
 import Joi from "joi";
 
 
+// ======================================================
+// ADD TO CART VALIDATION
+// ======================================================
 
-// =================================
-// Add To Cart Validation
-// =================================
+export const addToCartValidation =
+    Joi.object({
 
-export const addToCartValidation = Joi.object({
+        product:
 
-    product: Joi.string()
-        .required()
-        .messages({
+            Joi.string()
+                .required()
+                .messages({
 
-            "any.required":
-            "Product id is required"
+                    "string.empty":
+                        "Product id is required",
 
-        }),
+                    "any.required":
+                        "Product id is required"
+
+                }),
 
 
-    quantity: Joi.number()
-        .integer()
-        .min(1)
-        .required()
-        .messages({
+        quantity:
 
-            "number.base":
-            "Quantity must be a number",
+            Joi.number()
+                .integer()
+                .min(1)
+                .required()
+                .messages({
 
-            "number.min":
-            "Quantity must be at least 1",
+                    "number.base":
+                        "Quantity must be a number",
 
-            "any.required":
-            "Quantity is required"
+                    "number.integer":
+                        "Quantity must be an integer",
 
-        })
+                    "number.min":
+                        "Quantity must be at least 1",
 
-});
+                    "any.required":
+                        "Quantity is required"
+
+                })
+
+    });

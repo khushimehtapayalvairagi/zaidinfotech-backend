@@ -16,26 +16,61 @@ return await StockTransaction.create(
 
 
 
-export const getTransactions =
-async(productId)=>{
+export const getTransactions = async (productId) => {
 
+    return await StockTransaction.find({
 
-return await StockTransaction.find({
+        product: productId
 
-product:productId
+    })
 
-})
+    .populate({
 
-.populate(
-"createdBy",
-"name email"
-)
+        path: "product",
 
-.sort({
+        select:
+            "name sku images brand category",
 
-createdAt:-1
+        populate: [
 
-});
+            {
+                path: "brand",
 
+                select: "name"
+
+            },
+
+            {
+                path: "category",
+
+                select: "name"
+
+            }
+
+        ]
+
+    })
+
+    .populate(
+
+        "inventory",
+
+        "currentStock reservedStock minimumStock maximumStock status unit"
+
+    )
+
+    .populate(
+
+        "createdBy",
+
+        "name email"
+
+    )
+
+    .sort({
+
+        createdAt: -1
+
+    });
 
 };

@@ -12,7 +12,8 @@ addStock,
 removeStock,
 reserveStock,
 releaseReservedStock,
-returnStock
+returnStock,
+getShopInventory
 
 }
 from "./inventory.controller.js";
@@ -46,7 +47,15 @@ const inventoryRoles = [
 ];
 
 
+// ======================================================
+// PUBLIC SHOP INVENTORY
+// Customer bina login stock dekh sakta hai
+// ======================================================
 
+router.get(
+    "/shop",
+    getShopInventory
+);
 
 
 router.post(

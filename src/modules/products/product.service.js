@@ -21,7 +21,15 @@ import {
     getProductByBarcodeDB
 } from "./product.repository.js";
 
-/*
+
+import { findProductsByReceptionist } from './product.repository.js';
+
+export const fetchProductsAddedByReceptionist = async (receptionistId) => {
+  const products = await findProductsByReceptionist(receptionistId);
+  return products;
+}
+  /*
+
 =========================================
 Create Product
 =========================================

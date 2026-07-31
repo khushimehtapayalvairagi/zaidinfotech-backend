@@ -9,7 +9,9 @@ getProductById,
 updateProduct,
 deleteProduct,
 searchProduct,
-getShopProducts
+getShopProducts,
+  getProductsAddedByReceptionist, 
+  getProductsOrderedByReceptionist
 
 } from "./product.controller.js";
 import {
@@ -31,6 +33,14 @@ const router = express.Router();
 
 
 
+
+
+
+
+  
+router.get('/receptionist/added/:receptionistId', getProductsAddedByReceptionist);
+
+router.get('/receptionist/ordered/:receptionistId', getProductsOrderedByReceptionist);
 
 // ==========================
 // ADMIN PRODUCT ROUTES

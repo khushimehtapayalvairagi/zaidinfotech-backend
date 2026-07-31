@@ -283,3 +283,8 @@ export const getShopProductsDB = async () => {
     return productsWithOffer;
 
 };
+
+
+export const findProductsByReceptionist = async (receptionistId) => {
+  return await Product.find({ addedBy: receptionistId }).sort({ createdAt: -1 });
+};

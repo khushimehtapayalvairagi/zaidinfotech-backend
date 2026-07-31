@@ -7,7 +7,9 @@ import {
     getCart,
     updateCartQuantity,
     removeCartItem,
-    clearCart
+    clearCart,
+    //  applyCoupon,
+    // removeCoupon
 
 } from "./cart.controller.js";
 
@@ -122,6 +124,34 @@ router.delete(
     clearCart
 
 );
+
+
+// =================================
+// Apply Coupon
+// =================================
+
+// router.post(
+
+//     "/apply-coupon",
+
+//     verifyToken,
+
+//     applyCoupon
+
+// );
+// =================================
+// Remove Coupon
+// =================================
+
+// router.delete(
+
+//     "/remove-coupon",
+
+//     verifyToken,
+
+//     removeCoupon
+
+// );
 
 
 

@@ -36,4 +36,20 @@ export const registerSchema = z.object({
     "ACCOUNTANT",
     "CUSTOMER",
   ]).optional(),
+
+
+  salaryDetails: z.object({
+
+    salaryType: z.enum([
+        "MONTHLY",
+        "DAILY"
+    ]).optional(),
+
+
+    amount: z.number().optional(),
+
+
+    joiningDate: z.string().optional()
+
+}).optional()
 });

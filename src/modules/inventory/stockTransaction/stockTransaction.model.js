@@ -1,145 +1,368 @@
+// import mongoose from "mongoose";
+
+
+// const stockTransactionSchema =
+// new mongoose.Schema(
+// {
+
+//     // Product
+
+//     product:{
+
+//         type:mongoose.Schema.Types.ObjectId,
+
+//         ref:"Product",
+
+//         required:true
+
+//     },
+
+
+//     // Inventory Reference
+
+//     inventory:{
+
+//         type:mongoose.Schema.Types.ObjectId,
+
+//         ref:"Inventory",
+
+//         required:true
+
+//     },
+
+
+
+//     // Transaction Type
+
+
+//     type:{
+
+//         type:String,
+
+//         enum:[
+
+//             "STOCK_IN",
+
+//             "STOCK_OUT",
+
+//             "ORDER",
+
+//             "REPAIR_USAGE",
+
+//             "RENTAL_OUT",
+
+//             "RETURN"
+
+//         ],
+
+//         required:true
+
+//     },
+
+
+
+
+//     // Quantity Changed
+
+//     quantity:{
+
+//         type:Number,
+
+//         required:true
+
+//     },
+
+
+
+
+//     // Before Stock
+
+//     previousStock:{
+
+//         type:Number,
+
+//         default:0
+
+//     },
+
+
+
+
+//     // After Stock
+
+//     updatedStock:{
+
+//         type:Number,
+
+//         default:0
+
+//     },
+
+
+
+
+//     // Reason
+
+//     description:{
+
+//         type:String,
+
+//         default:""
+
+//     },
+
+
+
+
+//     // Who Updated
+
+//     createdBy:{
+
+//         type:mongoose.Schema.Types.ObjectId,
+
+//         ref:"User"
+
+//     }
+
+
+// },
+// {
+//     timestamps:true
+// }
+
+// );
+
+
+
+// const StockTransaction =
+// mongoose.model(
+// "StockTransaction",
+// stockTransactionSchema
+// );
+
+
+
+// export default StockTransaction;
+
+
 import mongoose from "mongoose";
 
 
 const stockTransactionSchema =
-new mongoose.Schema(
-{
+    new mongoose.Schema(
+        {
 
-    // Product
+            // =================================
+            // Product
+            // =================================
 
-    product:{
+            product: {
 
-        type:mongoose.Schema.Types.ObjectId,
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-        ref:"Product",
+                ref: "Product",
 
-        required:true
+                required: true
 
-    },
+            },
 
 
-    // Inventory Reference
+            // =================================
+            // Inventory
+            // =================================
 
-    inventory:{
+            inventory: {
 
-        type:mongoose.Schema.Types.ObjectId,
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-        ref:"Inventory",
+                ref: "Inventory",
 
-        required:true
+                required: true
 
-    },
+            },
 
 
+            // =================================
+            // Order
+            // =================================
 
-    // Transaction Type
+            order: {
 
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-    type:{
+                ref: "Order",
 
-        type:String,
+                default: null
 
-        enum:[
+            },
 
-            "STOCK_IN",
 
-            "STOCK_OUT",
+            // =================================
+            // Transaction Type
+            // =================================
 
-            "ORDER",
+            type: {
 
-            "REPAIR_USAGE",
+                type: String,
 
-            "RENTAL_OUT",
+                enum: [
 
-            "RETURN"
+                    "STOCK_IN",
 
-        ],
+                    "STOCK_OUT",
 
-        required:true
+                    "ORDER",
 
-    },
+                    "REPAIR_USAGE",
 
+                    "RENTAL_OUT",
 
+                    "RETURN"
 
+                ],
 
-    // Quantity Changed
+                required: true
 
-    quantity:{
+            },
 
-        type:Number,
 
-        required:true
+            // =================================
+            // Quantity
+            // =================================
 
-    },
+            quantity: {
 
+                type: Number,
 
+                required: true,
 
+                min: 1
 
-    // Before Stock
+            },
 
-    previousStock:{
 
-        type:Number,
+            // =================================
+            // Previous Stock
+            // =================================
 
-        default:0
+            previousStock: {
 
-    },
+                type: Number,
 
+                default: 0
 
+            },
 
 
-    // After Stock
+            // =================================
+            // Updated Stock
+            // =================================
 
-    updatedStock:{
+            updatedStock: {
 
-        type:Number,
+                type: Number,
 
-        default:0
+                default: 0
 
-    },
+            },
 
 
+            // =================================
+            // Sale Price
+            // =================================
 
+            salePrice: {
 
-    // Reason
+                type: Number,
 
-    description:{
+                default: 0
 
-        type:String,
+            },
 
-        default:""
 
-    },
+            // =================================
+            // Total Sale Amount
+            // =================================
 
+            totalAmount: {
 
+                type: Number,
 
+                default: 0
 
-    // Who Updated
+            },
 
-    createdBy:{
 
-        type:mongoose.Schema.Types.ObjectId,
+            // =================================
+            // Order Source
+            // =================================
 
-        ref:"User"
+            orderSource: {
 
-    }
+                type: String,
 
+                enum: [
 
-},
-{
-    timestamps:true
-}
+                    "ONLINE",
 
-);
+                    "WALK_IN",
 
+                    "MANUAL"
+
+                ],
+
+                default: "MANUAL"
+
+            },
+
+
+            // =================================
+            // Description
+            // =================================
+
+            description: {
+
+                type: String,
+
+                default: ""
+
+            },
+
+
+            // =================================
+            // Who Created
+            // =================================
+
+            createdBy: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref: "User",
+
+                default: null
+
+            }
+
+        },
+
+        {
+
+            timestamps: true
+
+        }
+
+    );
 
 
 const StockTransaction =
-mongoose.model(
-"StockTransaction",
-stockTransactionSchema
-);
-
+    mongoose.model(
+        "StockTransaction",
+        stockTransactionSchema
+    );
 
 
 export default StockTransaction;

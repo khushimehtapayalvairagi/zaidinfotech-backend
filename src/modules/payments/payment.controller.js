@@ -1,13 +1,652 @@
-import * as paymentService from "./payment.service.js";
-import Order from "../orders/order.model.js";
+// import * as paymentService from "./payment.service.js";
+// import Order from "../orders/order.model.js";
 
 
-//Create Razorpay Order
+// //Create Razorpay Order
+// // =======================================
+// // CREATE RAZORPAY ORDER
+// // =======================================
+
+// export const createRazorpayOrder = async (req, res) => {
+
+//     try {
+
+//         const {
+//             orderId
+//         } = req.body;
+
+
+//         if (!orderId) {
+
+//             return res.status(400).json({
+
+//                 success: false,
+
+//                 message: "Order ID is required"
+
+//             });
+
+//         }
+
+
+//         // IMPORTANT:
+//         // Apne order service/model ke according
+//         // yahan order fetch karna hoga.
+
+//         // const Order =
+//         //     (await import("../orders/order.model.js"))
+//         //         .default;
+
+
+//         const order =
+//             await Order.findById(orderId);
+
+
+//         if (!order) {
+
+//             return res.status(404).json({
+
+//                 success: false,
+
+//                 message: "Order not found"
+
+//             });
+
+//         }
+
+
+//         const razorpayOrder =
+//             await paymentService.createRazorpayPaymentOrder(
+
+//                 order.totalAmount,
+
+//                 `order_${order._id}`
+
+//             );
+
+
+//         return res.status(200).json({
+
+//             success: true,
+
+//             message:
+//                 "Razorpay order created successfully",
+
+//             order: razorpayOrder
+
+//         });
+
+//     }
+
+//     catch (error) {
+
+//         console.log(
+//             "CREATE RAZORPAY ORDER ERROR:",
+//             error
+//         );
+
+//         return res.status(400).json({
+
+//             success: false,
+
+//             message: error.message
+
+//         });
+
+//     }
+
+// };
+
+
+
+// // =======================================
+// // VERIFY RAZORPAY PAYMENT
+// // =======================================
+
+// export const verifyRazorpayPaymentController = async (
+//     req,
+//     res
+// ) => {
+
+//     try {
+
+//         const {
+
+//             paymentId,
+
+//             razorpayOrderId,
+
+//             razorpayPaymentId,
+
+//             razorpaySignature
+
+//         } = req.body;
+
+
+//         const payment =
+//             await paymentService.verifyRazorpayPaymentService({
+
+//                 paymentId,
+
+//                 razorpayOrderId,
+
+//                 razorpayPaymentId,
+
+//                 razorpaySignature
+
+//             });
+
+
+//         return res.status(200).json({
+
+//             success: true,
+
+//             message:
+//                 "Payment verified successfully",
+
+//             payment
+
+//         });
+
+//     }
+
+//     catch (error) {
+
+//         console.log(
+//             "VERIFY RAZORPAY PAYMENT ERROR:",
+//             error
+//         );
+
+//         return res.status(400).json({
+
+//             success: false,
+
+//             message: error.message
+
+//         });
+
+//     }
+
+// };
+
+
+// // =======================================
+// // CREATE PAYMENT
+// // =======================================
+
+// export const createPayment = async(req,res)=>{
+
+
+//     try{
+
+
+//         const userId = req.user._id;
+
+
+
+//         const paymentData = {
+
+
+//             ...req.body,
+
+
+//             user:userId
+
+
+//         };
+
+
+
+//         const payment =
+
+//         await paymentService.createPayment(
+
+//             paymentData
+
+//         );
+
+
+
+//         res.status(201).json({
+
+//             success:true,
+
+//             message:"Payment created successfully",
+
+//             payment
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // GET PAYMENT BY ID
+// // =======================================
+
+// export const getPaymentById = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {id}=req.params;
+
+
+
+//         const payment =
+
+//         await paymentService.getPaymentById(
+
+//             id
+
+//         );
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             payment
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(404).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // GET MY PAYMENTS
+// // =======================================
+
+// export const getMyPayments = async(req,res)=>{
+
+
+//     try{
+
+
+//         const userId = req.user._id;
+
+
+
+//         const payments =
+
+//         await paymentService.getUserPayments(
+
+//             userId
+
+//         );
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             payments
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // GET ALL PAYMENTS
+// // ADMIN
+// // =======================================
+
+// export const getAllPayments = async(req,res)=>{
+
+
+//     try{
+
+
+//         const payments =
+
+//         await paymentService.getAllPayments();
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             payments
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // PAYMENT SUCCESS
+// // =======================================
+
+// export const paymentSuccess = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {id}=req.params;
+
+
+
+//         const {
+
+// transactionId,
+
+// gatewayPaymentId,
+
+// gateway,
+
+// gatewayResponse
+
+// }= req.body;
+
+
+
+//         const payment =
+
+//         // await paymentService.markPaymentSuccess(
+
+//         //     id,
+
+//         //     transactionId,
+
+//         //     gatewayResponse
+
+//         // );
+
+//         await paymentService.markPaymentSuccess(
+
+//     id,
+
+//     transactionId,
+
+//     gatewayPaymentId,
+
+//     gateway,
+
+//     gatewayResponse
+
+// );
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             message:"Payment successful",
+
+//             payment
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // PAYMENT FAILED
+// // =======================================
+
+// export const paymentFailed = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {id}=req.params;
+
+
+
+//         const {
+
+//             failureReason
+
+//         } = req.body;
+
+
+
+//         const payment =
+
+//         await paymentService.markPaymentFailed(
+
+//             id,
+
+//                failureReason
+
+//         );
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             message:"Payment failed",
+
+//             payment
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+// // =======================================
+// // REFUND PAYMENT
+// // =======================================
+
+// export const refundPayment = async(req,res)=>{
+
+
+//     try{
+
+//         const { id } = req.params;
+//         const {
+
+//     refundReason,
+
+//     refundedAmount
+
+// } = req.body;
+
+// const payment = await paymentService.refundPayment(
+
+//     id,
+
+//     refundReason,
+
+//     refundedAmount
+
+// );
+
+
+//         // const {id}=req.params;
+
+
+
+//         // const payment =
+
+//         // await paymentService.refundPayment(
+
+//         //     id
+            
+
+//         // );
+
+
+
+//         res.status(200).json({
+
+//             success:true,
+
+//             message:"Payment refunded",
+
+//             payment
+
+//         });
+
+
+
+//     }
+
+//     catch(error){
+
+
+//         res.status(400).json({
+
+//             success:false,
+
+//             message:error.message
+
+//         });
+
+
+//     }
+
+// };
+
+
+
+
+
+import * as paymentService
+    from "./payment.service.js";
+
+import Order
+    from "../orders/order.model.js";
+
+
 // =======================================
 // CREATE RAZORPAY ORDER
 // =======================================
 
-export const createRazorpayOrder = async (req, res) => {
+export const createRazorpayOrder = async (
+    req,
+    res
+) => {
 
     try {
 
@@ -15,6 +654,10 @@ export const createRazorpayOrder = async (req, res) => {
             orderId
         } = req.body;
 
+        console.log(
+            "CREATE RAZORPAY ORDER REQUEST =",
+            req.body
+        );
 
         if (!orderId) {
 
@@ -28,19 +671,12 @@ export const createRazorpayOrder = async (req, res) => {
 
         }
 
-
-        // IMPORTANT:
-        // Apne order service/model ke according
-        // yahan order fetch karna hoga.
-
-        // const Order =
-        //     (await import("../orders/order.model.js"))
-        //         .default;
-
+        // -----------------------------------
+        // Find Order
+        // -----------------------------------
 
         const order =
             await Order.findById(orderId);
-
 
         if (!order) {
 
@@ -54,6 +690,15 @@ export const createRazorpayOrder = async (req, res) => {
 
         }
 
+        console.log(
+            "ORDER FOUND =",
+            order._id,
+            order.totalAmount
+        );
+
+        // -----------------------------------
+        // Create Razorpay Order
+        // -----------------------------------
 
         const razorpayOrder =
             await paymentService.createRazorpayPaymentOrder(
@@ -64,6 +709,14 @@ export const createRazorpayOrder = async (req, res) => {
 
             );
 
+        console.log(
+            "RAZORPAY ORDER CREATED =",
+            razorpayOrder
+        );
+
+        // -----------------------------------
+        // IMPORTANT RESPONSE
+        // -----------------------------------
 
         return res.status(200).json({
 
@@ -72,7 +725,16 @@ export const createRazorpayOrder = async (req, res) => {
             message:
                 "Razorpay order created successfully",
 
-            order: razorpayOrder
+            order: razorpayOrder,
+
+            razorpayOrderId:
+                razorpayOrder.id,
+
+            amount:
+                razorpayOrder.amount,
+
+            currency:
+                razorpayOrder.currency
 
         });
 
@@ -80,16 +742,18 @@ export const createRazorpayOrder = async (req, res) => {
 
     catch (error) {
 
-        console.log(
-            "CREATE RAZORPAY ORDER ERROR:",
+        console.error(
+            "CREATE RAZORPAY ORDER ERROR =",
             error
         );
 
-        return res.status(400).json({
+        return res.status(500).json({
 
             success: false,
 
-            message: error.message
+            message:
+                error.message ||
+                "Unable to create Razorpay order"
 
         });
 
@@ -98,33 +762,19 @@ export const createRazorpayOrder = async (req, res) => {
 };
 
 
-
 // =======================================
 // VERIFY RAZORPAY PAYMENT
 // =======================================
 
-export const verifyRazorpayPaymentController = async (
-    req,
-    res
-) => {
+export const verifyRazorpayPaymentController =
+    async (
+        req,
+        res
+    ) => {
 
-    try {
+        try {
 
-        const {
-
-            paymentId,
-
-            razorpayOrderId,
-
-            razorpayPaymentId,
-
-            razorpaySignature
-
-        } = req.body;
-
-
-        const payment =
-            await paymentService.verifyRazorpayPaymentService({
+            const {
 
                 paymentId,
 
@@ -134,15 +784,150 @@ export const verifyRazorpayPaymentController = async (
 
                 razorpaySignature
 
+            } = req.body;
+
+            console.log(
+                "VERIFY PAYMENT REQUEST =",
+                req.body
+            );
+
+            if (!paymentId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Payment ID is required"
+
+                });
+
+            }
+
+            if (!razorpayOrderId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Razorpay Order ID is required"
+
+                });
+
+            }
+
+            if (!razorpayPaymentId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Razorpay Payment ID is required"
+
+                });
+
+            }
+
+            if (!razorpaySignature) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Razorpay Signature is required"
+
+                });
+
+            }
+
+            const payment =
+                await paymentService.verifyRazorpayPaymentService({
+
+                    paymentId,
+
+                    razorpayOrderId,
+
+                    razorpayPaymentId,
+
+                    razorpaySignature
+
+                });
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Payment verified successfully",
+
+                payment
+
             });
 
+        }
 
-        return res.status(200).json({
+        catch (error) {
+
+            console.error(
+                "VERIFY RAZORPAY PAYMENT ERROR =",
+                error
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message
+
+            });
+
+        }
+
+    };
+
+
+// =======================================
+// CREATE PAYMENT
+// =======================================
+
+export const createPayment = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const userId =
+            req.user._id;
+
+        const paymentData = {
+
+            ...req.body,
+
+            user: userId
+
+        };
+
+        console.log(
+            "CREATE PAYMENT DATA =",
+            paymentData
+        );
+
+        const payment =
+            await paymentService.createPayment(
+                paymentData
+            );
+
+        return res.status(201).json({
 
             success: true,
 
             message:
-                "Payment verified successfully",
+                "Payment created successfully",
 
             payment
 
@@ -152,8 +937,8 @@ export const verifyRazorpayPaymentController = async (
 
     catch (error) {
 
-        console.log(
-            "VERIFY RAZORPAY PAYMENT ERROR:",
+        console.error(
+            "CREATE PAYMENT ERROR =",
             error
         );
 
@@ -161,468 +946,332 @@ export const verifyRazorpayPaymentController = async (
 
             success: false,
 
-            message: error.message
+            message:
+                error.message
 
         });
 
     }
 
 };
-
-
-// =======================================
-// CREATE PAYMENT
-// =======================================
-
-export const createPayment = async(req,res)=>{
-
-
-    try{
-
-
-        const userId = req.user._id;
-
-
-
-        const paymentData = {
-
-
-            ...req.body,
-
-
-            user:userId
-
-
-        };
-
-
-
-        const payment =
-
-        await paymentService.createPayment(
-
-            paymentData
-
-        );
-
-
-
-        res.status(201).json({
-
-            success:true,
-
-            message:"Payment created successfully",
-
-            payment
-
-        });
-
-
-
-    }
-
-    catch(error){
-
-
-        res.status(400).json({
-
-            success:false,
-
-            message:error.message
-
-        });
-
-
-    }
-
-};
-
-
 
 
 // =======================================
 // GET PAYMENT BY ID
 // =======================================
 
-export const getPaymentById = async(req,res)=>{
+export const getPaymentById = async (
+    req,
+    res
+) => {
 
+    try {
 
-    try{
-
-
-        const {id}=req.params;
-
-
+        const {
+            id
+        } = req.params;
 
         const payment =
+            await paymentService.getPaymentById(
+                id
+            );
 
-        await paymentService.getPaymentById(
+        return res.status(200).json({
 
-            id
-
-        );
-
-
-
-        res.status(200).json({
-
-            success:true,
+            success: true,
 
             payment
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(404).json({
 
-        res.status(404).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 
 };
-
-
 
 
 // =======================================
 // GET MY PAYMENTS
 // =======================================
 
-export const getMyPayments = async(req,res)=>{
+export const getMyPayments = async (
+    req,
+    res
+) => {
 
+    try {
 
-    try{
-
-
-        const userId = req.user._id;
-
-
+        const userId =
+            req.user._id;
 
         const payments =
+            await paymentService.getUserPayments(
+                userId
+            );
 
-        await paymentService.getUserPayments(
+        return res.status(200).json({
 
-            userId
-
-        );
-
-
-
-        res.status(200).json({
-
-            success:true,
+            success: true,
 
             payments
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(400).json({
 
-        res.status(400).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 
 };
-
-
 
 
 // =======================================
 // GET ALL PAYMENTS
-// ADMIN
 // =======================================
 
-export const getAllPayments = async(req,res)=>{
+export const getAllPayments = async (
+    req,
+    res
+) => {
 
-
-    try{
-
+    try {
 
         const payments =
+            await paymentService.getAllPayments();
 
-        await paymentService.getAllPayments();
+        return res.status(200).json({
 
-
-
-        res.status(200).json({
-
-            success:true,
+            success: true,
 
             payments
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(400).json({
 
-        res.status(400).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 
 };
-
-
 
 
 // =======================================
 // PAYMENT SUCCESS
 // =======================================
 
-export const paymentSuccess = async(req,res)=>{
+export const paymentSuccess = async (
+    req,
+    res
+) => {
 
+    try {
 
-    try{
-
-
-        const {id}=req.params;
-
-
+        const {
+            id
+        } = req.params;
 
         const {
 
-transactionId,
+            transactionId,
 
-gatewayPaymentId,
+            gatewayPaymentId,
 
-gateway,
+            gateway,
 
-gatewayResponse
+            gatewayResponse
 
-}= req.body;
-
-
+        } = req.body;
 
         const payment =
+            await paymentService.markPaymentSuccess(
 
-        // await paymentService.markPaymentSuccess(
+                id,
 
-        //     id,
+                transactionId,
 
-        //     transactionId,
+                gatewayPaymentId,
 
-        //     gatewayResponse
+                gateway,
 
-        // );
+                gatewayResponse
 
-        await paymentService.markPaymentSuccess(
+            );
 
-    id,
+        return res.status(200).json({
 
-    transactionId,
+            success: true,
 
-    gatewayPaymentId,
-
-    gateway,
-
-    gatewayResponse
-
-);
-
-
-
-        res.status(200).json({
-
-            success:true,
-
-            message:"Payment successful",
+            message:
+                "Payment successful",
 
             payment
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(400).json({
 
-        res.status(400).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 
 };
-
-
 
 
 // =======================================
 // PAYMENT FAILED
 // =======================================
 
-export const paymentFailed = async(req,res)=>{
+export const paymentFailed = async (
+    req,
+    res
+) => {
 
-
-    try{
-
-
-        const {id}=req.params;
-
-
+    try {
 
         const {
+            id
+        } = req.params;
 
+        const {
             failureReason
-
         } = req.body;
 
-
-
         const payment =
+            await paymentService.markPaymentFailed(
 
-        await paymentService.markPaymentFailed(
+                id,
 
-            id,
+                failureReason
 
-               failureReason
+            );
 
-        );
+        return res.status(200).json({
 
+            success: true,
 
-
-        res.status(200).json({
-
-            success:true,
-
-            message:"Payment failed",
+            message:
+                "Payment failed",
 
             payment
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(400).json({
 
-        res.status(400).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 
 };
 
 
-
-
 // =======================================
 // REFUND PAYMENT
 // =======================================
 
-export const refundPayment = async(req,res)=>{
+export const refundPayment = async (
+    req,
+    res
+) => {
 
+    try {
 
-    try{
+        const {
+            id
+        } = req.params;
 
-        const { id } = req.params;
         const {
 
-    refundReason,
+            refundReason,
 
-    refundedAmount
+            refundedAmount
 
-} = req.body;
+        } = req.body;
 
-const payment = await paymentService.refundPayment(
+        const payment =
+            await paymentService.refundPayment(
 
-    id,
+                id,
 
-    refundReason,
+                refundReason,
 
-    refundedAmount
+                refundedAmount
 
-);
+            );
 
+        return res.status(200).json({
 
-        // const {id}=req.params;
+            success: true,
 
-
-
-        // const payment =
-
-        // await paymentService.refundPayment(
-
-        //     id
-            
-
-        // );
-
-
-
-        res.status(200).json({
-
-            success:true,
-
-            message:"Payment refunded",
+            message:
+                "Payment refunded",
 
             payment
 
         });
 
-
-
     }
 
-    catch(error){
+    catch (error) {
 
+        return res.status(400).json({
 
-        res.status(400).json({
+            success: false,
 
-            success:false,
-
-            message:error.message
+            message:
+                error.message
 
         });
-
 
     }
 

@@ -1,17 +1,18 @@
-import Order from "./order.model.js";
+// import Order from "./order.model.js";
 
 
 
 
-// =======================================
-// Create New Order
-// =======================================
 
-// export const createOrder = async(orderData)=>{
 
+
+// // =======================================
+// // CREATE ORDER
+// // =======================================
+
+// export const createOrder = async (orderData) => {
 
 //     const order = new Order(orderData);
-
 
 //     return await order.save();
 
@@ -19,175 +20,367 @@ import Order from "./order.model.js";
 
 
 
+// // =======================================
+// // Find Order By Id
+// // =======================================
 
-// =======================================
+// export const findOrderById = async(orderId)=>{
+
+
+//     return await Order.findById(orderId)
+
+//     .populate(
+//         "user",
+//         "firstName lastName email"
+//     )
+
+//     .populate(
+//         "orderItems.product"
+//     );
+
+
+// };
+
+
+
+
+// // =======================================
+// // Find All Orders Of User
+// // =======================================
+
+// export const findOrdersByUserId = async(userId)=>{
+
+
+//     return await Order.find({
+
+//         user:userId
+
+//     })
+
+//     .populate(
+//         "orderItems.product"
+//     )
+
+//     .sort({
+
+//         createdAt:-1
+
+//     });
+
+
+// };
+
+
+
+
+// // =======================================
+// // Find All Orders (Admin)
+// // =======================================
+
+// export const findAllOrders = async()=>{
+
+
+//     return await Order.find()
+
+//     .populate(
+//         "user",
+//         "firstName lastName email"
+//     )
+
+//     .populate(
+//         "orderItems.product"
+//     )
+
+//     .sort({
+
+//         createdAt:-1
+
+//     });
+
+
+// };
+
+
+
+
+// // =======================================
+// // Update Order Status
+// // =======================================
+
+// export const updateOrderStatus = async(
+
+//     orderId,
+
+//     status
+
+// )=>{
+
+
+//     return await Order.findByIdAndUpdate(
+
+//         orderId,
+
+//         {
+
+//             orderStatus:status
+
+//         },
+
+//         {
+
+//             new:true
+
+//         }
+
+//     );
+
+
+// };
+
+
+
+
+// // =======================================
+// // Update Payment Status
+// // =======================================
+
+// export const updatePaymentStatus = async(
+
+//     orderId,
+
+//     paymentStatus,
+
+//     paymentId
+
+// )=>{
+
+
+//     return await Order.findByIdAndUpdate(
+
+//         orderId,
+
+//         {
+
+//             paymentStatus,
+
+//             paymentId
+
+//         },
+
+//         {
+
+//             new:true
+
+//         }
+
+//     );
+
+
+// };
+
+
+import Order from "./order.model.js";
+
+
+// ======================================================
 // CREATE ORDER
-// =======================================
+// ======================================================
 
-export const createOrder = async (orderData) => {
+export const createOrder = async (
+  orderData
+) => {
 
-    const order = new Order(orderData);
+  const order =
+    new Order(orderData);
 
-    return await order.save();
-
+  return await order.save();
 };
 
 
+// ======================================================
+// FIND ORDER BY ID
+// ======================================================
 
-// =======================================
-// Find Order By Id
-// =======================================
+export const findOrderById = async (
+  orderId
+) => {
 
-export const findOrderById = async(orderId)=>{
-
-
-    return await Order.findById(orderId)
+  return await Order.findById(
+    orderId
+  )
 
     .populate(
-        "user",
-        "firstName lastName email"
+      "user",
+      "firstName lastName name email phone"
     )
 
     .populate(
-        "orderItems.product"
-    );
+      "soldBy",
+      "firstName lastName name email role"
+    )
 
+    .populate({
+      path: "orderItems.product",
+
+      populate: [
+
+        {
+          path: "brand",
+          select: "name",
+        },
+
+        {
+          path: "category",
+          select: "name",
+        },
+
+      ],
+    });
 
 };
 
 
+// ======================================================
+// FIND USER ORDERS
+// ======================================================
 
-
-// =======================================
-// Find All Orders Of User
-// =======================================
-
-export const findOrdersByUserId = async(userId)=>{
-
+export const findOrdersByUserId =
+  async (userId) => {
 
     return await Order.find({
 
-        user:userId
+      user: userId,
 
     })
 
-    .populate(
-        "orderItems.product"
-    )
+      .populate({
+        path: "orderItems.product",
 
-    .sort({
+        populate: [
 
-        createdAt:-1
+          {
+            path: "brand",
+            select: "name",
+          },
 
-    });
+          {
+            path: "category",
+            select: "name",
+          },
+
+        ],
+      })
+
+      .populate(
+        "soldBy",
+        "firstName lastName name email role"
+      )
+
+      .sort({
+        createdAt: -1,
+      });
+
+  };
 
 
-};
+// ======================================================
+// FIND ALL ORDERS
+// ADMIN
+// ======================================================
 
-
-
-
-// =======================================
-// Find All Orders (Admin)
-// =======================================
-
-export const findAllOrders = async()=>{
-
+export const findAllOrders =
+  async () => {
 
     return await Order.find()
 
-    .populate(
+      .populate(
         "user",
-        "firstName lastName email"
-    )
+        "firstName lastName name email phone"
+      )
 
-    .populate(
-        "orderItems.product"
-    )
+      .populate(
+        "soldBy",
+        "firstName lastName name email role"
+      )
 
-    .sort({
+      .populate({
+        path: "orderItems.product",
 
-        createdAt:-1
+        populate: [
 
-    });
+          {
+            path: "brand",
+            select: "name",
+          },
+
+          {
+            path: "category",
+            select: "name",
+          },
+
+        ],
+      })
+
+      .sort({
+        createdAt: -1,
+      });
+
+  };
 
 
-};
+// ======================================================
+// UPDATE ORDER STATUS
+// ======================================================
 
-
-
-
-// =======================================
-// Update Order Status
-// =======================================
-
-export const updateOrderStatus = async(
-
+export const updateOrderStatus =
+  async (
     orderId,
-
     status
-
-)=>{
-
+  ) => {
 
     return await Order.findByIdAndUpdate(
 
-        orderId,
+      orderId,
 
-        {
+      {
+        orderStatus: status,
+      },
 
-            orderStatus:status
-
-        },
-
-        {
-
-            new:true
-
-        }
+      {
+        new: true,
+        runValidators: true,
+      }
 
     );
 
-
-};
-
+  };
 
 
+// ======================================================
+// UPDATE PAYMENT
+// ======================================================
 
-// =======================================
-// Update Payment Status
-// =======================================
-
-export const updatePaymentStatus = async(
-
+export const updatePaymentStatus =
+  async (
     orderId,
-
     paymentStatus,
-
-    paymentId
-
-)=>{
-
+    paymentId = ""
+  ) => {
 
     return await Order.findByIdAndUpdate(
 
-        orderId,
+      orderId,
 
-        {
+      {
+        paymentStatus,
+        paymentId,
+      },
 
-            paymentStatus,
-
-            paymentId
-
-        },
-
-        {
-
-            new:true
-
-        }
+      {
+        new: true,
+        runValidators: true,
+      }
 
     );
 
-
-};
+  };

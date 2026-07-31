@@ -19,7 +19,47 @@ errorResponse
 } from "../../common/utils/apiResponse.js";
 
 
+import { fetchProductsAddedByReceptionist } from './product.service.js';
 
+    
+export const getProductsAddedByReceptionist = async (req, res) => {
+  try {
+    const { receptionistId } = req.params;
+    const products = await fetchProductsAddedByReceptionist(receptionistId);
+
+    return res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+export const getProductsOrderedByReceptionist = async (req, res) => {
+  try {
+    const { receptionistId } = req.params;
+
+    // Fetching orders created by this receptionist ID
+    const orders = await Order.find({ receptionistId })
+      .populate('items.product')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 // =================================
 // Create Product (ADMIN)
