@@ -490,6 +490,15 @@ const orderSchema = new mongoose.Schema(
 
     },
 
+//new
+
+    paidAmount: {
+    type: Number,
+    default: 0,
+    min: 0,
+},
+
+
 
     // Razorpay payment ID
     paymentId: {

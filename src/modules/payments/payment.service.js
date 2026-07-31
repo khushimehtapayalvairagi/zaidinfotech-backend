@@ -455,6 +455,8 @@ import {
     verifyRazorpayPayment
 } from "./razorpay.service.js";
 
+import Order
+    from "../orders/order.model.js";
 
 // =======================================
 // CREATE RAZORPAY ORDER
@@ -486,33 +488,58 @@ export const verifyRazorpayPaymentService = async ({
     razorpaySignature
 }) => {
 
-    // Find MongoDB Payment
+    // ==========================================
+    // 1. FIND PAYMENT
+    // ==========================================
+
     const payment =
         await paymentRepository.getPaymentById(
             paymentId
         );
 
     if (!payment) {
+
         throw new Error(
             "Payment not found"
         );
+
     }
 
-    // Verify Razorpay Signature
+
+    // ==========================================
+    // 2. VERIFY RAZORPAY SIGNATURE
+    // ==========================================
+
     const isValid =
         verifyRazorpayPayment({
+
             razorpayOrderId,
+
             razorpayPaymentId,
+
             razorpaySignature
+
         });
 
+
     if (!isValid) {
+
         throw new Error(
             "Invalid Razorpay payment signature"
         );
+
     }
 
-    // Update Payment
+
+    console.log(
+        "SIGNATURE VERIFY SUCCESS"
+    );
+
+
+    // ==========================================
+    // 3. UPDATE PAYMENT = SUCCESS
+    // ==========================================
+
     const updatedPayment =
         await paymentRepository.updatePaymentStatus(
 
@@ -527,15 +554,85 @@ export const verifyRazorpayPaymentService = async ({
             "RAZORPAY",
 
             {
+
                 razorpayOrderId,
+
                 razorpayPaymentId,
+
                 razorpaySignature
+
             },
 
             ""
+
         );
 
+
+    console.log(
+        "PAYMENT STATUS = SUCCESS"
+    );
+
+
+    // ==========================================
+    // 4. GET ORDER ID
+    // ==========================================
+
+    const orderId =
+        payment.referenceId;
+
+
+    if (!orderId) {
+
+        throw new Error(
+            "Order ID not found in payment"
+        );
+
+    }
+
+
+    // ==========================================
+    // 5. FIND ORDER
+    // ==========================================
+
+    const order =
+        await Order.findById(
+            orderId
+        );
+
+
+    if (!order) {
+
+        throw new Error(
+            "Order not found"
+        );
+
+    }
+
+
+    // ==========================================
+    // 6. UPDATE ORDER = PAID
+    // ==========================================
+
+    order.paymentStatus = "PAID";
+
+    order.paymentId =
+        razorpayPaymentId;
+
+
+    await order.save();
+
+
+    console.log(
+        "ORDER PAYMENT STATUS = PAID"
+    );
+
+
+    // ==========================================
+    // 7. RETURN PAYMENT
+    // ==========================================
+
     return updatedPayment;
+
 };
 
 
