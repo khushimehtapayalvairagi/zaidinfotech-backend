@@ -17,6 +17,7 @@ import stockTransactionRoutes from "./modules/inventory/stockTransaction/stockTr
 import paymentRoutes from "./modules/payments/payment.routes.js";
 import shipmentRoutes from "./modules/shipment/shipment.routes.js";
 import offerRoutes from "./modules/offer/offer.routes.js";
+import salaryRoutes from "./modules/salary/salary.routes.js";
 
 
 const app = express();
@@ -62,6 +63,7 @@ app.use("/api/orders",orderRoutes);
 app.use("/api/offers",offerRoutes);
 app.use("/api/payments",paymentRoutes);
 app.use("/api/shipment",shipmentRoutes);
+app.use("/api/salary", salaryRoutes);
 export default app;
 
 

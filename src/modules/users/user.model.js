@@ -24,7 +24,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+       required: function () {
+        return this.hasSystemAccess;
+    }
     },
+ 
 
     phone: {
       type: String,
@@ -36,7 +40,11 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-    },
+          required: function () {
+        return this.hasSystemAccess;
+    }
+    },           
+
 
     profileImage: {
       type: String,
@@ -88,19 +96,21 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
 
-    role: {
-      type: String,
-      enum: [
+role: {
+    type: String,
+    enum: [
         "SUPER_ADMIN",
         "ADMIN",
         "RECEPTIONIST",
         "TECHNICIAN",
         "INVENTORY",
         "ACCOUNTANT",
-        "CUSTOMER",
-      ],
-      default: "CUSTOMER",
-    },
+        "CUSTOMER"
+    ],
+    required: function () {
+        return this.hasSystemAccess;
+    }
+},
 
     department: {
       type: String,
@@ -120,6 +130,10 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+hasSystemAccess: {
+    type: Boolean,
+    default: true
+},
 
 salaryDetails: {
 

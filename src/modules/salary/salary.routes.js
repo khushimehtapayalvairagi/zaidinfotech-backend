@@ -52,7 +52,7 @@ router.get(
 
     verifyToken,
 
-    authorizeRoles("ADMIN"),
+    allowRoles("ADMIN"),
 
     exportSalaryExcel
 

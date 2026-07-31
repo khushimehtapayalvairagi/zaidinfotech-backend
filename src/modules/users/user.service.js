@@ -6,42 +6,59 @@ import * as userRepository from "./user.repository.js";
 // Create User
 // ===============================
 export const createUser = async (data) => {
-  // Email Check
-  const existingUser = await userRepository.findByEmail(data.email);
 
-  if (existingUser) {
-    throw new Error("Email already exists");
-  }
-
-  // Phone Check
+  // Phone Check (sabke liye)
   const existingPhone = await userRepository.findByPhone(data.phone);
 
   if (existingPhone) {
     throw new Error("Phone number already exists");
   }
 
-  // Password Hash
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  // ==========================================
+  // Employee ID Generate (Only Staff)
+  // ==========================================
+  if (data.role !== "CUSTOMER") {
 
-  data.password = hashedPassword;
+    const totalUsers = await userRepository.countUsers();
 
-  // Employee Code Generate
-  // const totalUsers = await userRepository.countUsers();
+    data.employeeId = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+  }
 
-  // data.employeeCode = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+  // ==========================================
+  // Employee With System Access
+  // ==========================================
+  if (data.hasSystemAccess) {
 
-// Employee ID Generate (Only Staff)
+    // Email Check
+    const existingUser = await userRepository.findByEmail(data.email);
 
-if (data.role !== "CUSTOMER") {
+    if (existingUser) {
+      throw new Error("Email already exists");
+    }
 
-  const totalUsers = await userRepository.countUsers();
+    // Password Required
+    if (!data.password) {
+      throw new Error("Password is required");
+    }
 
-  data.employeeId = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+    // Password Hash
+    data.password = await bcrypt.hash(data.password, 10);
 
-}
+  }
 
+  // ==========================================
+  // Employee Without System Access
+  // ==========================================
+  else {
+
+    data.email = "";
+    data.password = "";
+    data.role = null;
+
+  }
 
   return await userRepository.create(data);
+
 };
 
 // ===============================
