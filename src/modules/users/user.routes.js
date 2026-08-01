@@ -16,7 +16,10 @@ import {
   updateEmployeeStatus,
   getSalaryHistory,
   addSalaryHistory,
-  updateSalary
+  updateSalary,
+  forgotPassword,
+  resetPassword
+
 
 } from "./user.controller.js";
 
@@ -185,5 +188,17 @@ allowRoles(
 getSalaryHistory
 
 );
+
+router.post(
+  "/forgot-password",
+  forgotPassword
+);
+
+router.post(
+  "/reset-password/:token",
+  resetPassword
+);
+
+
 
 export default router;

@@ -402,3 +402,40 @@ message:error.message
 
 
 };
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const result = await userService.forgotPassword(req.body.email);
+
+    return res.status(200).json({
+      success: true,
+      message: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const result = await userService.resetPassword(
+      req.params.token,
+      req.body.password
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+

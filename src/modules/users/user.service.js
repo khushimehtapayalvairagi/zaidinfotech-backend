@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "./user.model.js";
 import * as userRepository from "./user.repository.js";
+import { sendResetPasswordEmail } from "../services/mail.service.js";
 
 // ===============================
 // Create User
@@ -349,4 +350,52 @@ export const getSalaryHistory = async(id)=>{
 
     return employee;
 
+};
+
+
+export const forgotPassword = async (email) => {
+
+  const user = await userRepository.findByEmail(email);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  await userRepository.saveResetToken(
+    user._id,
+    token,
+    new Date(Date.now() + 15 * 60 * 1000)
+  );
+
+   await sendResetPasswordEmail(user.email, token); 
+  // TODO:
+  // Send email containing:
+  // http://localhost:5173/reset-password/${token}
+
+  return "Password reset link sent successfully.";
+};
+
+
+export const resetPassword = async (
+  token,
+  password
+) => {
+
+  const user =
+    await userRepository.findByResetToken(token);
+
+  if (!user) {
+    throw new Error("Invalid or expired token");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await userRepository.updatePassword(
+    user._id,
+    hashedPassword
+  );
+
+  return "Password reset successfully";
 };

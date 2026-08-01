@@ -223,3 +223,33 @@ export const getSalaryHistory = async(id)=>{
     return user;
 
 };
+
+
+export const saveResetToken = async (
+  userId,
+  token,
+  expiry
+) => {
+  return await User.findByIdAndUpdate(userId, {
+    resetPasswordToken: token,
+    resetPasswordExpires: expiry,
+  });
+};
+
+export const findByResetToken = async (token) => {
+  return await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: new Date() },
+  });
+};
+
+export const updatePassword = async (
+  userId,
+  password
+) => {
+  return await User.findByIdAndUpdate(userId, {
+    password,
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
+  });
+};

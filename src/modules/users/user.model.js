@@ -28,8 +28,28 @@ const userSchema = new mongoose.Schema(
         return this.hasSystemAccess;
     }
     },
- 
 
+ biometricId: {
+    type: String,
+    trim: true,
+    default: ""
+},
+
+shift: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Shift",
+    default: null
+},
+ 
+resetPasswordToken: {
+    type: String,
+    default: null,
+},
+
+resetPasswordExpires: {
+    type: Date,
+    default: null,
+},
     phone: {
       type: String,
       required: true,

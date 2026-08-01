@@ -49,26 +49,6 @@ export const exportSalaryExcel = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // 1. Create/Set Initial Salary Configuration
 export const createSalaryController = async (req, res) => {
   try {
