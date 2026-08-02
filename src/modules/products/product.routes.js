@@ -71,6 +71,7 @@ router.get(
     getProducts
 );
 
+
 // ==========================
 // CUSTOMER SHOP ROUTE
 // ==========================
@@ -78,6 +79,7 @@ router.get(
 
 router.get(
     "/shop",
+      allowRoles("RECEPTIONIST"),
     getShopProducts
 );
 
