@@ -13,6 +13,7 @@ export const createUser = async (data) => {
 
   if (existingPhone) {
     throw new Error("Phone number already exists");
+    
   }
 
   // ==========================================
