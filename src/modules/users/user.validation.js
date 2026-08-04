@@ -27,6 +27,17 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Must contain one number")
     .regex(/[@$!%*?&#]/, "Must contain one special character"),
 
+  // role: z.enum([
+  //   "SUPER_ADMIN",
+  //   "ADMIN",
+  //   "RECEPTIONIST",
+  //   "TECHNICIAN",
+  //   "INVENTORY",
+  //   "ACCOUNTANT",
+  //   "CUSTOMER",
+
+  // ]).optional(),
+
   role: z.enum([
     "SUPER_ADMIN",
     "ADMIN",
@@ -34,8 +45,8 @@ export const registerSchema = z.object({
     "TECHNICIAN",
     "INVENTORY",
     "ACCOUNTANT",
-    "CUSTOMER",
-  ]).optional(),
+    "OTHER"
+]).optional(),
 
 
   salaryDetails: z.object({
@@ -86,6 +97,7 @@ export const createUserSchema = z.object({
     "REPAIR",
     "INVENTORY",
     "ACCOUNTS",
+    "OTHER"
   ]),
 
   designation: z.string().optional(),

@@ -168,17 +168,47 @@ res.status(400).json({
 // ==================================================
 // Get Attendance List
 // ==================================================
-
 export const getAttendance = async(req,res)=>{
 
 
 try{
 
 
+let filter={};
+
+
+// Admin can see all attendance
+
+if(
+[
+"SUPER_ADMIN",
+"ADMIN",
+
+]
+.includes(req.user.role)
+){
+
+filter={};
+
+}
+
+
+// Employee can see own attendance
+
+else{
+
+
+filter={
+user:req.user._id
+};
+
+
+}
+
+
+
 const attendance =
-await getAllAttendance(
-    req.query
-);
+await getAllAttendance(filter);
 
 
 

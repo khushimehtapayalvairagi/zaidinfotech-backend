@@ -44,6 +44,10 @@ import {
 
 } from "../../common/middleware/auth.middleware.js";
 
+import {
+verifyBiometricKey
+}
+from "../../common/middleware/biometric.middleware.js";
 
 
 const router = express.Router();
@@ -81,6 +85,8 @@ manualAttendance
 
 router.post(
 "/biometric",
+
+verifyBiometricKey,
 
 validate(biometricAttendanceValidation),
 

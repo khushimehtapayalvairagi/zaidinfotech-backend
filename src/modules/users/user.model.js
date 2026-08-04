@@ -57,13 +57,21 @@ resetPasswordExpires: {
       trim: true,
     },
 
+    // password: {
+    //   type: String,
+    //   required: true,
+    //       required: function () {
+    //     return this.hasSystemAccess;
+    // }
+    // },   
+    
     password: {
-      type: String,
-      required: true,
-          required: function () {
+    type: String,
+    default: "",
+    required: function () {
         return this.hasSystemAccess;
     }
-    },           
+},
 
 
     profileImage: {
@@ -115,7 +123,6 @@ resetPasswordExpires: {
       unique: true,
       sparse: true,
     },
-
 role: {
     type: String,
     enum: [
@@ -125,12 +132,29 @@ role: {
         "TECHNICIAN",
         "INVENTORY",
         "ACCOUNTANT",
-        "CUSTOMER"
+        "CUSTOMER",
+        "OTHER"
     ],
     required: function () {
         return this.hasSystemAccess;
     }
 },
+// role: {
+//     type: String,
+//     enum: [
+//         "SUPER_ADMIN",
+//         "ADMIN",
+//         "RECEPTIONIST",
+//         "TECHNICIAN",
+//         "INVENTORY",
+//         "ACCOUNTANT",
+//         "CUSTOMER"
+        
+//     ],
+//     required: function () {
+//         return this.hasSystemAccess;
+//     }
+// },
 
     department: {
       type: String,
@@ -141,6 +165,7 @@ role: {
         "INVENTORY",
         "ACCOUNTS",
         "CUSTOMER",
+         "OTHER"            // <-- ADD THIS
       ],
       default: "CUSTOMER",
     },

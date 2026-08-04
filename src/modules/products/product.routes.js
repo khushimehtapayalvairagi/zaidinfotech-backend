@@ -60,17 +60,28 @@ router.post(
 
 );
 
-
-
 // Get All Products
+// ADMIN + RECEPTIONIST + INVENTORY_MANAGER
 
 router.get(
     "/",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles(
+        "ADMIN",
+        "RECEPTIONIST",
+        "INVENTORY_MANAGER"
+    ),
     getProducts
 );
 
+// // Get All Products
+
+// router.get(
+//     "/",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     getProducts
+// );
 
 // ==========================
 // CUSTOMER SHOP ROUTE
@@ -79,19 +90,29 @@ router.get(
 
 router.get(
     "/shop",
-      allowRoles("RECEPTIONIST"),
     getShopProducts
 );
 
 
-// Search Product
-
 router.get(
     "/search",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles(
+        "ADMIN",
+        "RECEPTIONIST",
+        "INVENTORY_MANAGER"
+    ),
     searchProduct
 );
+
+// // Search Product
+
+// router.get(
+//     "/search",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     searchProduct
+// );
 
 // Get Single Product
 

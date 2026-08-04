@@ -378,6 +378,21 @@ export const createOrderValidation = Joi.object({
         "Total amount is required",
     }),
 
+
+// ====================================================
+// PAYMENT METHOD
+// ====================================================
+
+paymentMethod: Joi.string()
+    .valid(
+        "CASH",
+        "CARD",
+        "UPI",
+        "ONLINE"
+    )
+    .default("CASH"),
+
+
   // ====================================================
   // ORDER SOURCE
   // ====================================================

@@ -90,14 +90,24 @@ export const softDelete = async (id) => {
 export const findEmployees = async () => {
 
   const employees = await User.find({
+
     role: {
-      $in: [
-        "RECEPTIONIST",
-        "TECHNICIAN",
-        "INVENTORY",
-        "ACCOUNTANT"
-      ]
-    },
+  $in: [
+    "RECEPTIONIST",
+    "TECHNICIAN",
+    "INVENTORY",
+    "ACCOUNTANT",
+    "OTHER"
+  ]
+},
+    // role: {
+    //   $in: [
+    //     "RECEPTIONIST",
+    //     "TECHNICIAN",
+    //     "INVENTORY",
+    //     "ACCOUNTANT"
+    //   ]
+    // },
     isDeleted: false
   }).select("-password");
 

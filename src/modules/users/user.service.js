@@ -50,13 +50,25 @@ export const createUser = async (data) => {
   // ==========================================
   // Employee Without System Access
   // ==========================================
-  else {
+  // else {
 
-    data.email = "";
-    data.password = "";
-    data.role = null;
+  //   data.email = "";
+  //   data.password = "";
+  //   data.role = null;
 
-  }
+  // }
+
+else {
+
+    if (!data.email) {
+        throw new Error("Email is required");
+    }
+
+    delete data.password;
+
+    data.role = "OTHER";
+
+}
 
   return await userRepository.create(data);
 
