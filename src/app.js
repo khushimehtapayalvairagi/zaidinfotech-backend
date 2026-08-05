@@ -19,12 +19,17 @@ import shipmentRoutes from "./modules/shipment/shipment.routes.js";
 import offerRoutes from "./modules/offer/offer.routes.js";
 import salaryRoutes from "./modules/salary/salary.routes.js";
 import shiftRoutes from "./modules/shift/shift.routes.js";
-import attendanceRoutes from "./modules/attendence/attendance.routes.js";
+// import attendanceRoutes from "./modules/attendence/attendance.routes.js";
 
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        process.env.FRONTEND_URL
+    ]
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -67,7 +72,7 @@ app.use("/api/payments",paymentRoutes);
 app.use("/api/shipment",shipmentRoutes);
 app.use("/api/salary", salaryRoutes);
 app.use("/api/shifts",shiftRoutes);
-app.use("/api/attendance",attendanceRoutes);
+// app.use("/api/attendance",attendanceRoutes);
 
 export default app;
 
