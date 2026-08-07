@@ -19,8 +19,8 @@ import shipmentRoutes from "./modules/shipment/shipment.routes.js";
 import offerRoutes from "./modules/offer/offer.routes.js";
 import salaryRoutes from "./modules/salary/salary.routes.js";
 import shiftRoutes from "./modules/shift/shift.routes.js";
-// import attendanceRoutes from "./modules/attendence/attendance.routes.js";
-
+ import attendanceRoutes from "./modules/attendence/attendance.routes.js";
+import invoiceRoutes from "./modules/invoices/invoice.routes.js";
 
 const app = express();
 
@@ -72,7 +72,8 @@ app.use("/api/payments",paymentRoutes);
 app.use("/api/shipment",shipmentRoutes);
 app.use("/api/salary", salaryRoutes);
 app.use("/api/shifts",shiftRoutes);
-// app.use("/api/attendance",attendanceRoutes);
+app.use("/api/attendance",attendanceRoutes);
+app.use("/api/invoices",invoiceRoutes);
 
 export default app;
 
