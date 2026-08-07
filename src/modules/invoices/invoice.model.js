@@ -246,6 +246,29 @@ referenceId: {
   required: true,
   index: true
 },
+items: [
+  {
+    type: "PRODUCT",
+    referenceId: productId,
+    description: "Dell Laptop",
+    quantity: 1,
+    amount: 50000
+  },
+  {
+    type: "REPAIR",
+    referenceId: repairId,
+    description: "Screen Replacement",
+    quantity: 1,
+    amount: 4000
+  },
+  {
+    type: "REPAIR",
+    referenceId: repairId,
+    description: "Labour Charge",
+    quantity: 1,
+    amount: 1000
+  }
+],
     // =========================================
     // DELETE
     // =========================================
