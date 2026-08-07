@@ -232,7 +232,20 @@ const invoiceSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
+        invoiceFor: {
+  type: String,
+  enum: [
+    "ORDER",
+    "REPAIR",
+    "RENTAL"
+  ],
+  required: true
+},
+referenceId: {
+  type: mongoose.Schema.Types.ObjectId,
+  required: true,
+  index: true
+},
     // =========================================
     // DELETE
     // =========================================
