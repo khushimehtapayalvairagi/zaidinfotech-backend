@@ -36,6 +36,10 @@ import { verifyToken } from "../../common/middleware/auth.middleware.js";
 
 const router = express.Router();
 
+router.get(
+    "/:id/tracking",
+    shipmentController.getShipmentTracking
+);
 
 
 // =======================================

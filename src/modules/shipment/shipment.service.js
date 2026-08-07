@@ -4,12 +4,12 @@ import {
     SHIPMENT_STATUS
 } from "../../common/constants/shipmentStatus.js";
 
-
+import ShipmentTracking from "./shipmentTracking.model.js";
 
 // =======================================
 // CREATE SHIPMENT
 // =======================================
-
+   
 export const createShipment = async (shipmentData) => {
 
     // Check if shipment already exists
@@ -163,45 +163,80 @@ export const updateTrackingDetails = async (
 // =======================================
 
 export const updateShipmentStatus = async (
+    shipmentId,
+    shipmentStatus,
+    trackingInfo={}
+) => {
+
+
+const shipment =
+await shipmentRepository.getShipmentById(
+    shipmentId
+);
+
+
+if(!shipment){
+
+    throw new Error(
+        "Shipment not found."
+    );
+
+}
+
+
+
+let deliveredAt = null;
+
+
+if(
+    shipmentStatus === SHIPMENT_STATUS.DELIVERED
+){
+
+    deliveredAt = new Date();
+
+}
+
+
+
+// 1. Update Current Shipment Status
+
+const updatedShipment =
+await shipmentRepository.updateShipmentStatus(
 
     shipmentId,
 
-    shipmentStatus
+    shipmentStatus,
 
-) => {
+    deliveredAt
 
-    const shipment =
-    await shipmentRepository.getShipmentById(
-        shipmentId
-    );
+);
 
-    if(!shipment){
 
-        throw new Error(
-            "Shipment not found."
-        );
 
-    }
 
-    let deliveredAt = null;
+// 2. Save Tracking History
 
-    if(
-        shipmentStatus === SHIPMENT_STATUS.DELIVERED
-    ){
+await ShipmentTracking.create({
 
-        deliveredAt = new Date();
+    shipmentId: shipmentId,
 
-    }
+    status: shipmentStatus,
 
-    return await shipmentRepository.updateShipmentStatus(
+    location:
+    trackingInfo.location || "",
 
-        shipmentId,
+    description:
+    trackingInfo.description || "",
 
-        shipmentStatus,
+    updatedBy:
+    trackingInfo.updatedBy || null
 
-        deliveredAt
+});
 
-    );
+
+
+return updatedShipment;
+
 
 };
 

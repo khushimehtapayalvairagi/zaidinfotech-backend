@@ -219,16 +219,26 @@ export const updateShipmentStatus = async (req, res) => {
 
         const { id } = req.params;
 
-        const { shipmentStatus } = req.body;
+       const {
+    shipmentStatus,
+    location,
+    description
+} = req.body;
 
-        const shipment = await shipmentService.updateShipmentStatus(
+      const shipment =
+await shipmentService.updateShipmentStatus(
 
-            id,
+    id,
 
-            shipmentStatus
+    shipmentStatus,
 
-        );
+    {
+        location,
+        description,
+        updatedBy:req.user._id
+    }
 
+);
         res.status(200).json({
 
             success: true,
@@ -292,3 +302,33 @@ export const deleteShipment = async (req, res) => {
     }
 
 };
+
+export const getShipmentTracking = async(req,res)=>{
+
+try{
+
+const tracking =
+await ShipmentTracking.find({
+shipmentId:req.params.id
+})
+.sort({
+createdAt:1
+});
+
+
+res.json({
+success:true,
+tracking
+});
+
+
+}catch(error){
+
+res.status(400).json({
+success:false,
+message:error.message
+});
+
+}
+
+}
