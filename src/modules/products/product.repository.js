@@ -18,35 +18,36 @@ export const createProductDB = async (data) => {
 
 export const getProductsDB = async (query = {}) => {
 
-
-    return await Product.find({
-
-        isDeleted:false,
-
+    const products = await Product.find({
+        isDeleted: false,
         ...query
-
     })
+    .populate("category", "name slug")
+    .populate("brand", "name slug logo")
+    .populate("createdBy", "name email")
+    .sort({ createdAt: -1 });
 
-    .populate(
-        "category",
-        "name slug"
-    )
+    const productIds = products.map(p => p._id);
 
-    .populate(
-        "brand",
-        "name slug logo"
-    )
-
-    .populate(
-        "createdBy",
-        "name email"
-    )
-
-    .sort({
-        createdAt:-1
+    const inventories = await Inventory.find({
+        product: { $in: productIds }
     });
 
+    const inventoryMap = {};
 
+    inventories.forEach(inv => {
+        inventoryMap[inv.product.toString()] = inv;
+    });
+
+    return products.map(product => ({
+        ...product.toObject(),
+        inventory: inventoryMap[product._id.toString()] || {
+            currentStock: 0,
+            reservedStock: 0,
+            minimumStock: 0,
+            maximumStock: 0
+        }
+    }));
 };
 
 
