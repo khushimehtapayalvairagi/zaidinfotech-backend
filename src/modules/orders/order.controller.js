@@ -1027,15 +1027,28 @@ export const updateOrderStatus =
 
     try {
 
+      // const order =
+      //   await orderService.updateOrderStatus(
+
+      //     req.params.id,
+
+      //     req.body.status
+
+      //   );
+
+
       const order =
-        await orderService.updateOrderStatus(
+await orderService.updateOrderStatus(
 
-          req.params.id,
+  req.params.id,
 
-          req.body.status
+  req.body.status,
 
-        );
+  req.user?._id || null,
 
+  req.body.message || ""
+
+);
 
       return res.status(200).json({
 

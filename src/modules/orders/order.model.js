@@ -535,6 +535,68 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
 
+
+    // ====================================================
+// ORDER TRACKING
+// ====================================================
+
+tracking: {
+
+  history: [
+
+    {
+
+      status: {
+        type: String,
+        required: true,
+      },
+
+      message: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+
+    },
+
+  ],
+
+  courierName: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+
+  trackingNumber: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+
+  trackingUrl: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+
+  expectedDeliveryDate: {
+    type: Date,
+    default: null,
+  },
+
+},
+
   },
 
   {

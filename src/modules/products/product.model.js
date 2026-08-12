@@ -1,133 +1,133 @@
-import mongoose from "mongoose";
-import {
-PRODUCT_STATUS
-} from "../../common/constants/productStatus.js";
+// import mongoose from "mongoose";
+// import {
+// PRODUCT_STATUS
+// } from "../../common/constants/productStatus.js";
 
-const productSchema = new mongoose.Schema(
-{
+// const productSchema = new mongoose.Schema(
+// {
 
-    // Basic Information
+//     // Basic Information
 
-    name:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-
-    slug:{
-        type:String,
-        unique:true,
-        lowercase:true,
-        trim:true
-    },
+//     name:{
+//         type:String,
+//         required:true,
+//         trim:true
+//     },
 
 
-    sku:{
-        type:String,
-        unique:true,
-        trim:true
-    },
+//     slug:{
+//         type:String,
+//         unique:true,
+//         lowercase:true,
+//         trim:true
+//     },
 
 
-    barcode:{
-        type:String,
-        unique:true,
-        sparse:true
-    },
+//     sku:{
+//         type:String,
+//         unique:true,
+//         trim:true
+//     },
 
 
-
-    // Category Relation
-
-    category:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Category",
-        required:true
-    },
+//     barcode:{
+//         type:String,
+//         unique:true,
+//         sparse:true
+//     },
 
 
 
-    // Brand Relation
+//     // Category Relation
 
-    brand:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Brand",
-        required:true
-    },
-
-
-
-    // Product Description
-
-    description:{
-        type:String,
-        default:""
-    },
-
-
-    shortDescription:{
-        type:String,
-        default:""
-    },
+//     category:{
+//         type:mongoose.Schema.Types.ObjectId,
+//         ref:"Category",
+//         required:true
+//     },
 
 
 
-    // Product Images
+//     // Brand Relation
 
-    images:[
-        {
-            url:{
-                type:String,
-                required:true
-            },
-
-            alt:{
-                type:String,
-                default:""
-            }
-        }
-    ],
+//     brand:{
+//         type:mongoose.Schema.Types.ObjectId,
+//         ref:"Brand",
+//         required:true
+//     },
 
 
 
-    // Pricing Details
+//     // Product Description
 
-    pricing:{
-
-
-        // Admin/Owner ke liye
-        purchasePrice:{
-            type:Number,
-            default:0
-        },
+//     description:{
+//         type:String,
+//         default:""
+//     },
 
 
-        // Customer ko ye price dikhega
-        sellingPrice:{
-            type:Number,
-            required:true
-        },
+//     shortDescription:{
+//         type:String,
+//         default:""
+//     },
 
 
-        mrp:{
-            type:Number,
-            default:0
-        },
+
+//     // Product Images
+
+//     images:[
+//         {
+//             url:{
+//                 type:String,
+//                 required:true
+//             },
+
+//             alt:{
+//                 type:String,
+//                 default:""
+//             }
+//         }
+//     ],
 
 
-        discount:{
-            type:Number,
-            default:0
-        },
+
+//     // Pricing Details
+
+//     pricing:{
 
 
-        gst:{
-            type:Number,
-            default:0
-        }
+//         // Admin/Owner ke liye
+//         purchasePrice:{
+//             type:Number,
+//             default:0
+//         },
 
-    },
+
+//         // Customer ko ye price dikhega
+//         sellingPrice:{
+//             type:Number,
+//             required:true
+//         },
+
+
+//         mrp:{
+//             type:Number,
+//             default:0
+//         },
+
+
+//         discount:{
+//             type:Number,
+//             default:0
+//         },
+
+
+//         gst:{
+//             type:Number,
+//             default:0
+//         }
+
+//     },
 
 
 
@@ -135,78 +135,390 @@ const productSchema = new mongoose.Schema(
 
 
 
-    // Product Specifications
+//     // Product Specifications
 
-    specifications:{
-        type:Object,
-        default:{}
-    },
-
-
-
-    // SEO
-
-    metaTitle:{
-        type:String,
-        default:""
-    },
-
-
-    metaDescription:{
-        type:String,
-        default:""
-    },
+//     specifications:{
+//         type:Object,
+//         default:{}
+//     },
 
 
 
-    // Product Status
+//     // SEO
 
-  status:{
-    type:String,
+//     metaTitle:{
+//         type:String,
+//         default:""
+//     },
 
-    enum:[
-        PRODUCT_STATUS.ACTIVE,
-        PRODUCT_STATUS.INACTIVE,
-        PRODUCT_STATUS.OUT_OF_STOCK,
-        PRODUCT_STATUS.DISCONTINUED
-    ],
 
-    default: PRODUCT_STATUS.ACTIVE
-},
+//     metaDescription:{
+//         type:String,
+//         default:""
+//     },
 
 
 
-    // Soft Delete
+//     // Product Status
 
-    isDeleted:{
-        type:Boolean,
-        default:false
-    },
+//   status:{
+//     type:String,
 
+//     enum:[
+//         PRODUCT_STATUS.ACTIVE,
+//         PRODUCT_STATUS.INACTIVE,
+//         PRODUCT_STATUS.OUT_OF_STOCK,
+//         PRODUCT_STATUS.DISCONTINUED
+//     ],
 
-
-    // Kis Admin ne banaya
-
-    createdBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
-    }
-
-
-},
-{
-    timestamps:true
-}
-
-);
+//     default: PRODUCT_STATUS.ACTIVE
+// },
 
 
 
-const Product = mongoose.model(
-    "Product",
-    productSchema
-);
+//     // Soft Delete
 
+//     isDeleted:{
+//         type:Boolean,
+//         default:false
+//     },
+
+
+
+//     // Kis Admin ne banaya
+
+//     createdBy:{
+//         type:mongoose.Schema.Types.ObjectId,
+//         ref:"User"
+//     }
+
+
+// },
+// {
+//     timestamps:true
+// }
+
+// );
+
+
+
+// const Product = mongoose.model(
+//     "Product",
+//     productSchema
+// );
+
+
+
+// export default Product;
+
+
+
+
+
+
+
+
+
+
+
+
+import mongoose from "mongoose";
+
+import {
+    PRODUCT_STATUS
+} from "../../common/constants/productStatus.js";
+
+
+const productSchema =
+    new mongoose.Schema(
+
+        {
+
+            // =================================================
+            // BASIC INFORMATION
+            // =================================================
+
+            name: {
+
+                type: String,
+
+                required: true,
+
+                trim: true
+
+            },
+
+
+            slug: {
+
+                type: String,
+
+                unique: true,
+
+                lowercase: true,
+
+                trim: true
+
+            },
+
+
+            sku: {
+
+                type: String,
+
+                unique: true,
+
+                trim: true
+
+            },
+
+
+            barcode: {
+
+                type: String,
+
+                unique: true,
+
+                sparse: true
+
+            },
+
+
+            // =================================================
+            // CATEGORY
+            // =================================================
+
+            category: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref: "Category",
+
+                required: true
+
+            },
+
+
+            // =================================================
+            // BRAND
+            // =================================================
+
+            brand: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref: "Brand",
+
+                required: true
+
+            },
+
+
+            // =================================================
+            // DESCRIPTION
+            // =================================================
+
+            description: {
+
+                type: String,
+
+                default: ""
+
+            },
+
+
+            shortDescription: {
+
+                type: String,
+
+                default: ""
+
+            },
+
+
+            // =================================================
+            // IMAGES
+            // =================================================
+
+            images: [
+
+                {
+
+                    url: {
+
+                        type: String,
+
+                        required: true
+
+                    },
+
+                    alt: {
+
+                        type: String,
+
+                        default: ""
+
+                    }
+
+                }
+
+            ],
+
+
+            // =================================================
+            // PRICING
+            // =================================================
+
+            pricing: {
+
+                purchasePrice: {
+
+                    type: Number,
+
+                    default: 0
+
+                },
+
+                sellingPrice: {
+
+                    type: Number,
+
+                    required: true
+
+                },
+
+                mrp: {
+
+                    type: Number,
+
+                    default: 0
+
+                },
+
+                discount: {
+
+                    type: Number,
+
+                    default: 0
+
+                },
+
+                gst: {
+
+                    type: Number,
+
+                    default: 0
+
+                }
+
+            },
+
+
+            // =================================================
+            // SPECIFICATIONS
+            // =================================================
+
+            specifications: {
+
+                type: Object,
+
+                default: {}
+
+            },
+
+
+            // =================================================
+            // SEO
+            // =================================================
+
+            metaTitle: {
+
+                type: String,
+
+                default: ""
+
+            },
+
+
+            metaDescription: {
+
+                type: String,
+
+                default: ""
+
+            },
+
+
+            // =================================================
+            // STATUS
+            // =================================================
+
+            status: {
+
+                type: String,
+
+                enum: [
+
+                    PRODUCT_STATUS.ACTIVE,
+
+                    PRODUCT_STATUS.INACTIVE,
+
+                    PRODUCT_STATUS.OUT_OF_STOCK,
+
+                    PRODUCT_STATUS.DISCONTINUED
+
+                ],
+
+                default:
+                    PRODUCT_STATUS.ACTIVE
+
+            },
+
+
+            // =================================================
+            // SOFT DELETE
+            // =================================================
+
+            isDeleted: {
+
+                type: Boolean,
+
+                default: false
+
+            },
+
+
+            // =================================================
+            // CREATED BY
+            // =================================================
+
+            createdBy: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref: "User"
+
+            }
+
+        },
+
+        {
+
+            timestamps: true
+
+        }
+
+    );
+
+
+const Product =
+    mongoose.model(
+        "Product",
+        productSchema
+    );
 
 
 export default Product;

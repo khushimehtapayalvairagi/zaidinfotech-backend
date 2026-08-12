@@ -3,37 +3,46 @@ import {
     getProductsDB,
     getProductByIdDB,
     getProductByNameDB,
-    getProductBySKUDB,
     updateProductDB,
     deleteProductDB,
     searchProductsDB,
-    getShopProductsDB
+    getShopProductsDB,
+    getProductByBarcodeDB,
+    findProductsByReceptionist
 } from "./product.repository.js";
 
 import Category from "../categories/category.model.js";
+
 import Brand from "../brands/brand.model.js";
+
 import Inventory from "../inventory/inventory.model.js";
 
 import generateSlug from "../../common/utils/generateSlug.js";
+
 import generateSKU from "../../common/utils/generateSKU.js";
-import {
-   
-    getProductByBarcodeDB
-} from "./product.repository.js";
 
 
-import { findProductsByReceptionist } from './product.repository.js';
+// =====================================================
+// PRODUCTS ADDED BY RECEPTIONIST
+// =====================================================
 
-export const fetchProductsAddedByReceptionist = async (receptionistId) => {
-  const products = await findProductsByReceptionist(receptionistId);
-  return products;
-}
-  /*
+export const fetchProductsAddedByReceptionist = async (
+    receptionistId
+) => {
 
-=========================================
-Create Product
-=========================================
-*/
+    const products =
+        await findProductsByReceptionist(
+            receptionistId
+        );
+
+    return products;
+
+};
+
+
+// =====================================================
+// CREATE PRODUCT
+// =====================================================
 
 export const createProductService = async (
     data,
@@ -41,137 +50,365 @@ export const createProductService = async (
     files = []
 ) => {
 
-    // =========================
-    // Duplicate Product
-    // =========================
+    try {
 
-    const existingProduct =
-        await getProductByNameDB(data.name);
+        console.log(
+            "========== CREATE PRODUCT SERVICE =========="
+        );
 
-    // const existingProduct =
-    // await getProductByNameDB(data.productName);
+        console.log(
+            "Incoming Product Data:",
+            data
+        );
 
-    if (existingProduct) {
-        throw new Error("Product already exists");
-    }
+        console.log(
+            "Files:",
+            files
+        );
 
-    // =========================
-    // Duplicate Barcode
-    // =========================
 
-    if (data.barcode) {
+        // =================================================
+        // DUPLICATE PRODUCT
+        // =================================================
 
-      const barcodeExists =
-await getProductByBarcodeDB(data.barcode);
+        const existingProduct =
+            await getProductByNameDB(
+                data.name
+            );
 
-        if (barcodeExists) {
-            throw new Error("Barcode already exists");
+
+        if (existingProduct) {
+
+            throw new Error(
+                "Product already exists"
+            );
+
         }
 
+
+        // =================================================
+        // DUPLICATE BARCODE
+        // =================================================
+
+        if (data.barcode) {
+
+            const barcodeExists =
+                await getProductByBarcodeDB(
+                    data.barcode
+                );
+
+
+            if (barcodeExists) {
+
+                throw new Error(
+                    "Barcode already exists"
+                );
+
+            }
+
+        }
+
+
+        // =================================================
+        // CATEGORY VALIDATION
+        // =================================================
+
+        const category =
+            await Category.findById(
+                data.category
+            );
+
+
+        if (!category) {
+
+            throw new Error(
+                "Category not found"
+            );
+
+        }
+
+
+        // =================================================
+        // BRAND VALIDATION
+        // =================================================
+
+        const brand =
+            await Brand.findById(
+                data.brand
+            );
+
+
+        if (!brand) {
+
+            throw new Error(
+                "Brand not found"
+            );
+
+        }
+
+
+        // =================================================
+        // PRICING
+        // =================================================
+        //
+        // At this point data.pricing is already an object
+        // because parseProductMultipartData converted it
+        // before Joi validation.
+        //
+        // =================================================
+
+        const pricing = {
+
+            purchasePrice:
+                Number(
+                    data.pricing?.purchasePrice ?? 0
+                ),
+
+            sellingPrice:
+                Number(
+                    data.pricing?.sellingPrice ?? 0
+                ),
+
+            mrp:
+                Number(
+                    data.pricing?.mrp ?? 0
+                ),
+
+            discount:
+                Number(
+                    data.pricing?.discount ?? 0
+                ),
+
+            gst:
+                Number(
+                    data.pricing?.gst ?? 0
+                )
+
+        };
+
+
+        // =================================================
+        // SLUG
+        // =================================================
+
+        const slug =
+            generateSlug(
+                data.name
+            );
+
+
+        // =================================================
+        // SKU
+        // =================================================
+
+        const products =
+            await getProductsDB();
+
+
+        const sku =
+            generateSKU(
+
+                category.name,
+
+                brand.name,
+
+                products.length + 1
+
+            );
+
+
+        // =================================================
+        // IMAGES
+        // =================================================
+
+        let images = [];
+
+
+        if (
+            files &&
+            files.length > 0
+        ) {
+
+            images =
+                files.map(
+                    (file) => ({
+
+                        url:
+                            `/uploads/products/${file.filename}`,
+
+                        alt:
+                            data.name
+
+                    })
+                );
+
+        }
+
+
+        // =================================================
+        // FINAL PRODUCT DATA
+        // =================================================
+
+        const productData = {
+
+            name:
+                data.name,
+
+            category:
+                data.category,
+
+            brand:
+                data.brand,
+
+            shortDescription:
+                data.shortDescription || "",
+
+            description:
+                data.description || "",
+
+            pricing,
+
+            slug,
+
+            sku,
+
+            images,
+
+            createdBy:
+                userId
+
+        };
+
+
+        // =================================================
+        // BARCODE
+        // =================================================
+
+        if (data.barcode) {
+
+            productData.barcode =
+                data.barcode;
+
+        }
+
+
+        // =================================================
+        // SPECIFICATIONS
+        // =================================================
+
+        if (data.specifications) {
+
+            productData.specifications =
+                data.specifications;
+
+        }
+
+
+        // =================================================
+        // SEO
+        // =================================================
+
+        if (data.metaTitle) {
+
+            productData.metaTitle =
+                data.metaTitle;
+
+        }
+
+
+        if (data.metaDescription) {
+
+            productData.metaDescription =
+                data.metaDescription;
+
+        }
+
+
+        // =================================================
+        // STATUS
+        // =================================================
+
+        if (data.status) {
+
+            productData.status =
+                data.status;
+
+        }
+
+
+        // =================================================
+        // DEBUG
+        // =================================================
+
+        console.log(
+            "FINAL PRODUCT DATA:",
+            productData
+        );
+
+
+        // =================================================
+        // CREATE PRODUCT
+        // =================================================
+
+        const product =
+            await createProductDB(
+                productData
+            );
+
+
+        // =================================================
+        // AUTO CREATE INVENTORY
+        // =================================================
+
+        await Inventory.create({
+
+            product:
+                product._id,
+
+            currentStock:
+                0,
+
+            reservedStock:
+                0,
+
+            minimumStock:
+                0,
+
+            maximumStock:
+                0,
+
+            warehouseLocation:
+                "",
+
+            createdBy:
+                userId
+
+        });
+
+
+        // =================================================
+        // RETURN
+        // =================================================
+
+        return product;
+
+    } catch (error) {
+
+        console.error(
+            "CREATE PRODUCT SERVICE ERROR:",
+            error
+        );
+
+        throw error;
+
     }
-
-    // =========================
-    // Category Validation
-    // =========================
-
-    const category =
-        await Category.findById(data.category);
-
-    if (!category) {
-        throw new Error("Category not found");
-    }
-
-    // =========================
-    // Brand Validation
-    // =========================
-
-    const brand =
-        await Brand.findById(data.brand);
-
-    if (!brand) {
-        throw new Error("Brand not found");
-    }
-
-    // =========================
-    // Slug
-    // =========================
-
-    data.slug = generateSlug(data.name);
-
-    // =========================
-    // SKU
-    // =========================
-
-    const products =
-        await getProductsDB();
-
-    data.sku = generateSKU(
-        category.name,
-        brand.name,
-        products.length + 1
-    );
-
-    // =========================
-    // Images
-    // =========================
-
-    if (files.length > 0) {
-
-        data.images = files.map(file => ({
-
-            url: file.path,
-
-            alt: data.name
-            // alt: data.productName
-
-        }));
-
-    }
-
-    // =========================
-    // Created By
-    // =========================
-
-    data.createdBy = userId;
-
-    // =========================
-    // Save Product
-    // =========================
-
-    const product =
-        await createProductDB(data);
-
-    // =========================
-    // Auto Inventory Create
-    // =========================
-
-    await Inventory.create({
-
-        product: product._id,
-
-        currentStock: 0,
-
-        reservedStock: 0,
-
-        minimumStock: 0,
-
-        maximumStock: 0,
-
-        warehouseLocation: "",
-
-        createdBy: userId
-
-    });
-
-    return product;
 
 };
 
-/*
-=========================================
-Get Products
-=========================================
-*/
+
+// =====================================================
+// GET PRODUCTS
+// =====================================================
 
 export const getProductsService = async () => {
 
@@ -179,98 +416,186 @@ export const getProductsService = async () => {
 
 };
 
-/*
-=========================================
-Get Product
-=========================================
-*/
 
-export const getProductService = async (id) => {
+// =====================================================
+// GET SINGLE PRODUCT
+// =====================================================
+
+export const getProductService = async (
+    id
+) => {
 
     const product =
-        await getProductByIdDB(id);
+        await getProductByIdDB(
+            id
+        );
+
 
     if (!product) {
 
-        throw new Error("Product not found");
+        throw new Error(
+            "Product not found"
+        );
 
     }
+
 
     return product;
 
 };
 
-/*
-=========================================
-Update Product
-=========================================
-*/
+
+// =====================================================
+// UPDATE PRODUCT
+// =====================================================
 
 export const updateProductService = async (
     id,
     data
 ) => {
 
-    // if (data.name) {
+    // =================================================
+    // HANDLE FLAT PRICING
+    // =================================================
 
-    //     data.slug =
-    //         generateSlug(data.name);
+    const hasFlatPricing =
+        data.purchasePrice !== undefined ||
+        data.sellingPrice !== undefined ||
+        data.mrp !== undefined ||
+        data.discount !== undefined ||
+        data.gst !== undefined;
 
-    // }
+
+    if (hasFlatPricing) {
+
+        data.pricing = {
+
+            purchasePrice:
+                Number(
+                    data.purchasePrice || 0
+                ),
+
+            sellingPrice:
+                Number(
+                    data.sellingPrice || 0
+                ),
+
+            mrp:
+                Number(
+                    data.mrp || 0
+                ),
+
+            discount:
+                Number(
+                    data.discount || 0
+                ),
+
+            gst:
+                Number(
+                    data.gst || 0
+                )
+
+        };
+
+
+        delete data.purchasePrice;
+
+        delete data.sellingPrice;
+
+        delete data.mrp;
+
+        delete data.discount;
+
+        delete data.gst;
+
+    }
+
+
+    // =================================================
+    // SLUG
+    // =================================================
+
+    if (data.name) {
+
+        data.slug =
+            generateSlug(
+                data.name
+            );
+
+    }
+
+
+    // =================================================
+    // UPDATE
+    // =================================================
 
     const product =
-        await updateProductDB(id, data);
+        await updateProductDB(
+            id,
+            data
+        );
+
 
     if (!product) {
 
-        throw new Error("Product not found");
+        throw new Error(
+            "Product not found"
+        );
 
     }
+
 
     return product;
 
 };
 
-/*
-=========================================
-Delete Product
-=========================================
-*/
 
-export const deleteProductService = async (id) => {
+// =====================================================
+// DELETE PRODUCT
+// =====================================================
+
+export const deleteProductService = async (
+    id
+) => {
 
     const product =
-        await deleteProductDB(id);
+        await deleteProductDB(
+            id
+        );
+
 
     if (!product) {
 
-        throw new Error("Product not found");
+        throw new Error(
+            "Product not found"
+        );
 
     }
+
 
     return product;
 
 };
 
-/*
-=========================================
-Search Product
-=========================================
-*/
+
+// =====================================================
+// SEARCH PRODUCTS
+// =====================================================
 
 export const searchProductService = async (
     keyword
 ) => {
 
-    return await searchProductsDB(keyword);
+    return await searchProductsDB(
+        keyword
+    );
 
 };
 
-/*
-=========================================
-Customer Shop Products
-=========================================
-*/
+
+// =====================================================
+// CUSTOMER SHOP PRODUCTS
+// =====================================================
 
 export const getShopProductsService = async () => {
 

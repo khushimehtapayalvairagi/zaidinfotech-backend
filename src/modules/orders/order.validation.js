@@ -411,19 +411,36 @@ paymentMethod: Joi.string()
 // UPDATE ORDER STATUS
 // ======================================================
 
+// export const updateOrderStatusValidation =
+//   Joi.object({
+
+//     status: Joi.string()
+//       .valid(
+//         ...Object.values(
+//           ORDER_STATUS
+//         )
+//       )
+//       .required(),
+
+//   });
+
 export const updateOrderStatusValidation =
-  Joi.object({
+Joi.object({
 
-    status: Joi.string()
-      .valid(
-        ...Object.values(
-          ORDER_STATUS
-        )
+  status: Joi.string()
+    .valid(
+      ...Object.values(
+        ORDER_STATUS
       )
-      .required(),
+    )
+    .required(),
 
-  });
+  message: Joi.string()
+    .allow("")
+    .max(500)
+    .default(""),
 
+});
 
 // ======================================================
 // UPDATE PAYMENT STATUS

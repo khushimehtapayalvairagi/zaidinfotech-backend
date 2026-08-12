@@ -1,7 +1,375 @@
-import Invoice from "./invoice.model.js";
+// import Invoice from "./invoice.model.js";
 
-import * as invoiceRepository
-  from "./invoice.repository.js";
+// import * as invoiceRepository
+//   from "./invoice.repository.js";
+
+// import Order from "../orders/order.model.js";
+// import Payment from "../payments/payment.model.js";
+
+// // ==========================================
+// // GENERATE INVOICE NUMBER
+// // ==========================================
+
+// const generateInvoiceNumber = async () => {
+
+//   const count =
+//     await Invoice.countDocuments();
+
+//   const nextNumber =
+//     count + 1;
+
+//   return `INV${new Date().getFullYear()}${String(
+//     nextNumber
+//   ).padStart(6, "0")}`;
+// };
+
+
+// // ==========================================
+// // CREATE INVOICE FROM ORDER
+// // ==========================================
+
+// export const createInvoiceFromOrder =
+// async (orderId) => {
+
+//   // ----------------------------------------
+//   // CHECK EXISTING INVOICE
+//   // ----------------------------------------
+
+//   const existingInvoice =
+//     await invoiceRepository.findInvoiceByOrderId(
+//       orderId
+//     );
+
+//   if (existingInvoice) {
+//     return existingInvoice;
+//   }
+
+
+//   // ----------------------------------------
+//   // FIND ORDER
+//   // ----------------------------------------
+
+//   const order =
+//     await Order.findById(orderId)
+//       .populate("user")
+//       .populate("soldBy")
+//       .populate("orderItems.product");
+
+
+//   if (!order) {
+//     throw new Error("Order not found");
+//   }
+
+
+//   // ----------------------------------------
+//   // ORDER MUST BE PAID
+//   // ----------------------------------------
+
+//   if (
+//     order.paymentStatus !== "PAID"
+//   ) {
+//     throw new Error(
+//       "Invoice can only be generated for paid order"
+//     );
+//   }
+
+
+//   // ----------------------------------------
+//   // FIND SUCCESSFUL PAYMENT
+//   // ----------------------------------------
+
+//   const payment =
+//     await Payment.findOne({
+
+//       referenceId: order._id,
+
+//       paymentFor: "ORDER",
+
+//       paymentStatus: "SUCCESS",
+
+//       isDeleted: false,
+
+//     }).sort({
+//       createdAt: -1,
+//     });
+
+
+//   // ----------------------------------------
+//   // ITEMS
+//   // ----------------------------------------
+
+//   const items =
+//     order.orderItems.map((item) => {
+
+//       return {
+
+//         product:
+//           item.product?._id ||
+//           item.product ||
+//           null,
+
+//         title:
+//           item.title,
+
+//         quantity:
+//           item.quantity,
+
+//         originalPrice:
+//           item.originalPrice,
+
+//         discountAmount:
+//           item.discountAmount || 0,
+
+//         price:
+//           item.price,
+
+//         total:
+//           item.price *
+//           item.quantity,
+
+//         imageUrl:
+//           item.imageUrl || "",
+
+//       };
+
+//     });
+
+
+//   // ----------------------------------------
+//   // SUBTOTAL
+//   // ----------------------------------------
+
+//   const subtotal =
+//     order.orderItems.reduce(
+//       (sum, item) => {
+
+//         return (
+//           sum +
+//           (
+//             item.originalPrice *
+//             item.quantity
+//           )
+//         );
+
+//       },
+//       0
+//     );
+
+
+//   // ----------------------------------------
+//   // DISCOUNT
+//   // ----------------------------------------
+
+//   const discount =
+//     order.orderItems.reduce(
+//       (sum, item) => {
+
+//         return (
+//           sum +
+//           (
+//             (item.discountAmount || 0) *
+//             item.quantity
+//           )
+//         );
+
+//       },
+//       0
+//     );
+
+
+//   // ----------------------------------------
+//   // PAID AMOUNT
+//   // ----------------------------------------
+
+//   const paidAmount =
+//     Number(order.paidAmount || 0);
+
+
+//   // ----------------------------------------
+//   // BALANCE
+//   // ----------------------------------------
+
+//   const balanceAmount =
+//     Math.max(
+//       Number(order.totalAmount) -
+//       paidAmount,
+//       0
+//     );
+
+
+//   // ----------------------------------------
+//   // CREATE INVOICE
+//   // ----------------------------------------
+
+//   // const invoice =
+//   //   await invoiceRepository.createInvoice({
+
+//   //     invoiceNumber:
+//   //       await generateInvoiceNumber(),
+
+//   //     order:
+//   //       order._id,
+
+//   //     user:
+//   //       order.user._id,
+
+//   //     orderSource:
+//   //       order.orderSource,
+
+//   //     soldBy:
+//   //       order.soldBy?._id || null,
+
+//   //     items,
+
+//   //     subtotal,
+
+//   //     discount,
+
+//   //     totalAmount:
+//   //       order.totalAmount,
+
+//   //     paidAmount,
+
+//   //     balanceAmount,
+
+//   //     paymentStatus:
+//   //       order.paymentStatus,
+
+//   //     paymentMethod:
+//   //       payment?.paymentMethod || "",
+
+//   //     payment:
+//   //       payment?._id || null,
+
+//   //     billingAddress:
+//   //       order.shippingAddress,
+
+//   //     invoiceDate:
+//   //       new Date(),
+
+//   //   });
+
+// const invoice =
+// await invoiceRepository.createInvoice({
+
+//     invoiceNumber:
+//         await generateInvoiceNumber(),
+
+//     order:
+//         order._id,
+
+//     // user:
+//     //     order.user._id,
+
+//     user:
+//     order.user?._id || null,
+
+//     // ADD THIS
+//     invoiceFor: "ORDER",
+
+//     // orderSource:
+//     //     order.orderSource,
+//     orderSource:
+//     order.orderSource || "ONLINE",
+
+//     soldBy:
+//         order.soldBy?._id || null,
+
+//     items,
+
+//     subtotal,
+
+//     discount,
+
+//     totalAmount:
+//         order.totalAmount,
+
+//     paidAmount,
+
+//     balanceAmount,
+
+//     paymentStatus:
+//         order.paymentStatus,
+
+//     paymentMethod:
+//         payment?.paymentMethod || "",
+
+//     payment:
+//         payment?._id || null,
+
+//     billingAddress:
+//         order.shippingAddress,
+
+//     invoiceDate:
+//         new Date(),
+
+// });
+//   return invoice;
+// };
+
+
+// // ==========================================
+// // GET INVOICE BY ID
+// // ==========================================
+
+// export const getInvoiceById =
+// async (invoiceId) => {
+
+//   const invoice =
+//     await invoiceRepository.findInvoiceById(
+//       invoiceId
+//     );
+
+//   if (!invoice) {
+//     throw new Error(
+//       "Invoice not found"
+//     );
+//   }
+
+//   return invoice;
+// };
+
+
+// // ==========================================
+// // GET INVOICE BY ORDER
+// // ==========================================
+
+// export const getInvoiceByOrderId =
+// async (orderId) => {
+
+//   const invoice =
+//     await invoiceRepository.findInvoiceByOrderId(
+//       orderId
+//     );
+
+//   if (!invoice) {
+//     throw new Error(
+//       "Invoice not found"
+//     );
+//   }
+
+//   return invoice;
+// };
+
+
+// // ==========================================
+// // GET ALL
+// // ==========================================
+
+// export const getAllInvoices =
+// async () => {
+
+//   return await
+//     invoiceRepository.findAllInvoices();
+
+// };
+
+
+
+
+
+import Invoice from "./invoice.model.js";
+import * as invoiceRepository from "./invoice.repository.js";
 
 import Order from "../orders/order.model.js";
 import Payment from "../payments/payment.model.js";
@@ -11,97 +379,119 @@ import Payment from "../payments/payment.model.js";
 // ==========================================
 
 const generateInvoiceNumber = async () => {
+  const year = new Date().getFullYear();
 
-  const count =
-    await Invoice.countDocuments();
+  const count = await Invoice.countDocuments();
 
-  const nextNumber =
-    count + 1;
+  const nextNumber = count + 1;
 
-  return `INV${new Date().getFullYear()}${String(
-    nextNumber
-  ).padStart(6, "0")}`;
+  return `INV${year}${String(nextNumber).padStart(6, "0")}`;
 };
-
 
 // ==========================================
 // CREATE INVOICE FROM ORDER
 // ==========================================
 
-export const createInvoiceFromOrder =
-async (orderId) => {
+export const createInvoiceFromOrder = async (orderId) => {
+  console.log("=================================");
+  console.log("CREATE INVOICE STARTED");
+  console.log("ORDER ID:", orderId);
 
-  // ----------------------------------------
-  // CHECK EXISTING INVOICE
-  // ----------------------------------------
+  // ==========================================
+  // 1. CHECK EXISTING INVOICE
+  // ==========================================
 
   const existingInvoice =
-    await invoiceRepository.findInvoiceByOrderId(
-      orderId
-    );
+    await invoiceRepository.findInvoiceByOrderId(orderId);
 
   if (existingInvoice) {
+    console.log(
+      "INVOICE ALREADY EXISTS:",
+      existingInvoice.invoiceNumber
+    );
+
     return existingInvoice;
   }
 
+  // ==========================================
+  // 2. FIND ORDER
+  // ==========================================
 
-  // ----------------------------------------
-  // FIND ORDER
-  // ----------------------------------------
-
-  const order =
-    await Order.findById(orderId)
-      .populate("user")
-      .populate("soldBy")
-      .populate("orderItems.product");
-
+  const order = await Order.findById(orderId)
+    .populate("user")
+    .populate("soldBy")
+    .populate("orderItems.product");
 
   if (!order) {
     throw new Error("Order not found");
   }
 
+  console.log("ORDER FOUND:", order._id);
+  console.log("ORDER SOURCE:", order.orderSource);
+  console.log("ORDER PAYMENT STATUS:", order.paymentStatus);
+  console.log("ORDER PAID AMOUNT:", order.paidAmount);
 
-  // ----------------------------------------
-  // ORDER MUST BE PAID
-  // ----------------------------------------
+  // ==========================================
+  // 3. USER VALIDATION
+  // ==========================================
 
-  if (
-    order.paymentStatus !== "PAID"
-  ) {
+  if (!order.user?._id) {
     throw new Error(
-      "Invoice can only be generated for paid order"
+      "Customer/user is missing from order"
     );
   }
 
+  // ==========================================
+  // 4. ORDER MUST BE PAID
+  // ==========================================
 
-  // ----------------------------------------
-  // FIND SUCCESSFUL PAYMENT
-  // ----------------------------------------
+  if (order.paymentStatus !== "PAID") {
+    throw new Error(
+      `Invoice can only be generated for paid order. Current status: ${order.paymentStatus}`
+    );
+  }
 
-  const payment =
-    await Payment.findOne({
+  // ==========================================
+  // 5. FIND SUCCESSFUL PAYMENT
+  // ==========================================
 
-      referenceId: order._id,
-
-      paymentFor: "ORDER",
-
-      paymentStatus: "SUCCESS",
-
-      isDeleted: false,
-
-    }).sort({
+  const payment = await Payment.findOne({
+    referenceId: order._id,
+    paymentFor: "ORDER",
+    paymentStatus: "SUCCESS",
+    isDeleted: false,
+  })
+    .sort({
       createdAt: -1,
     });
 
+  console.log(
+    "SUCCESSFUL PAYMENT FOUND:",
+    payment
+  );
 
-  // ----------------------------------------
-  // ITEMS
-  // ----------------------------------------
+  // ==========================================
+  // IMPORTANT
+  //
+  // Walk-in payment may not have a Payment
+  // document.
+  //
+  // Therefore DO NOT force payment to exist.
+  // ==========================================
 
-  const items =
-    order.orderItems.map((item) => {
+  // ==========================================
+  // 6. ITEMS
+  // ==========================================
 
+  const items = (order.orderItems || []).map(
+    (item) => {
       return {
+        itemType: "PRODUCT",
+
+        referenceId:
+          item.product?._id ||
+          item.product ||
+          null,
 
         product:
           item.product?._id ||
@@ -109,158 +499,221 @@ async (orderId) => {
           null,
 
         title:
-          item.title,
+          item.title ||
+          item.product?.title ||
+          "Product",
+
+        description:
+          item.description ||
+          "",
 
         quantity:
-          item.quantity,
+          Number(item.quantity || 1),
 
         originalPrice:
-          item.originalPrice,
+          Number(item.originalPrice || 0),
 
         discountAmount:
-          item.discountAmount || 0,
+          Number(item.discountAmount || 0),
 
         price:
-          item.price,
+          Number(item.price || 0),
 
         total:
-          item.price *
-          item.quantity,
+          Number(item.price || 0) *
+          Number(item.quantity || 1),
 
         imageUrl:
-          item.imageUrl || "",
-
+          item.imageUrl ||
+          "",
       };
+    }
+  );
 
-    });
+  // ==========================================
+  // 7. SUBTOTAL
+  // ==========================================
 
+  const subtotal = items.reduce(
+    (sum, item) => {
+      return (
+        sum +
+        Number(item.originalPrice || 0) *
+          Number(item.quantity || 1)
+      );
+    },
+    0
+  );
 
-  // ----------------------------------------
-  // SUBTOTAL
-  // ----------------------------------------
+  // ==========================================
+  // 8. DISCOUNT
+  // ==========================================
 
-  const subtotal =
-    order.orderItems.reduce(
-      (sum, item) => {
+  const discount = items.reduce(
+    (sum, item) => {
+      return (
+        sum +
+        Number(item.discountAmount || 0) *
+          Number(item.quantity || 1)
+      );
+    },
+    0
+  );
 
-        return (
-          sum +
-          (
-            item.originalPrice *
-            item.quantity
-          )
-        );
+  // ==========================================
+  // 9. TOTAL
+  // ==========================================
 
-      },
-      0
-    );
+  const totalAmount =
+    Number(order.totalAmount || 0);
 
+  // ==========================================
+  // 10. PAID AMOUNT
+  // ==========================================
 
-  // ----------------------------------------
-  // DISCOUNT
-  // ----------------------------------------
-
-  const discount =
-    order.orderItems.reduce(
-      (sum, item) => {
-
-        return (
-          sum +
-          (
-            (item.discountAmount || 0) *
-            item.quantity
-          )
-        );
-
-      },
-      0
-    );
-
-
-  // ----------------------------------------
-  // PAID AMOUNT
-  // ----------------------------------------
-
-  const paidAmount =
+  let paidAmount =
     Number(order.paidAmount || 0);
 
+  // ==========================================
+  // ONLINE PAYMENT FALLBACK
+  //
+  // If order.paidAmount is 0 but successful
+  // Razorpay payment exists, use payment amount.
+  // ==========================================
 
-  // ----------------------------------------
-  // BALANCE
-  // ----------------------------------------
+  if (
+    paidAmount <= 0 &&
+    payment
+  ) {
+    paidAmount =
+      Number(
+        payment.amount ||
+        payment.paidAmount ||
+        0
+      );
+  }
 
-  const balanceAmount =
-    Math.max(
-      Number(order.totalAmount) -
-      paidAmount,
-      0
-    );
+  // ==========================================
+  // 11. BALANCE
+  // ==========================================
 
+  const balanceAmount = Math.max(
+    totalAmount - paidAmount,
+    0
+  );
 
-  // ----------------------------------------
-  // CREATE INVOICE
-  // ----------------------------------------
+  // ==========================================
+  // 12. ORDER SOURCE
+  // ==========================================
+
+  const orderSource =
+    order.orderSource === "WALK_IN"
+      ? "WALK_IN"
+      : "ONLINE";
+
+  // ==========================================
+  // 13. PAYMENT METHOD
+  // ==========================================
+
+  let paymentMethod =
+    payment?.paymentMethod ||
+    order.paymentMethod ||
+    "";
+
+  // ==========================================
+  // WALK-IN FALLBACK
+  // ==========================================
+
+  if (
+    orderSource === "WALK_IN" &&
+    !paymentMethod
+  ) {
+    paymentMethod = "CASH";
+  }
+
+  // ==========================================
+  // 14. CREATE INVOICE
+  // ==========================================
+
+  const invoiceData = {
+    invoiceNumber:
+      await generateInvoiceNumber(),
+
+    order:
+      order._id,
+
+    user:
+      order.user._id,
+
+    invoiceFor:
+      "ORDER",
+
+    referenceId:
+      order._id,
+
+    orderSource,
+
+    soldBy:
+      order.soldBy?._id ||
+      null,
+
+    items,
+
+    subtotal,
+
+    discount,
+
+    totalAmount,
+
+    paidAmount,
+
+    balanceAmount,
+
+    paymentStatus:
+      order.paymentStatus,
+
+    paymentMethod,
+
+    payment:
+      payment?._id ||
+      null,
+
+    billingAddress:
+      order.shippingAddress || {},
+
+    invoiceDate:
+      new Date(),
+  };
+
+  console.log(
+    "FINAL INVOICE DATA:",
+    invoiceData
+  );
+
+  // ==========================================
+  // 15. CREATE
+  // ==========================================
 
   const invoice =
-    await invoiceRepository.createInvoice({
+    await invoiceRepository.createInvoice(
+      invoiceData
+    );
 
-      invoiceNumber:
-        await generateInvoiceNumber(),
-
-      order:
-        order._id,
-
-      user:
-        order.user._id,
-
-      orderSource:
-        order.orderSource,
-
-      soldBy:
-        order.soldBy?._id || null,
-
-      items,
-
-      subtotal,
-
-      discount,
-
-      totalAmount:
-        order.totalAmount,
-
-      paidAmount,
-
-      balanceAmount,
-
-      paymentStatus:
-        order.paymentStatus,
-
-      paymentMethod:
-        payment?.paymentMethod || "",
-
-      payment:
-        payment?._id || null,
-
-      billingAddress:
-        order.shippingAddress,
-
-      invoiceDate:
-        new Date(),
-
-    });
-
+  console.log(
+    "INVOICE CREATED SUCCESSFULLY:",
+    invoice._id
+  );
 
   return invoice;
 };
 
-
 // ==========================================
-// GET INVOICE BY ID
+// GET BY ID
 // ==========================================
 
-export const getInvoiceById =
-async (invoiceId) => {
-
+export const getInvoiceById = async (
+  invoiceId
+) => {
   const invoice =
     await invoiceRepository.findInvoiceById(
       invoiceId
@@ -275,14 +728,13 @@ async (invoiceId) => {
   return invoice;
 };
 
-
 // ==========================================
-// GET INVOICE BY ORDER
+// GET BY ORDER
 // ==========================================
 
-export const getInvoiceByOrderId =
-async (orderId) => {
-
+export const getInvoiceByOrderId = async (
+  orderId
+) => {
   const invoice =
     await invoiceRepository.findInvoiceByOrderId(
       orderId
@@ -297,15 +749,10 @@ async (orderId) => {
   return invoice;
 };
 
-
 // ==========================================
 // GET ALL
 // ==========================================
 
-export const getAllInvoices =
-async () => {
-
-  return await
-    invoiceRepository.findAllInvoices();
-
+export const getAllInvoices = async () => {
+  return await invoiceRepository.findAllInvoices();
 };

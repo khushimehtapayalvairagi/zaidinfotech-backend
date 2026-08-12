@@ -1,35 +1,35 @@
-import express from "express";
+// import express from "express";
 
 
-import {
+// import {
 
-createProduct,
-getProducts,
-getProductById,
-updateProduct,
-deleteProduct,
-searchProduct,
-getShopProducts,
-  getProductsAddedByReceptionist, 
-  getProductsOrderedByReceptionist
+// createProduct,
+// getProducts,
+// getProductById,
+// updateProduct,
+// deleteProduct,
+// searchProduct,
+// getShopProducts,
+//   getProductsAddedByReceptionist, 
+//   getProductsOrderedByReceptionist
 
-} from "./product.controller.js";
-import {
-    createProductValidation,
-    updateProductValidation
-} from "./product.validation.js";
+// } from "./product.controller.js";
+// import {
+//     createProductValidation,
+//     updateProductValidation
+// } from "./product.validation.js";
 
-import {
-validate
-} from "../../common/middleware/validate.middleware.js";
+// import {
+// validate
+// } from "../../common/middleware/validate.middleware.js";
 
 
-import { verifyToken } from "../../common/middleware/auth.middleware.js";
-import { allowRoles } from "../../common/middleware/role.middleware.js";
+// import { verifyToken } from "../../common/middleware/auth.middleware.js";
+// import { allowRoles } from "../../common/middleware/role.middleware.js";
 
-import {productUpload} from "../../common/middleware/upload.middleware.js";
+// import {productUpload} from "../../common/middleware/upload.middleware.js";
 
-const router = express.Router();
+// const router = express.Router();
 
 
 
@@ -38,124 +38,351 @@ const router = express.Router();
 
 
   
-router.get('/receptionist/added/:receptionistId', getProductsAddedByReceptionist);
+// router.get('/receptionist/added/:receptionistId', getProductsAddedByReceptionist);
 
-router.get('/receptionist/ordered/:receptionistId', getProductsOrderedByReceptionist);
+// router.get('/receptionist/ordered/:receptionistId', getProductsOrderedByReceptionist);
 
-// ==========================
-// ADMIN PRODUCT ROUTES
-// ==========================
+// // ==========================
+// // ADMIN PRODUCT ROUTES
+// // ==========================
 
 
 
-// Create Product
+// // Create Product
 
-router.post(
-    "/",
-    verifyToken,
-    allowRoles("ADMIN"),
-    validate(createProductValidation),
-    productUpload.array("images",5),
-    createProduct
+// // router.post(
+// //     "/",
+// //     verifyToken,
+// //     allowRoles("ADMIN"),
+// //     validate(createProductValidation),
+// //     productUpload.array("images",5),
+// //     createProduct
 
-);
+// // );
 
-// Get All Products
-// ADMIN + RECEPTIONIST + INVENTORY_MANAGER
-
-router.get(
-    "/",
-    verifyToken,
-    allowRoles(
-        "ADMIN",
-        "RECEPTIONIST",
-        "INVENTORY_MANAGER"
-    ),
-    getProducts
-);
+// router.post(
+//     "/",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     productUpload.array("images", 5),
+//     validate(createProductValidation),
+//     createProduct
+// );
 
 // // Get All Products
+// // ADMIN + RECEPTIONIST + INVENTORY_MANAGER
 
 // router.get(
 //     "/",
 //     verifyToken,
-//     allowRoles("ADMIN"),
+//     allowRoles(
+//         "ADMIN",
+//         "RECEPTIONIST",
+//         "INVENTORY_MANAGER"
+//     ),
 //     getProducts
 // );
 
-// ==========================
-// CUSTOMER SHOP ROUTE
-// ==========================
+// // // Get All Products
 
+// // router.get(
+// //     "/",
+// //     verifyToken,
+// //     allowRoles("ADMIN"),
+// //     getProducts
+// // );
+
+// // ==========================
+// // CUSTOMER SHOP ROUTE
+// // ==========================
+
+
+// router.get(
+//     "/shop",
+//     getShopProducts
+// );
+
+
+// router.get(
+//     "/search",
+//     verifyToken,
+//     allowRoles(
+//         "ADMIN",
+//         "RECEPTIONIST",
+//         "INVENTORY_MANAGER"
+//     ),
+//     searchProduct
+// );
+
+// // // Search Product
+
+// // router.get(
+// //     "/search",
+// //     verifyToken,
+// //     allowRoles("ADMIN"),
+// //     searchProduct
+// // );
+
+// // Get Single Product
+
+// router.get(
+//     "/:id",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     getProductById
+// );
+
+
+
+
+// // Update Product
+
+// router.put(
+//     "/:id",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     validate(updateProductValidation),
+//     updateProduct
+// );
+
+
+// // Delete Product
+
+// router.delete(
+//     "/:id",
+//     verifyToken,
+//     allowRoles("ADMIN"),
+//     deleteProduct
+// );
+
+
+
+
+
+
+
+
+
+
+
+
+
+// export default router;
+
+
+
+
+
+
+import express from "express";
+
+import {
+    createProduct,
+    getProducts,
+    getProductById,
+    updateProduct,
+    deleteProduct,
+    searchProduct,
+    getShopProducts,
+    getProductsAddedByReceptionist,
+    getProductsOrderedByReceptionist,
+    parseProductMultipartData
+} from "./product.controller.js";
+
+import {
+    createProductValidation,
+    updateProductValidation
+} from "./product.validation.js";
+
+import {
+    validate
+} from "../../common/middleware/validate.middleware.js";
+
+import {
+    verifyToken
+} from "../../common/middleware/auth.middleware.js";
+
+import {
+    allowRoles
+} from "../../common/middleware/role.middleware.js";
+
+import {
+    productUpload
+} from "../../common/middleware/upload.middleware.js";
+
+
+const router = express.Router();
+
+
+// =====================================================
+// RECEPTIONIST ROUTES
+// =====================================================
 
 router.get(
-    "/shop",
-    getShopProducts
+
+    "/receptionist/added/:receptionistId",
+
+    getProductsAddedByReceptionist
+
 );
 
 
 router.get(
-    "/search",
+
+    "/receptionist/ordered/:receptionistId",
+
+    getProductsOrderedByReceptionist
+
+);
+
+
+// =====================================================
+// ADMIN - CREATE PRODUCT
+// =====================================================
+//
+// IMPORTANT ORDER:
+//
+// 1. verifyToken
+// 2. allowRoles
+// 3. multer
+// 4. parse multipart JSON
+// 5. Joi validation
+// 6. controller
+//
+// =====================================================
+
+router.post(
+
+    "/",
+
     verifyToken,
+
+    allowRoles("ADMIN"),
+
+    productUpload.array(
+        "images",
+        5
+    ),
+
+    parseProductMultipartData,
+
+    validate(
+        createProductValidation
+    ),
+
+    createProduct
+
+);
+
+
+// =====================================================
+// GET ALL PRODUCTS
+// =====================================================
+
+router.get(
+
+    "/",
+
+    verifyToken,
+
     allowRoles(
         "ADMIN",
         "RECEPTIONIST",
         "INVENTORY_MANAGER"
     ),
-    searchProduct
+
+    getProducts
+
 );
 
-// // Search Product
 
-// router.get(
-//     "/search",
-//     verifyToken,
-//     allowRoles("ADMIN"),
-//     searchProduct
-// );
-
-// Get Single Product
+// =====================================================
+// CUSTOMER SHOP
+// =====================================================
 
 router.get(
-    "/:id",
-    verifyToken,
-    allowRoles("ADMIN"),
-    getProductById
+
+    "/shop",
+
+    getShopProducts
+
 );
 
 
+// =====================================================
+// SEARCH
+// =====================================================
+
+router.get(
+
+    "/search",
+
+    verifyToken,
+
+    allowRoles(
+        "ADMIN",
+        "RECEPTIONIST",
+        "INVENTORY_MANAGER"
+    ),
+
+    searchProduct
+
+);
 
 
-// Update Product
+// =====================================================
+// GET SINGLE PRODUCT
+// =====================================================
+
+router.get(
+
+    "/:id",
+
+    verifyToken,
+
+    allowRoles("ADMIN"),
+
+    getProductById
+
+);
+
+
+// =====================================================
+// UPDATE PRODUCT
+// =====================================================
 
 router.put(
+
     "/:id",
+
     verifyToken,
+
     allowRoles("ADMIN"),
-    validate(updateProductValidation),
+
+    validate(
+        updateProductValidation
+    ),
+
     updateProduct
+
 );
 
 
-// Delete Product
+// =====================================================
+// DELETE PRODUCT
+// =====================================================
 
 router.delete(
+
     "/:id",
+
     verifyToken,
+
     allowRoles("ADMIN"),
+
     deleteProduct
+
 );
-
-
-
-
-
-
-
-
-
-
-
 
 
 export default router;

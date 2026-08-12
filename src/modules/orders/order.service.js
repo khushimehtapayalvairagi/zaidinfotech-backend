@@ -285,6 +285,7 @@ import {
   removeStockService
 } from "../inventory/inventory.service.js";
 
+import Order from "./order.model.js";
 
 // ======================================================
 // CREATE ORDER
@@ -411,6 +412,77 @@ export const createOrder = async (
       orderData
     );
 
+    // ====================================================
+// INITIAL TRACKING HISTORY
+// ====================================================
+
+try {
+
+  const orderForTracking =
+    await Order.findById(order._id);
+
+  if (orderForTracking) {
+
+    if (!orderForTracking.tracking) {
+
+      orderForTracking.tracking = {
+        history: [],
+        courierName: "",
+        trackingNumber: "",
+        trackingUrl: "",
+        expectedDeliveryDate: null,
+      };
+
+    }
+
+    if (
+      !orderForTracking.tracking.history ||
+      !Array.isArray(
+        orderForTracking.tracking.history
+      )
+    ) {
+
+      orderForTracking.tracking.history = [];
+
+    }
+
+
+    orderForTracking.tracking.history.push({
+
+      status:
+        orderForTracking.orderStatus,
+
+      message:
+        orderForTracking.orderSource === "WALK_IN"
+
+          ? "Walk-in order created"
+
+          : "Order placed successfully",
+
+      updatedBy:
+        createdBy,
+
+      createdAt:
+        new Date(),
+
+    });
+
+
+    await orderForTracking.save();
+
+  }
+
+}
+catch (trackingError) {
+
+  // Tracking should NEVER break order creation
+
+  console.error(
+    "TRACKING INITIALIZATION ERROR:",
+    trackingError
+  );
+
+}
 
   // ====================================================
   // WALK-IN STOCK DECREASE
@@ -522,37 +594,201 @@ export const getAllOrders =
 // UPDATE ORDER STATUS
 // ======================================================
 
-export const updateOrderStatus =
-  async (
-    orderId,
-    status
-  ) => {
+// export const updateOrderStatus =
+//   async (
+//     orderId,
+//     status
+//   ) => {
 
-    const order =
-      await orderRepository.findOrderById(
+//     const order =
+//       await orderRepository.findOrderById(
+//         orderId
+//       );
+
+
+//     if (!order) {
+
+//       throw new Error(
+//         "Order not found"
+//       );
+
+//     }
+
+
+//     return await
+//       orderRepository.updateOrderStatus(
+
+//         orderId,
+
+//         status
+
+//       );
+
+//   };
+
+
+// ======================================================
+// UPDATE ORDER STATUS + TRACKING HISTORY
+// ======================================================
+
+export const updateOrderStatus =
+async (
+  orderId,
+  status,
+  updatedBy = null,
+  message = ""
+) => {
+
+  const order =
+    await orderRepository.findOrderById(
+      orderId
+    );
+
+
+  if (!order) {
+
+    throw new Error(
+      "Order not found"
+    );
+
+  }
+
+
+  // ---------------------------------------------
+  // EXISTING ORDER STATUS UPDATE
+  // ---------------------------------------------
+
+  const updatedOrder =
+    await orderRepository.updateOrderStatus(
+
+      orderId,
+
+      status
+
+    );
+
+
+  // ---------------------------------------------
+  // TRACKING HISTORY
+  // ---------------------------------------------
+
+  try {
+
+    const trackingOrder =
+      await Order.findById(
         orderId
       );
 
 
-    if (!order) {
+    if (trackingOrder) {
 
-      throw new Error(
-        "Order not found"
-      );
+      if (
+        !trackingOrder.tracking
+      ) {
+
+        trackingOrder.tracking = {
+
+          history: [],
+
+          courierName: "",
+
+          trackingNumber: "",
+
+          trackingUrl: "",
+
+          expectedDeliveryDate: null,
+
+        };
+
+      }
+
+
+      if (
+        !trackingOrder.tracking.history
+        ||
+        !Array.isArray(
+          trackingOrder.tracking.history
+        )
+      ) {
+
+        trackingOrder.tracking.history = [];
+
+      }
+
+
+      // Prevent duplicate consecutive history
+      const history =
+        trackingOrder.tracking.history;
+
+
+      const lastHistory =
+        history.length > 0
+          ? history[history.length - 1]
+          : null;
+
+
+      if (
+        !lastHistory ||
+        lastHistory.status !== status
+      ) {
+
+        history.push({
+
+          status,
+
+          message:
+            message ||
+            getDefaultTrackingMessage(
+              status
+            ),
+
+          updatedBy,
+
+          createdAt:
+            new Date(),
+
+        });
+
+      }
+
+
+      // Delivered date
+
+      if (
+        status === "DELIVERED"
+      ) {
+
+        trackingOrder.deliveryDate =
+          new Date();
+
+      }
+
+
+      await trackingOrder.save();
 
     }
 
+  }
+  catch (trackingError) {
 
-    return await
-      orderRepository.updateOrderStatus(
+    console.error(
+      "TRACKING UPDATE ERROR:",
+      trackingError
+    );
 
-        orderId,
+  }
 
-        status
 
-      );
+  // ---------------------------------------------
+  // RETURN FRESH ORDER
+  // ---------------------------------------------
 
-  };
+  return await
+    orderRepository.findOrderById(
+      orderId
+    );
+
+};
 
 
 // ======================================================
@@ -593,3 +829,37 @@ export const updatePaymentStatus =
       );
 
   };
+
+  // ======================================================
+// DEFAULT TRACKING MESSAGE
+// ======================================================
+
+const getDefaultTrackingMessage =
+(status) => {
+
+  switch (status) {
+
+    case "PENDING":
+      return "Your order has been placed.";
+
+    case "CONFIRMED":
+      return "Your order has been confirmed.";
+
+    case "PROCESSING":
+      return "Your order is being prepared.";
+
+    case "SHIPPED":
+      return "Your order has been shipped.";
+
+    case "DELIVERED":
+      return "Your order has been delivered.";
+
+    case "CANCELLED":
+      return "Your order has been cancelled.";
+
+    default:
+      return "Order status updated.";
+
+  }
+
+};
