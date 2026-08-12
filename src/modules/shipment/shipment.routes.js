@@ -15,7 +15,9 @@ import {
 
     updateShipmentStatus,
 
-    deleteShipment
+    deleteShipment,
+    getShipmentTracking
+
 
 } from "./shipment.controller.js";
 
@@ -38,7 +40,7 @@ const router = express.Router();
 
 router.get(
     "/:id/tracking",
-    shipmentController.getShipmentTracking
+    getShipmentTracking
 );
 
 
