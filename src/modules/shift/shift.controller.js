@@ -4,37 +4,25 @@ import * as shiftService from "./shift.service.js";
 
 // CREATE
 
-export const createShift = async(req,res)=>{
+export const createShift = async (req, res) => {
+  try {
+    const newshift = await shiftService.createShift({
+      ...req.body,
+      
+    });
 
-try{
-
-const shift =
-await shiftService.createShift({
-    ...req.body,
-    createdBy:req.user._id
-});
-
-
-res.status(201).json({
-
-success:true,
-message:"Shift created successfully",
-data:shift
-
-});
-
-
-}catch(error){
-
-res.status(400).json({
-
-success:false,
-message:error.message
-
-});
-
-}
-
+    res.status(201).json({
+      success: true,
+      message: "Shift created successfully",
+      data:  newshift,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 
