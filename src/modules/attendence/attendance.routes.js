@@ -1,134 +1,36 @@
+
+
+// export default router;
+
 import express from "express";
-
-
+import { validate } from "../../common/middleware/validate.middleware.js";
+import * as attendanceController from "./attendance.controller.js";
 import {
-
-manualAttendance,
-
-biometricAttendance,
-
-checkout,
-
-getAttendance
-
-}
-from "./attendance.controller.js";
-
-
-import {
-validate
-}
-from "../../common/middleware/validate.middleware.js";
-
-
-import {
-
-manualAttendanceValidation,
-
-biometricAttendanceValidation,
-
-checkoutValidation
-
-}
-from "./attendance.validation.js";
-
-
-import {
-allowRoles
-}
-from "../../common/middleware/role.middleware.js";
-
-import {
-
-    verifyToken
-
-} from "../../common/middleware/auth.middleware.js";
-
-import {
-verifyBiometricKey
-}
-from "../../common/middleware/biometric.middleware.js";
-
+    manualAttendanceValidation,
+    biometricAttendanceValidation,
+    checkoutValidation
+} from "./attendance.validation.js";
 
 const router = express.Router();
 
-
-
-// ==========================================
-// Manual Attendance
-// Only Admin can mark attendance
-// ==========================================
+router.get("/", attendanceController.getAllAttendance);
 
 router.post(
-"/manual",
-
- verifyToken,
-
-allowRoles(
-"SUPER_ADMIN",
-"ADMIN"
-),
-
-validate(manualAttendanceValidation),
-
-manualAttendance
-
+    "/manual",
+    validate(manualAttendanceValidation),
+    attendanceController.createManualAttendance
 );
-
-
-
-
-// ==========================================
-// Biometric Attendance
-// Machine API
-// ==========================================
 
 router.post(
-"/biometric",
-
-verifyBiometricKey,
-
-validate(biometricAttendanceValidation),
-
-biometricAttendance
-
+    "/biometric",
+    validate(biometricAttendanceValidation),
+    attendanceController.processBiometricPunch
 );
-
-
-
-
-// ==========================================
-// Checkout
-// Employee/Admin
-// ==========================================
 
 router.put(
-"/checkout",
-
- verifyToken,
-
-validate(checkoutValidation),
-
-checkout
-
+    "/checkout",
+    validate(checkoutValidation),
+    attendanceController.processCheckout
 );
-
-
-
-
-// ==========================================
-// Attendance List
-// ==========================================
-
-router.get(
-"/",
-
- verifyToken,
-
-getAttendance
-
-);
-
-
 
 export default router;

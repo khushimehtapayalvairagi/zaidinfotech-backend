@@ -1,63 +1,76 @@
 import Joi from "joi";
 
-
-// Manual Attendance Validation
-
 export const manualAttendanceValidation = Joi.object({
-
-    user:Joi.string()
+    user: Joi.string()
         .required()
         .messages({
-            "any.required":
-            "Employee is required"
+            "string.empty": "User is required",
+            "any.required": "User is required"
         }),
 
+    employeeId: Joi.string()
+        .required()
+        .messages({
+            "string.empty": "Employee ID is required",
+            "any.required": "Employee ID is required"
+        }),
 
-    status:Joi.string()
+    date: Joi.date()
+        .required()
+        .messages({
+            "date.base": "Date must be a valid date",
+            "any.required": "Date is required"
+        }),
+
+    status: Joi.string()
         .valid(
             "PRESENT",
             "ABSENT",
             "HALF_DAY",
-            "LEAVE"
+            "LEAVE",
+            "LATE"
         )
-        .required(),
-
-
-    remark:Joi.string()
-        .allow("")
-
-});
-
-
-
-
-
-// Biometric Validation
-
-export const biometricAttendanceValidation = Joi.object({
-
-    biometricId:Joi.string()
         .required()
         .messages({
-            "any.required":
-            "Biometric ID required"
+            "any.only": "Invalid attendance status",
+            "any.required": "Attendance status is required"
         }),
 
-
-    punchTime:Joi.date()
+    attendanceMode: Joi.string()
+        .valid("MANUAL", "BIOMETRIC")
         .required()
+        .messages({
+            "any.only": "Invalid attendance mode",
+            "any.required": "Attendance mode is required"
+        }),
 
+    remark: Joi.string()
+        .allow("")
+        .optional()
 });
 
+export const biometricAttendanceValidation = Joi.object({
+    user: Joi.string().required(),
 
+    employeeId: Joi.string().required(),
 
+    date: Joi.date().required(),
 
+    attendanceMode: Joi.string()
+        .valid("BIOMETRIC")
+        .required(),
 
-// Checkout Validation
+    punchType: Joi.string()
+        .valid("CHECK_IN", "CHECK_OUT")
+        .required()
+});
 
 export const checkoutValidation = Joi.object({
+    user: Joi.string().required(),
 
-    user:Joi.string()
-        .required()
+    employeeId: Joi.string().required(),
 
+    date: Joi.date().required(),
+
+    checkoutTime: Joi.date().required()
 });
