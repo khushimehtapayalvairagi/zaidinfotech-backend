@@ -20,6 +20,7 @@ import Inventory from "../inventory/inventory.model.js";
 import generateSlug from "../../common/utils/generateSlug.js";
 
 import generateSKU from "../../common/utils/generateSKU.js";
+import {calculateDiscountedPrice,matchOfferToProduct} from "../../common/utils/offerCalculator.js";
 
 
 // =====================================================
@@ -421,29 +422,28 @@ export const getProductsService = async () => {
 // GET SINGLE PRODUCT
 // =====================================================
 
-export const getProductService = async (
-    id
-) => {
+export const getProductService = async(id) => {
 
-    const product =
-        await getProductByIdDB(
-            id
-        );
+    const product = await getProductByIdDB(id);
 
-
-    if (!product) {
-
-        throw new Error(
-            "Product not found"
-        );
-
+    if(!product){
+        throw new Error("Product not found");
     }
 
+    // Offer check
+    const offer = await getBestOfferForProduct(product);
 
-    return product;
+    const finalPricing = applyOfferOnPrice(
+        product.pricing.sellingPrice,
+        offer
+    );
 
+    return {
+        ...product.toObject(),
+        offer: offer || null,
+        finalPrice: finalPricing
+    };
 };
-
 
 // =====================================================
 // UPDATE PRODUCT
@@ -597,8 +597,22 @@ export const searchProductService = async (
 // CUSTOMER SHOP PRODUCTS
 // =====================================================
 
-export const getShopProductsService = async () => {
+export const getShopProductsService = async() => {
 
-    return await getShopProductsDB();
+    const products = await getShopProductsDB();
 
+    const activeOffers = await getActiveOffersDB(); 
+    // offer.repository.js se already ban chuka hai
+
+    return products.map((product) => {
+        const offer = matchOfferToProduct(product, activeOffers);
+        return {
+            ...product.toObject(),
+            offer: offer || null,
+            finalPrice: calculateDiscountedPrice(
+                product.pricing.sellingPrice,
+                offer
+            )
+        };
+    });
 };

@@ -1,7 +1,34 @@
 import Attendance from "./attendance.model.js";
+import User from "../users/user.model.js";
+// export const markManualAttendance = async (data) => {
+//     const checkInTime = data.checkIn || new Date();
+
+//     const record = await Attendance.create({
+//         user: data.user,
+//         employeeId: data.employeeId,
+//         date: data.date,
+//         status: data.status,
+//         attendanceMode: data.attendanceMode || "MANUAL",
+//         checkIn: checkInTime,
+//         remark: data.remark || ""
+//     });
+
+//     return record;
+// };
 
 export const markManualAttendance = async (data) => {
+
     const checkInTime = data.checkIn || new Date();
+
+    // Find employee
+    const employee = await User.findById(data.user);
+
+    if (!employee) {
+        throw new Error("Employee not found");
+    }
+
+    // Employee ke assigned shift ko get karo
+    const shiftId = employee.shift || null;
 
     const record = await Attendance.create({
         user: data.user,
@@ -10,10 +37,19 @@ export const markManualAttendance = async (data) => {
         status: data.status,
         attendanceMode: data.attendanceMode || "MANUAL",
         checkIn: checkInTime,
-        remark: data.remark || ""
+        remark: data.remark || "",
+        shift: shiftId
     });
 
-    return record;
+    return await Attendance.findById(record._id)
+        .populate(
+            "user",
+            "firstName lastName employeeId biometricId department designation"
+        )
+        .populate(
+            "shift",
+            "name startTime endTime breakDuration lateAllowedMinutes"
+        );
 };
 
 export const getAttendanceRecords = async () => {

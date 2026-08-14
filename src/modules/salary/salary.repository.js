@@ -26,9 +26,19 @@ export const saveEmployee = async (userDoc) => {
 };
 
 
+// export const findAllEmployeesSalaryData = async () => {
+//   return await User.find({ isDeleted: false, role: { $ne: "SUPER_ADMIN" } })
+//     .select("firstName lastName designation email department salaryDetails salaryHistory status")
+//     .sort({ createdAt: -1 });
+// };
+
 export const findAllEmployeesSalaryData = async () => {
-  return await User.find({ isDeleted: false, role: { $ne: "SUPER_ADMIN" } })
-    .select("firstName lastName designation email department salaryDetails salaryHistory status")
+  return await User.find({
+    isDeleted: false,
+  })
+    .select(
+      "firstName lastName employeeId email department designation salaryDetails salaryHistory status"
+    )
     .sort({ createdAt: -1 });
 };
 

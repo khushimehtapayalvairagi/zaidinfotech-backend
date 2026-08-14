@@ -515,7 +515,51 @@ import {
     saveCartDB
 } from "./cart.repository.js";
 
+import { getActiveOffersDB } from "../offer/offer.repository.js";
+import {
+    calculateDiscountedPrice,
+    matchOfferToProduct
+} from "../../common/utils/offerCalculator.js";
 
+
+// ======================================================
+// HELPER: GET OFFER APPLIED PRICE
+// ======================================================
+
+const getOfferAppliedPrice = async (productData, sellingPrice) => {
+
+    const activeOffers = await getActiveOffersDB();
+
+    const offer = matchOfferToProduct(
+        productData,
+        activeOffers
+    );
+
+    if (!offer) {
+
+        return {
+            finalPrice: sellingPrice,
+            appliedOffer: null
+        };
+    }
+
+    const finalPrice = calculateDiscountedPrice(
+        sellingPrice,
+        offer
+    );
+
+    return {
+
+        finalPrice,
+
+        appliedOffer: {
+            offerId: offer._id,
+            title: offer.title,
+            discountType: offer.discountType,
+            discountValue: offer.discountValue
+        }
+    };
+};
 // ======================================================
 // INVENTORY MODEL
 // ======================================================
@@ -716,7 +760,13 @@ export const addToCartService = async (
     } = getProductPrice(
         productData
     );
-
+    const {
+    finalPrice,
+    appliedOffer
+} = await getOfferAppliedPrice(
+    productData,
+    sellingPrice
+);
 
     console.log(
         "PRODUCT PRICE:",
@@ -798,86 +848,49 @@ export const addToCartService = async (
     // --------------------------------------------------
     // 10. EXISTING PRODUCT
     // --------------------------------------------------
+if (existingItem) {
 
-    if (existingItem) {
+    const newQuantity =
+        Number(existingItem.quantity || 0) + qty;
 
-        const newQuantity =
-            Number(
-                existingItem.quantity || 0
-            ) + qty;
-
-
-        // ----------------------------------------------
-        // CHECK STOCK
-        // ----------------------------------------------
-
-        if (
-            availableStock !== null &&
-            newQuantity > availableStock
-        ) {
-
-            throw new Error(
-                `Only ${availableStock} item(s) available`
-            );
-        }
-
-
-        // ----------------------------------------------
-        // UPDATE QUANTITY
-        // ----------------------------------------------
-
-        existingItem.quantity =
-            newQuantity;
-
-
-        // ----------------------------------------------
-        // UPDATE PRICE
-        // ----------------------------------------------
-
-        existingItem.price =
-            sellingPrice;
-
-        existingItem.originalPrice =
-            mrp;
-
-        existingItem.discountAmount =
-            discountAmount;
-
-        existingItem.finalPrice =
-            sellingPrice;
-
+    if (
+        availableStock !== null &&
+        newQuantity > availableStock
+    ) {
+        throw new Error(
+            `Only ${availableStock} item(s) available`
+        );
     }
 
+    existingItem.quantity = newQuantity;
+    existingItem.price = sellingPrice;
+    existingItem.originalPrice = mrp;
+    existingItem.discountAmount = discountAmount;
+
+    // CHANGED: ab offer applied price save hoga
+    existingItem.finalPrice = finalPrice;
+    existingItem.appliedOffer = appliedOffer;
+}
 
     // --------------------------------------------------
     // 11. NEW PRODUCT
     // --------------------------------------------------
 
-    else {
+   else {
 
-        cart.items.push({
+    cart.items.push({
 
-            product:
-                productData._id,
+        product: productData._id,
+        quantity: qty,
+        price: sellingPrice,
+        originalPrice: mrp,
+        discountAmount: discountAmount,
 
-            quantity:
-                qty,
-
-            price:
-                sellingPrice,
-
-            originalPrice:
-                mrp,
-
-            discountAmount:
-                discountAmount,
-
-            finalPrice:
-                sellingPrice
-
-        });
-    }
-
+        // CHANGED
+        finalPrice: finalPrice,
+        appliedOffer: appliedOffer
+    });
+}
 
     // --------------------------------------------------
     // 12. SAVE CART
@@ -1092,26 +1105,25 @@ export const updateCartQuantityService = async (
         productData
     );
 
-
+  const {
+    finalPrice,
+    appliedOffer
+} = await getOfferAppliedPrice(
+    productData,
+    sellingPrice
+);
     // --------------------------------------------------
     // UPDATE ITEM
     // --------------------------------------------------
 
-    item.quantity =
-        qty;
+item.quantity = qty;
+item.price = sellingPrice;
+item.originalPrice = mrp;
+item.discountAmount = discountAmount;
 
-    item.price =
-        sellingPrice;
-
-    item.originalPrice =
-        mrp;
-
-    item.discountAmount =
-        discountAmount;
-
-    item.finalPrice =
-        sellingPrice;
-
+// CHANGED
+item.finalPrice = finalPrice;
+item.appliedOffer = appliedOffer;
 
     // --------------------------------------------------
     // SAVE

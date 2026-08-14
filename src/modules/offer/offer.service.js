@@ -120,3 +120,19 @@ export const deleteOfferService = async(id)=>{
     return offer;
 
 };
+// ================================
+// Get Single Offer
+// ================================
+
+export const getOfferByIdService = async(id)=>{
+
+    const offer =
+    await offerRepository.getOfferByIdDB(id);
+
+    if(!offer){
+        throw new Error("Offer not found");
+    }
+
+    return offer;
+
+};

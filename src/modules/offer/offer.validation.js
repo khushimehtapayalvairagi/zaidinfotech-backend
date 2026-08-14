@@ -11,27 +11,20 @@ export const createOfferValidation = Joi.object({
     .required()
     .trim(),
 
-
     description: Joi.string()
     .allow("")
     .optional(),
 
-
-
     discountType: Joi.string()
     .valid(
         "PERCENTAGE",
-        "FLAT"
+        "FIXED"          // FIXED kiya, FLAT hataya
     )
     .required(),
-
-
 
     discountValue: Joi.number()
     .required()
     .min(0),
-
-
 
     products: Joi.array()
     .items(
@@ -40,30 +33,21 @@ export const createOfferValidation = Joi.object({
     .min(1)
     .required(),
 
-
-
     startDate: Joi.date()
     .required(),
-
-
 
     endDate: Joi.date()
     .required(),
 
-
-
     status: Joi.string()
     .valid(
         "ACTIVE",
-        "INACTIVE"
+        "INACTIVE",
+        "EXPIRED"        // EXPIRED add kiya
     )
     .default("ACTIVE")
 
-
 });
-
-
-
 
 
 // ================================
@@ -72,39 +56,34 @@ export const createOfferValidation = Joi.object({
 
 export const updateOfferValidation = Joi.object({
 
-    title:Joi.string(),
+    title: Joi.string(),
 
-    description:Joi.string()
+    description: Joi.string()
     .allow(""),
 
-
-    discountType:Joi.string()
+    discountType: Joi.string()
     .valid(
         "PERCENTAGE",
-        "FLAT"
+        "FIXED"           // FIXED kiya
     ),
 
-
-    discountValue:Joi.number()
+    discountValue: Joi.number()
     .min(0),
 
-
-    products:Joi.array()
+    products: Joi.array()
     .items(
         Joi.string()
     ),
 
+    startDate: Joi.date(),
 
-    startDate:Joi.date(),
+    endDate: Joi.date(),
 
-
-    endDate:Joi.date(),
-
-
-    status:Joi.string()
+    status: Joi.string()
     .valid(
         "ACTIVE",
-        "INACTIVE"
+        "INACTIVE",
+        "EXPIRED"          // EXPIRED add kiya
     )
 
 });

@@ -761,6 +761,8 @@ export const createOrder = async (
 
           title:
             item.title,
+             couponCode:
+        req.body.couponCode || "",  
 
           quantity:
             Number(item.quantity),
@@ -818,6 +820,9 @@ export const createOrder = async (
 
     totalAmount:
         Number(req.body.totalAmount),
+
+ couponCode:
+        req.body.couponCode || "",  
 
 
     paymentMethod:

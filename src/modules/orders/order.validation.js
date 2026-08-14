@@ -256,6 +256,10 @@ export const createOrderValidation = Joi.object({
           .allow(null, "")
           .default(null),
 
+          couponCode: Joi.string()
+    .allow("")
+    .optional(),
+
         // Image can be null / empty
         imageUrl: Joi.string()
           .allow(null, "")

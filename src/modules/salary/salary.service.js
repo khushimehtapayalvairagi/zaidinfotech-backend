@@ -5,101 +5,186 @@ import {
   saveEmployee ,
   findAllEmployeesSalaryData,
   findEmployeeSalarySummary ,
-  getAllEmployeesSalaryDB 
+  // getAllEmployeesSalaryDB 
 } from "./salary.repository.js";
 import ExcelJS from "exceljs";
 
+// export const exportSalaryExcelService = async () => {
+
+//     const salaries =
+//         await getAllEmployeesSalaryDB();
+
+//     const workbook =
+//         new ExcelJS.Workbook();
+
+//     const worksheet =
+//         workbook.addWorksheet("Employee Salary");
+
+//     worksheet.columns = [
+
+//         {
+//             header: "Employee ID",
+//             key: "employeeId",
+//             width: 20
+//         },
+
+//         {
+//             header: "Employee Name",
+//             key: "employeeName",
+//             width: 30
+//         },
+
+//         {
+//             header: "Email",
+//             key: "email",
+//             width: 30
+//         },
+
+//         {
+//             header: "Department",
+//             key: "department",
+//             width: 25
+//         },
+
+//         {
+//             header: "Salary",
+//             key: "salary",
+//             width: 15
+//         },
+
+//         {
+//             header: "Salary Type",
+//             key: "salaryType",
+//             width: 20
+//         },
+
+//         {
+//             header: "Status",
+//             key: "status",
+//             width: 15
+//         }
+
+//     ];
+
+//     salaries.forEach(item => {
+
+//         worksheet.addRow({
+
+//             employeeId:
+//                 item.employee?.employeeId || "",
+
+//             employeeName:
+//                 `${item.employee?.firstName || ""} ${item.employee?.lastName || ""}`,
+
+//             email:
+//                 item.employee?.email || "",
+
+//             department:
+//                 item.department?.name || "",
+
+//             salary:
+//                 item.baseSalary,
+
+//             salaryType:
+//                 item.salaryType,
+
+//             status:
+//                 item.status
+
+//         });
+
+//     });
+
+//     return workbook;
+
+// };
+
 export const exportSalaryExcelService = async () => {
+  const employees = await findAllEmployeesSalaryData();
 
-    const salaries =
-        await getAllEmployeesSalaryDB();
+  const workbook = new ExcelJS.Workbook();
 
-    const workbook =
-        new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(
+    "Employee Salary"
+  );
 
-    const worksheet =
-        workbook.addWorksheet("Employee Salary");
+  worksheet.columns = [
+    {
+      header: "Employee ID",
+      key: "employeeId",
+      width: 20,
+    },
+    {
+      header: "Employee Name",
+      key: "employeeName",
+      width: 30,
+    },
+    {
+      header: "Email",
+      key: "email",
+      width: 30,
+    },
+    {
+      header: "Department",
+      key: "department",
+      width: 25,
+    },
+    {
+      header: "Designation",
+      key: "designation",
+      width: 25,
+    },
+    {
+      header: "Salary",
+      key: "salary",
+      width: 15,
+    },
+    {
+      header: "Salary Type",
+      key: "salaryType",
+      width: 20,
+    },
+    {
+      header: "Status",
+      key: "status",
+      width: 15,
+    },
+  ];
 
-    worksheet.columns = [
+  employees.forEach((employee) => {
+    worksheet.addRow({
+      employeeId:
+        employee.employeeId ||
+        employee._id?.toString() ||
+        "",
 
-        {
-            header: "Employee ID",
-            key: "employeeId",
-            width: 20
-        },
+      employeeName:
+        `${employee.firstName || ""} ${
+          employee.lastName || ""
+        }`.trim(),
 
-        {
-            header: "Employee Name",
-            key: "employeeName",
-            width: 30
-        },
+      email: employee.email || "",
 
-        {
-            header: "Email",
-            key: "email",
-            width: 30
-        },
+      department:
+        employee.department || "",
 
-        {
-            header: "Department",
-            key: "department",
-            width: 25
-        },
+      designation:
+        employee.designation || "",
 
-        {
-            header: "Salary",
-            key: "salary",
-            width: 15
-        },
+      salary:
+        employee.salaryDetails?.amount || 0,
 
-        {
-            header: "Salary Type",
-            key: "salaryType",
-            width: 20
-        },
+      salaryType:
+        employee.salaryDetails?.salaryType ||
+        "MONTHLY",
 
-        {
-            header: "Status",
-            key: "status",
-            width: 15
-        }
-
-    ];
-
-    salaries.forEach(item => {
-
-        worksheet.addRow({
-
-            employeeId:
-                item.employee?.employeeId || "",
-
-            employeeName:
-                `${item.employee?.firstName || ""} ${item.employee?.lastName || ""}`,
-
-            email:
-                item.employee?.email || "",
-
-            department:
-                item.department?.name || "",
-
-            salary:
-                item.baseSalary,
-
-            salaryType:
-                item.salaryType,
-
-            status:
-                item.status
-
-        });
-
+      status:
+        employee.status || "",
     });
+  });
 
-    return workbook;
-
+  return workbook;
 };
-
-
 
 const createSalary = async (employeeId, payload) => {
   const { salaryType, amount, joiningDate } = payload;

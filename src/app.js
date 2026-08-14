@@ -72,38 +72,8 @@ app.use("/api/payments",paymentRoutes);
 app.use("/api/shipment",shipmentRoutes);
 app.use("/api/salary", salaryRoutes);
 app.use("/api/shifts",shiftRoutes);
-app.use("/api/attendance",attendanceRoutes);
+// app.use("/api/attendance",attendanceRoutes);
+app.use("/api/newAttendance", attendanceRoutes);
 app.use("/api/invoices",invoiceRoutes);
 
 export default app;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

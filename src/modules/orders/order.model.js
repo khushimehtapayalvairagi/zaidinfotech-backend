@@ -363,12 +363,30 @@ const orderSchema = new mongoose.Schema(
         },
 
 
-        // Offer
-        offer: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Offer",
-          default: null,
-        },
+      appliedOffer: {
+
+    offerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Offer",
+        default: null
+    },
+
+    title: {
+        type: String,
+        default: ""
+    },
+
+    discountType: {
+        type: String,
+        default: ""
+    },
+
+    discountValue: {
+        type: Number,
+        default: 0
+    }
+
+},
 
 
         // Product image
@@ -453,7 +471,61 @@ const orderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+   
+    // ====================================================
+// COUPON (NEW)
+// ====================================================
 
+coupon: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Coupon",
+  default: null,
+},
+
+couponCode: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
+couponDiscount: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+
+finalAmount: {
+  type: Number,
+  required: true,
+  min: 0,
+},
+// ====================================================
+// COUPON (NEW)
+// ====================================================
+
+coupon: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Coupon",
+  default: null,
+},
+
+couponCode: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
+couponDiscount: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+
+finalAmount: {
+  type: Number,
+  required: true,
+  min: 0,
+},
 
     // ====================================================
     // ORDER STATUS

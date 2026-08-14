@@ -135,9 +135,32 @@ const cartItemSchema =
                 type: Number,
                 required: true,
                 min: 0
+            },
+              appliedOffer: {
+            offerId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Offer",
+                default: null
+            },
+            title: {
+                type: String,
+                default: ""
+            },
+            discountType: {
+                type: String,
+                default: ""
+            },
+            discountValue: {
+                type: Number,
+                default: 0
             }
+        },
 
         },
+            // ================================
+        // OFFER SNAPSHOT (NEW)
+        // ================================
+      
 
         {
             _id: true

@@ -254,3 +254,33 @@ message:error.message
 
 
 };
+
+// ================================
+// Get Single Offer
+// ================================
+
+export const getOfferById = async(req,res)=>{
+
+try{
+
+    const offer =
+    await offerService.getOfferByIdService(
+        req.params.id
+    );
+
+    res.status(200).json({
+        success:true,
+        offer
+    });
+
+}
+catch(error){
+
+    res.status(404).json({
+        success:false,
+        message:error.message
+    });
+
+}
+
+};

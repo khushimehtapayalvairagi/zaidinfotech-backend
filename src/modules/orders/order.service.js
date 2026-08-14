@@ -286,7 +286,86 @@ import {
 } from "../inventory/inventory.service.js";
 
 import Order from "./order.model.js";
+import Product from "../products/product.model.js";
+import { getActiveOffersDB } from "../offer/offer.repository.js";
+import {
+    calculateDiscountedPrice,
+    matchOfferToProduct
+} from "../../common/utils/offerCalculator.js";
 
+
+
+import { validateCouponService, incrementCouponUsageService } from "../coupons/coupon.service.js";
+
+
+
+// ======================================================
+// HELPER: BUILD SECURE ORDER ITEMS
+// ======================================================
+
+const buildSecureOrderItems = async (rawItems) => {
+
+    const activeOffers = await getActiveOffersDB();
+
+    const secureItems = [];
+
+    let totalAmount = 0;
+
+    for (const item of rawItems) {
+
+        const productData = await Product.findById(item.product);
+
+        if (!productData) {
+            throw new Error(`Product not found: ${item.product}`);
+        }
+
+        const originalPrice = Number(productData.pricing.sellingPrice);
+
+        const offer = matchOfferToProduct(productData, activeOffers);
+
+        const finalPrice = calculateDiscountedPrice(
+            originalPrice,
+            offer
+        );
+
+        const discountAmount = originalPrice - finalPrice;
+
+        const quantity = Number(item.quantity);
+
+        secureItems.push({
+
+            product: productData._id,
+
+            title: productData.name,
+
+            quantity,
+
+            originalPrice,
+
+            discountAmount,
+
+            price: finalPrice,
+
+            appliedOffer: offer ? {
+                offerId: offer._id,
+                title: offer.title,
+                discountType: offer.discountType,
+                discountValue: offer.discountValue
+            } : null,
+
+            imageUrl: productData.images?.[0]?.url || ""
+
+        });
+
+        totalAmount += finalPrice * quantity;
+
+    }
+
+    return {
+        secureItems,
+        totalAmount
+    };
+};
 // ======================================================
 // CREATE ORDER
 // ======================================================
@@ -302,6 +381,42 @@ export const createOrder = async (
   const isWalkIn =
     orderData.orderSource === "WALK_IN";
 
+    const {
+        secureItems,
+        totalAmount
+    } = await buildSecureOrderItems(
+        orderData.orderItems
+    );
+
+     orderData.orderItems = secureItems;
+    
+    orderData.totalAmount = totalAmount;
+
+
+     // ====================================================
+  // NEW: COUPON VALIDATION
+  // ====================================================
+
+  let couponDiscount = 0;
+  let couponData = null;
+
+  if (orderData.couponCode) {
+
+    const result = await validateCouponService(
+      orderData.couponCode,
+      totalAmount,
+      orderData.user
+    );
+
+    couponDiscount = result.discountAmount;
+    couponData = result.coupon;
+
+    orderData.coupon = couponData.couponId;
+    orderData.couponCode = couponData.code;
+    orderData.couponDiscount = couponDiscount;
+  }
+
+  orderData.finalAmount = totalAmount - couponDiscount;
 
   // ====================================================
   // WALK-IN STOCK CHECK
@@ -412,11 +527,39 @@ export const createOrder = async (
       orderData
     );
 
-    // ====================================================
+
+// ====================================================
+// NEW: INCREMENT COUPON USAGE
+// ====================================================
+
+if (couponData) {
+
+  try {
+
+    await incrementCouponUsageService(
+      couponData.couponId,
+      orderData.user
+    );
+
+  }
+  catch (couponError) {
+
+    console.error(
+      "COUPON USAGE INCREMENT ERROR:",
+      couponError
+    );
+
+  }
+
+}
+
+
+// ====================================================
 // INITIAL TRACKING HISTORY
 // ====================================================
 
 try {
+  
 
   const orderForTracking =
     await Order.findById(order._id);
