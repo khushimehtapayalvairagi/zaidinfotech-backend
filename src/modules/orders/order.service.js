@@ -292,7 +292,10 @@ import {
     calculateDiscountedPrice,
     matchOfferToProduct
 } from "../../common/utils/offerCalculator.js";
-
+import {
+    createNotificationService,
+    notifyAdminsService
+} from "../notification/notification.service.js";
 
 
 import { validateCouponService, incrementCouponUsageService } from "../coupons/coupon.service.js";
@@ -551,6 +554,44 @@ if (couponData) {
 
   }
 
+}
+
+
+// ====================================================
+// NEW: ORDER PLACED NOTIFICATIONS
+// ====================================================
+
+try {
+
+    const isWalkInOrder =
+        orderData.orderSource === "WALK_IN";
+
+    if (!isWalkInOrder) {
+
+        await createNotificationService({
+            user: orderData.user,
+            type: "ORDER_PLACED",
+            title: "Order Placed",
+            message: `Your order has been placed successfully.`,
+            relatedId: order._id,
+            relatedModel: "Order"
+        });
+
+    }
+
+    await notifyAdminsService({
+        type: "ORDER_PLACED",
+        title: isWalkInOrder ? "New Walk-in Order" : "New Order Received",
+        message: isWalkInOrder
+            ? `A walk-in order of ₹${orderData.finalAmount} was created.`
+            : `A new order of ₹${orderData.finalAmount} has been placed.`,
+        relatedId: order._id,
+        relatedModel: "Order"
+    });
+
+}
+catch (notifError) {
+    console.error("ORDER NOTIFICATION ERROR:", notifError);
 }
 
 
@@ -909,6 +950,48 @@ async (
 
       await trackingOrder.save();
 
+
+// ====================================================
+// NEW: ORDER STATUS NOTIFICATIONS
+// ====================================================
+
+try {
+
+    const customerMessages = {
+        CONFIRMED: "Your order is confirmed.",
+        PROCESSING: "Your order is being processed.",
+        SHIPPED: "Your order has been shipped.",
+        OUT_FOR_DELIVERY: "Your order is out for delivery.",
+        DELIVERED: "Your order has been delivered successfully.",
+        CANCELLED: "Your order has been cancelled."
+    };
+
+    await createNotificationService({
+        user: trackingOrder.user,
+        type: "ORDER_STATUS",
+        title: "Order Status Updated",
+        message: customerMessages[status] || `Your order status is now ${status}.`,
+        relatedId: orderId,
+        relatedModel: "Order"
+    });
+
+    if (status === "SHIPPED" || status === "DELIVERED") {
+
+        await notifyAdminsService({
+            type: "ORDER_STATUS",
+            title: `Order ${status}`,
+            message: `Order #${orderId.toString().slice(-6)} has been marked as ${status}.`,
+            relatedId: orderId,
+            relatedModel: "Order"
+        });
+
+    }
+
+}
+catch (notifError) {
+    console.error("ORDER STATUS NOTIFICATION ERROR:", notifError);
+}
+
     }
 
   }
@@ -970,6 +1053,51 @@ export const updatePaymentStatus =
         paymentId
 
       );
+
+// ====================================================
+// NEW: PAYMENT NOTIFICATIONS
+// ====================================================
+
+try {
+
+    if (paymentStatus === "PAID") {
+
+        await createNotificationService({
+            user: order.user,
+            type: "PAYMENT",
+            title: "Payment Successful",
+            message: `Your payment for order #${orderId.toString().slice(-6)} was successful.`,
+            relatedId: order._id,
+            relatedModel: "Order"
+        });
+
+        await notifyAdminsService({
+            type: "PAYMENT",
+            title: "Payment Received",
+            message: `Payment received for order #${orderId.toString().slice(-6)}.`,
+            relatedId: order._id,
+            relatedModel: "Order"
+        });
+
+    }
+
+    if (paymentStatus === "FAILED") {
+
+        await createNotificationService({
+            user: order.user,
+            type: "PAYMENT",
+            title: "Payment Failed",
+            message: `Your payment for order #${orderId.toString().slice(-6)} failed. Please try again.`,
+            relatedId: order._id,
+            relatedModel: "Order"
+        });
+
+    }
+
+}
+catch (notifError) {
+    console.error("PAYMENT NOTIFICATION ERROR:", notifError);
+}
 
   };
 

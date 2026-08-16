@@ -484,7 +484,7 @@
 
 import {
     createProductService,
-    getProductsService,
+    
     getProductService,
     updateProductService,
     deleteProductService,
