@@ -231,60 +231,93 @@ export const getProductByBarcodeDB = async (barcode) => {
 
 
 // Customer Shop Products
+// export const getShopProductsDB = async () => {
+
+//     const products = await Product.find({
+//         status:"ACTIVE",
+//         isDeleted:false
+//     })
+//     .populate("category")
+//     .populate("brand");
+
+
+//     const activeOffers = await Offer.find({
+
+//         status:"ACTIVE",
+
+//         startDate:{
+//             $lte:new Date()
+//         },
+
+//         endDate:{
+//             $gte:new Date()
+//         }
+
+//     });
+
+
+
+//     const productsWithOffer = products.map(product => {
+
+
+//         const offer = activeOffers.find(
+//             offer =>
+//             offer.products.some(
+//                 id => id.toString() === product._id.toString()
+//             )
+//         );
+
+
+//         return {
+
+//             ...product.toObject(),
+
+//             offer: offer || null
+
+//         };
+
+
+//     });
+
+
+
+//     return productsWithOffer;
+
+// };
+
+
+// =====================================================
+// CUSTOMER SHOP PRODUCTS
+// =====================================================
+
 export const getShopProductsDB = async () => {
 
     const products = await Product.find({
-        status:"ACTIVE",
-        isDeleted:false
+
+        status: "ACTIVE",
+
+        isDeleted: false
+
     })
-    .populate("category")
-    .populate("brand");
 
+    .populate(
+        "category",
+        "name slug"
+    )
 
-    const activeOffers = await Offer.find({
+    .populate(
+        "brand",
+        "name slug logo"
+    )
 
-        status:"ACTIVE",
-
-        startDate:{
-            $lte:new Date()
-        },
-
-        endDate:{
-            $gte:new Date()
-        }
-
+    .sort({
+        createdAt: -1
     });
 
 
-
-    const productsWithOffer = products.map(product => {
-
-
-        const offer = activeOffers.find(
-            offer =>
-            offer.products.some(
-                id => id.toString() === product._id.toString()
-            )
-        );
-
-
-        return {
-
-            ...product.toObject(),
-
-            offer: offer || null
-
-        };
-
-
-    });
-
-
-
-    return productsWithOffer;
+    return products;
 
 };
-
 
 export const findProductsByReceptionist = async (receptionistId) => {
   return await Product.find({ addedBy: receptionistId }).sort({ createdAt: -1 });

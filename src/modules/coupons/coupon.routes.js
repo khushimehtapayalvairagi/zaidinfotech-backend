@@ -1,4 +1,7 @@
+
+
 import express from "express";
+
 
 import {
     createCoupon,
@@ -9,17 +12,21 @@ import {
     applyCoupon
 } from "./coupon.controller.js";
 
+
 import {
     verifyToken
 } from "../../common/middleware/auth.middleware.js";
+
 
 import {
     allowRoles
 } from "../../common/middleware/role.middleware.js";
 
+
 import {
     validate
 } from "../../common/middleware/validate.middleware.js";
+
 
 import {
     createCouponValidation,
@@ -31,28 +38,40 @@ import {
 const router = express.Router();
 
 
-// Admin Create Coupon
+// ======================================================
+// ADMIN - CREATE
+// ======================================================
 
 router.post(
     "/",
     verifyToken,
-    allowRoles("SUPER_ADMIN","ADMIN"),
+    allowRoles(
+        "SUPER_ADMIN",
+        "ADMIN"
+    ),
     validate(createCouponValidation),
     createCoupon
 );
 
 
-// Admin All Coupons
+// ======================================================
+// ADMIN - GET ALL
+// ======================================================
 
 router.get(
     "/",
     verifyToken,
-    allowRoles("SUPER_ADMIN","ADMIN"),
+    allowRoles(
+        "SUPER_ADMIN",
+        "ADMIN"
+    ),
     getCoupons
 );
 
 
-// Customer: Apply Coupon (checkout ke waqt)
+// ======================================================
+// CUSTOMER - APPLY
+// ======================================================
 
 router.post(
     "/apply",
@@ -62,33 +81,48 @@ router.post(
 );
 
 
-// Get Single Coupon (edit form)
+// ======================================================
+// ADMIN - GET SINGLE
+// ======================================================
 
 router.get(
     "/:id",
     verifyToken,
-    allowRoles("SUPER_ADMIN","ADMIN"),
+    allowRoles(
+        "SUPER_ADMIN",
+        "ADMIN"
+    ),
     getCouponById
 );
 
 
-// Update Coupon
+// ======================================================
+// ADMIN - UPDATE
+// ======================================================
 
 router.put(
     "/:id",
     verifyToken,
-    allowRoles("SUPER_ADMIN","ADMIN"),
+    allowRoles(
+        "SUPER_ADMIN",
+        "ADMIN"
+    ),
     validate(updateCouponValidation),
     updateCoupon
 );
 
 
-// Delete Coupon
+// ======================================================
+// ADMIN - DELETE
+// ======================================================
 
 router.delete(
     "/:id",
     verifyToken,
-    allowRoles("SUPER_ADMIN","ADMIN"),
+    allowRoles(
+        "SUPER_ADMIN",
+        "ADMIN"
+    ),
     deleteCoupon
 );
 

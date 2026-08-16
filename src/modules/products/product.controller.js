@@ -484,7 +484,7 @@
 
 import {
     createProductService,
-    
+    getProductsService,
     getProductService,
     updateProductService,
     deleteProductService,
@@ -1137,6 +1137,49 @@ export const searchProduct = async (
 // CUSTOMER SHOP PRODUCTS
 // =====================================================
 
+// export const getShopProducts = async (
+//     req,
+//     res
+// ) => {
+
+//     try {
+
+//         const products =
+//             await getShopProductsService();
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Shop products fetched successfully",
+
+//             products
+
+//         );
+
+//     } catch (error) {
+
+//         return errorResponse(
+
+//             res,
+
+//             500,
+
+//             error.message
+
+//         );
+
+//     }
+
+// };
+
+// =====================================================
+// CUSTOMER SHOP PRODUCTS
+// =====================================================
+
 export const getShopProducts = async (
     req,
     res
@@ -1144,8 +1187,27 @@ export const getShopProducts = async (
 
     try {
 
+        console.log(
+            "======================================"
+        );
+
+        console.log(
+            "CUSTOMER SHOP PRODUCTS REQUEST"
+        );
+
+        console.log(
+            "======================================"
+        );
+
+
         const products =
             await getShopProductsService();
+
+
+        console.log(
+            "SHOP CONTROLLER PRODUCTS:",
+            products.length
+        );
 
 
         return successResponse(
@@ -1161,6 +1223,23 @@ export const getShopProducts = async (
         );
 
     } catch (error) {
+
+        console.error(
+            "======================================"
+        );
+
+        console.error(
+            "GET SHOP PRODUCTS CONTROLLER ERROR:"
+        );
+
+        console.error(
+            error
+        );
+
+        console.error(
+            "======================================"
+        );
+
 
         return errorResponse(
 

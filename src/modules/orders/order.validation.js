@@ -171,6 +171,250 @@ import {
 // CREATE ORDER VALIDATION
 // ======================================================
 
+// export const createOrderValidation = Joi.object({
+
+//   // ====================================================
+//   // ORDER ITEMS
+//   // ====================================================
+
+//   orderItems: Joi.array()
+//     .items(
+
+//       Joi.object({
+
+//         // Product ID
+//         product: Joi.string()
+//           .trim()
+//           .required()
+//           .messages({
+//             "any.required":
+//               "Product is required",
+
+//             "string.empty":
+//               "Product is required",
+//           }),
+
+//         // Product title
+//         title: Joi.string()
+//           .trim()
+//           .required()
+//           .messages({
+//             "any.required":
+//               "Product title is required",
+
+//             "string.empty":
+//               "Product title is required",
+//           }),
+
+//         // Quantity
+//         quantity: Joi.number()
+//           .integer()
+//           .min(1)
+//           .required()
+//           .messages({
+//             "number.base":
+//               "Quantity must be a number",
+
+//             "number.min":
+//               "Quantity must be at least 1",
+
+//             "any.required":
+//               "Quantity is required",
+//           }),
+
+//         // Original price
+//         originalPrice: Joi.number()
+//           .min(0)
+//           .required()
+//           .messages({
+//             "number.base":
+//               "Original price must be a number",
+
+//             "any.required":
+//               "Original price is required",
+//           }),
+
+//         // Discount
+//         discountAmount: Joi.number()
+//           .min(0)
+//           .default(0),
+
+//         // Final selling price
+//         price: Joi.number()
+//           .min(0)
+//           .required()
+//           .messages({
+//             "number.base":
+//               "Product price must be a number",
+
+//             "any.required":
+//               "Product price is required",
+//           }),
+
+//         // Offer can be null
+//         offer: Joi.string()
+//           .allow(null, "")
+//           .default(null),
+
+//           couponCode: Joi.string()
+//     .allow("")
+//     .optional(),
+
+//         // Image can be null / empty
+//         imageUrl: Joi.string()
+//           .allow(null, "")
+//           .default(""),
+
+//       })
+
+//     )
+//     .min(1)
+//     .required()
+//     .messages({
+//       "array.min":
+//         "At least one product is required",
+
+//       "any.required":
+//         "Order items are required",
+//     }),
+
+//   // ====================================================
+//   // SHIPPING ADDRESS
+//   // ====================================================
+
+//   shippingAddress: Joi.object({
+
+//     fullName: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "Full name is required",
+
+//         "string.empty":
+//           "Full name is required",
+//       }),
+
+//     phone: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "Phone number is required",
+
+//         "string.empty":
+//           "Phone number is required",
+//       }),
+
+//     addressLine: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "Address is required",
+
+//         "string.empty":
+//           "Address is required",
+//       }),
+
+//     city: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "City is required",
+
+//         "string.empty":
+//           "City is required",
+//       }),
+
+//     state: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "State is required",
+
+//         "string.empty":
+//           "State is required",
+//       }),
+
+//     pincode: Joi.string()
+//       .trim()
+//       .required()
+//       .messages({
+//         "any.required":
+//           "Pincode is required",
+
+//         "string.empty":
+//           "Pincode is required",
+//       }),
+
+//     // null bhi accept
+//     country: Joi.string()
+//       .allow(null, "")
+//       .default("India"),
+
+//     // null bhi accept
+//     landmark: Joi.string()
+//       .allow(null, "")
+//       .default(""),
+
+//   })
+//     .required()
+//     .messages({
+//       "any.required":
+//         "Shipping address is required",
+//     }),
+
+//   // ====================================================
+//   // TOTAL
+//   // ====================================================
+
+//   totalAmount: Joi.number()
+//     .min(0)
+//     .required()
+//     .messages({
+//       "number.base":
+//         "Total amount must be a number",
+
+//       "any.required":
+//         "Total amount is required",
+//     }),
+
+
+// // ====================================================
+// // PAYMENT METHOD
+// // ====================================================
+
+// paymentMethod: Joi.string()
+//     .valid(
+//         "CASH",
+//         "CARD",
+//         "UPI",
+//         "ONLINE"
+//     )
+//     .default("CASH"),
+
+
+//   // ====================================================
+//   // ORDER SOURCE
+//   // ====================================================
+
+//   orderSource: Joi.string()
+//     .valid(
+//       "ONLINE",
+//       "WALK_IN"
+//     )
+//     .default("ONLINE"),
+
+// });
+
+
+// ======================================================
+// CREATE ORDER VALIDATION
+// ======================================================
+
 export const createOrderValidation = Joi.object({
 
   // ====================================================
@@ -182,7 +426,6 @@ export const createOrderValidation = Joi.object({
 
       Joi.object({
 
-        // Product ID
         product: Joi.string()
           .trim()
           .required()
@@ -194,7 +437,6 @@ export const createOrderValidation = Joi.object({
               "Product is required",
           }),
 
-        // Product title
         title: Joi.string()
           .trim()
           .required()
@@ -206,7 +448,6 @@ export const createOrderValidation = Joi.object({
               "Product title is required",
           }),
 
-        // Quantity
         quantity: Joi.number()
           .integer()
           .min(1)
@@ -222,7 +463,6 @@ export const createOrderValidation = Joi.object({
               "Quantity is required",
           }),
 
-        // Original price
         originalPrice: Joi.number()
           .min(0)
           .required()
@@ -234,12 +474,10 @@ export const createOrderValidation = Joi.object({
               "Original price is required",
           }),
 
-        // Discount
         discountAmount: Joi.number()
           .min(0)
           .default(0),
 
-        // Final selling price
         price: Joi.number()
           .min(0)
           .required()
@@ -251,16 +489,10 @@ export const createOrderValidation = Joi.object({
               "Product price is required",
           }),
 
-        // Offer can be null
         offer: Joi.string()
           .allow(null, "")
           .default(null),
 
-          couponCode: Joi.string()
-    .allow("")
-    .optional(),
-
-        // Image can be null / empty
         imageUrl: Joi.string()
           .allow(null, "")
           .default(""),
@@ -278,6 +510,7 @@ export const createOrderValidation = Joi.object({
         "Order items are required",
     }),
 
+
   // ====================================================
   // SHIPPING ADDRESS
   // ====================================================
@@ -286,76 +519,32 @@ export const createOrderValidation = Joi.object({
 
     fullName: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "Full name is required",
-
-        "string.empty":
-          "Full name is required",
-      }),
+      .required(),
 
     phone: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "Phone number is required",
-
-        "string.empty":
-          "Phone number is required",
-      }),
+      .required(),
 
     addressLine: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "Address is required",
-
-        "string.empty":
-          "Address is required",
-      }),
+      .required(),
 
     city: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "City is required",
-
-        "string.empty":
-          "City is required",
-      }),
+      .required(),
 
     state: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "State is required",
-
-        "string.empty":
-          "State is required",
-      }),
+      .required(),
 
     pincode: Joi.string()
       .trim()
-      .required()
-      .messages({
-        "any.required":
-          "Pincode is required",
+      .required(),
 
-        "string.empty":
-          "Pincode is required",
-      }),
-
-    // null bhi accept
     country: Joi.string()
       .allow(null, "")
       .default("India"),
 
-    // null bhi accept
     landmark: Joi.string()
       .allow(null, "")
       .default(""),
@@ -367,32 +556,44 @@ export const createOrderValidation = Joi.object({
         "Shipping address is required",
     }),
 
+
   // ====================================================
   // TOTAL
   // ====================================================
 
   totalAmount: Joi.number()
     .min(0)
-    .required()
-    .messages({
-      "number.base":
-        "Total amount must be a number",
-
-      "any.required":
-        "Total amount is required",
-    }),
+    .required(),
 
 
-// ====================================================
-// PAYMENT METHOD
-// ====================================================
+  // ====================================================
+  // COUPON
+  // ====================================================
 
-paymentMethod: Joi.string()
+  couponCode: Joi.string()
+    .trim()
+    .allow("")
+    .allow(null)
+    .optional()
+    .default(""),
+
+
+  couponDiscount: Joi.number()
+    .min(0)
+    .optional()
+    .default(0),
+
+
+  // ====================================================
+  // PAYMENT METHOD
+  // ====================================================
+
+  paymentMethod: Joi.string()
     .valid(
-        "CASH",
-        "CARD",
-        "UPI",
-        "ONLINE"
+      "CASH",
+      "CARD",
+      "UPI",
+      "ONLINE"
     )
     .default("CASH"),
 
@@ -409,7 +610,6 @@ paymentMethod: Joi.string()
     .default("ONLINE"),
 
 });
-
 
 // ======================================================
 // UPDATE ORDER STATUS

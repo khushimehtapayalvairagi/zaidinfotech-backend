@@ -21,7 +21,9 @@ import generateSlug from "../../common/utils/generateSlug.js";
 
 import generateSKU from "../../common/utils/generateSKU.js";
 import {calculateDiscountedPrice,matchOfferToProduct} from "../../common/utils/offerCalculator.js";
-
+import {
+    getActiveOffersDB
+} from "../offer/offer.repository.js";
 
 // =====================================================
 // PRODUCTS ADDED BY RECEPTIONIST
@@ -422,29 +424,93 @@ export const getProductsService = async () => {
 // GET SINGLE PRODUCT
 // =====================================================
 
-export const getProductService = async(id) => {
+// export const getProductService = async(id) => {
 
-    const product = await getProductByIdDB(id);
+//     const product = await getProductByIdDB(id);
 
-    if(!product){
-        throw new Error("Product not found");
+//     if(!product){
+//         throw new Error("Product not found");
+//     }
+
+//     // Offer check
+//     const offer = await getBestOfferForProduct(product);
+
+//     const finalPricing = applyOfferOnPrice(
+//         product.pricing.sellingPrice,
+//         offer
+//     );
+
+//     return {
+//         ...product.toObject(),
+//         offer: offer || null,
+//         finalPrice: finalPricing
+//     };
+// };
+
+// =====================================================
+// GET SINGLE PRODUCT
+// =====================================================
+
+export const getProductService = async (id) => {
+
+    const product =
+        await getProductByIdDB(id);
+
+    if (!product) {
+
+        throw new Error(
+            "Product not found"
+        );
+
     }
 
-    // Offer check
-    const offer = await getBestOfferForProduct(product);
 
-    const finalPricing = applyOfferOnPrice(
-        product.pricing.sellingPrice,
-        offer
-    );
+    // =================================================
+    // GET ACTIVE OFFERS
+    // =================================================
+
+    const activeOffers =
+        await getActiveOffersDB();
+
+
+    // =================================================
+    // MATCH OFFER WITH PRODUCT
+    // =================================================
+
+    const offer =
+        matchOfferToProduct(
+            product,
+            activeOffers
+        );
+
+
+    // =================================================
+    // CALCULATE FINAL PRICE
+    // =================================================
+
+    const finalPrice =
+        calculateDiscountedPrice(
+            product.pricing.sellingPrice,
+            offer
+        );
+
+
+    // =================================================
+    // RETURN PRODUCT
+    // =================================================
 
     return {
-        ...product.toObject(),
-        offer: offer || null,
-        finalPrice: finalPricing
-    };
-};
 
+        ...product.toObject(),
+
+        offer:
+            offer || null,
+
+        finalPrice
+
+    };
+
+};
 // =====================================================
 // UPDATE PRODUCT
 // =====================================================
@@ -597,22 +663,215 @@ export const searchProductService = async (
 // CUSTOMER SHOP PRODUCTS
 // =====================================================
 
-export const getShopProductsService = async() => {
+// export const getShopProductsService = async() => {
 
-    const products = await getShopProductsDB();
+//     const products = await getShopProductsDB();
 
-    const activeOffers = await getActiveOffersDB(); 
-    // offer.repository.js se already ban chuka hai
+//     const activeOffers = await getActiveOffersDB(); 
+//     // offer.repository.js se already ban chuka hai
 
-    return products.map((product) => {
-        const offer = matchOfferToProduct(product, activeOffers);
-        return {
-            ...product.toObject(),
-            offer: offer || null,
-            finalPrice: calculateDiscountedPrice(
-                product.pricing.sellingPrice,
-                offer
-            )
-        };
-    });
+//     return products.map((product) => {
+//         const offer = matchOfferToProduct(product, activeOffers);
+//         return {
+//             ...product.toObject(),
+//             offer: offer || null,
+//             finalPrice: calculateDiscountedPrice(
+//                 product.pricing.sellingPrice,
+//                 offer
+//             )
+//         };
+//     });
+// };
+
+
+// =====================================================
+// CUSTOMER SHOP PRODUCTS
+// =====================================================
+
+// export const getShopProductsService = async () => {
+
+//     const products =
+//         await getShopProductsDB();
+
+
+//     // =================================================
+//     // ACTIVE OFFERS
+//     // =================================================
+
+//     const activeOffers =
+//         await getActiveOffersDB();
+
+
+//     // =================================================
+//     // APPLY OFFER
+//     // =================================================
+
+//     return products.map(
+//         (product) => {
+
+//             const offer =
+//                 matchOfferToProduct(
+//                     product,
+//                     activeOffers
+//                 );
+
+
+//             const finalPrice =
+//                 calculateDiscountedPrice(
+//                     product.pricing.sellingPrice,
+//                     offer
+//                 );
+
+
+//             return {
+
+//                 ...product.toObject(),
+
+//                 offer:
+//                     offer || null,
+
+//                 finalPrice
+
+//             };
+
+//         }
+//     );
+
+// };
+
+
+// =====================================================
+// CUSTOMER SHOP PRODUCTS
+// =====================================================
+
+export const getShopProductsService = async () => {
+
+    try {
+
+        console.log(
+            "======================================"
+        );
+
+        console.log(
+            "GET SHOP PRODUCTS SERVICE"
+        );
+
+        console.log(
+            "======================================"
+        );
+
+
+        // =================================================
+        // GET ACTIVE PRODUCTS
+        // =================================================
+
+        const products =
+            await getShopProductsDB();
+
+
+        console.log(
+            "SHOP PRODUCTS COUNT:",
+            products.length
+        );
+
+
+        // =================================================
+        // GET ACTIVE OFFERS
+        // =================================================
+
+        const activeOffers =
+            await getActiveOffersDB();
+
+
+        console.log(
+            "ACTIVE OFFERS COUNT:",
+            activeOffers.length
+        );
+
+
+        // =================================================
+        // APPLY OFFERS
+        // =================================================
+
+        const productsWithOffers =
+            products.map((product) => {
+
+                // -------------------------------------------------
+                // Product is normally a mongoose document here.
+                // Keep fallback so this function remains safe even
+                // if repository ever returns plain objects.
+                // -------------------------------------------------
+
+                const productData =
+                    typeof product.toObject === "function"
+                        ? product.toObject()
+                        : product;
+
+
+                // -------------------------------------------------
+                // Find matching offer
+                // -------------------------------------------------
+
+                const offer =
+                    matchOfferToProduct(
+                        productData,
+                        activeOffers
+                    );
+
+
+                // -------------------------------------------------
+                // Calculate final customer price
+                // -------------------------------------------------
+
+                const sellingPrice =
+                    Number(
+                        productData.pricing?.sellingPrice || 0
+                    );
+
+
+                const finalPrice =
+                    calculateDiscountedPrice(
+                        sellingPrice,
+                        offer
+                    );
+
+
+                // -------------------------------------------------
+                // Return product
+                // -------------------------------------------------
+
+                return {
+
+                    ...productData,
+
+                    offer:
+                        offer || null,
+
+                    finalPrice
+
+                };
+
+            });
+
+
+        console.log(
+            "FINAL SHOP PRODUCTS:",
+            productsWithOffers.length
+        );
+
+
+        return productsWithOffers;
+
+
+    } catch (error) {
+
+        console.error(
+            "GET SHOP PRODUCTS SERVICE ERROR:",
+            error
+        );
+
+        throw error;
+
+    }
+
 };
