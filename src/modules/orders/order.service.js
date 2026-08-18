@@ -2041,7 +2041,15 @@ export const updateOrderStatus =
               "Your order has been delivered successfully.",
 
             CANCELLED:
-              "Your order has been cancelled."
+              "Your order has been cancelled.",
+
+            RETURN_REQUESTED:
+              "Your return request has been received.",
+
+             RETURNED:
+               "Your order has been returned successfully."
+
+              
 
           };
 
@@ -2395,6 +2403,15 @@ const getDefaultTrackingMessage =
         return (
           "Your order has been cancelled."
         );
+
+        case "RETURN_REQUESTED":
+
+           return "Your return request has been received.";
+
+
+      case "RETURNED":
+
+          return "Your order has been returned successfully.";
 
 
       default:

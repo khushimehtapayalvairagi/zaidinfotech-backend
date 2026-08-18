@@ -47,7 +47,127 @@ const calculateStatus = (
 };
 
 
+// ======================================================
+// INVENTORY ALERT NOTIFICATION
+// Admin ko Low Stock / Out of Stock notification
+// ======================================================
 
+const sendInventoryNotification = async ({
+    productId,
+    currentStock,
+    minimumStock,
+    status
+}) => {
+
+    try {
+
+        // ==========================================
+        // Sirf Low Stock / Out of Stock par alert
+        // ==========================================
+
+        if (
+            status !== INVENTORY_STATUS.LOW_STOCK &&
+            status !== INVENTORY_STATUS.OUT_OF_STOCK
+        ) {
+
+            return;
+
+        }
+
+        // ==========================================
+        // Product find
+        // ==========================================
+
+        const product =
+            await Product
+                .findById(productId)
+                .select("name sku");
+
+        if (!product) {
+
+            console.log(
+                "Inventory notification product not found:",
+                productId
+            );
+
+            return;
+
+        }
+
+        // ==========================================
+        // OUT OF STOCK
+        // ==========================================
+
+        if (
+            status ===
+            INVENTORY_STATUS.OUT_OF_STOCK
+        ) {
+
+            await notifyAdminsService({
+
+                type: "STOCK_OUT",
+
+                title:
+                    "🚨 Product Out of Stock",
+
+                message:
+                    `${product.name} (${product.sku || "No SKU"}) is OUT OF STOCK. Current stock: 0.`,
+
+                relatedId:
+                    product._id,
+
+                relatedModel:
+                    "Product"
+
+            });
+
+            return;
+
+        }
+
+        // ==========================================
+        // LOW STOCK
+        // ==========================================
+
+        if (
+            status ===
+            INVENTORY_STATUS.LOW_STOCK
+        ) {
+
+            await notifyAdminsService({
+
+                type: "STOCK_LOW",
+
+                title:
+                    "⚠️ Low Stock Alert",
+
+                message:
+                    `${product.name} (${product.sku || "No SKU"}) is low in stock. Current stock: ${currentStock}, minimum stock: ${minimumStock}.`,
+
+                relatedId:
+                    product._id,
+
+                relatedModel:
+                    "Product"
+
+            });
+
+        }
+
+    }
+    catch (error) {
+
+        // Notification fail hone par
+        // inventory operation fail nahi hoga
+
+        console.error(
+            "INVENTORY NOTIFICATION ERROR:",
+            error
+        );
+
+    }
+
+};
 
 
 // ==============================
@@ -156,20 +276,71 @@ async(id)=>{
 // Update Inventory
 // ==============================
 
+// export const updateInventoryService =
+// async(
+//     id,
+//     data
+// )=>{
+
+
+//     const inventory =
+//     await inventoryRepository
+//     .getInventoryById(id);
+
+
+
+//     if(!inventory){
+
+//         throw new Error(
+//             "Inventory not found"
+//         );
+
+//     }
+
+
+
+
+//     const stock =
+//     data.currentStock ??
+//     inventory.currentStock;
+
+
+
+//     const minimumStock =
+//     data.minimumStock ??
+//     inventory.minimumStock;
+
+
+
+//     data.status =
+//     calculateStatus(
+//         stock,
+//         minimumStock
+//     );
+
+
+
+
+//     return await inventoryRepository
+//     .updateInventory(
+//         id,
+//         data
+//     );
+
+
+// };
+
 export const updateInventoryService =
-async(
+async (
     id,
     data
-)=>{
-
+) => {
 
     const inventory =
-    await inventoryRepository
-    .getInventoryById(id);
+        await inventoryRepository
+            .getInventoryById(id);
 
-
-
-    if(!inventory){
+    if (!inventory) {
 
         throw new Error(
             "Inventory not found"
@@ -177,40 +348,53 @@ async(
 
     }
 
-
-
-
     const stock =
-    data.currentStock ??
-    inventory.currentStock;
-
-
+        data.currentStock ??
+        inventory.currentStock;
 
     const minimumStock =
-    data.minimumStock ??
-    inventory.minimumStock;
+        data.minimumStock ??
+        inventory.minimumStock;
 
-
+    const status =
+        calculateStatus(
+            stock,
+            minimumStock
+        );
 
     data.status =
-    calculateStatus(
-        stock,
-        minimumStock
-    );
+        status;
 
+    const updatedInventory =
+        await inventoryRepository
+            .updateInventory(
+                id,
+                data
+            );
 
+    // =====================================
+    // INVENTORY NOTIFICATION
+    // =====================================
 
+    await sendInventoryNotification({
 
-    return await inventoryRepository
-    .updateInventory(
-        id,
-        data
-    );
+        productId:
+            inventory.product,
 
+        currentStock:
+            stock,
+
+        minimumStock:
+            minimumStock,
+
+        status:
+            status
+
+    });
+
+    return updatedInventory;
 
 };
-
-
 
 
 
@@ -243,22 +427,143 @@ async(id)=>{
 // ==============================
 // Add Stock
 // ==============================
+// export const addStockService =
+// async(
+//     productId,
+//     quantity,
+//     userId
+// )=>{
+
+
+//     const inventory =
+//     await inventoryRepository
+//     .getInventoryByProductId(
+//         productId
+//     );
+
+
+//     if(!inventory){
+
+//         throw new Error(
+//             "Inventory not found"
+//         );
+
+//     }
+
+
+
+//     const previousStock =
+//     inventory.currentStock;
+
+
+
+//     const updatedStock =
+//     previousStock + quantity;
+
+
+
+//     const status =
+//     calculateStatus(
+//         updatedStock,
+//         inventory.minimumStock
+//     );
+
+
+
+
+//     const updatedInventory =
+//     await inventoryRepository
+//     .updateInventory(
+
+//         inventory._id,
+
+//         {
+
+//             currentStock:updatedStock,
+
+//             status,
+
+//             lastUpdatedBy:userId
+
+//         }
+
+//     );
+
+
+
+
+
+//     // Create Stock History
+
+//     await createStockTransactionService({
+
+//         product:inventory.product,
+
+//         inventory:inventory._id,
+
+//         type:"STOCK_IN",
+
+//         quantity:quantity,
+
+//         previousStock:previousStock,
+
+//         updatedStock:updatedStock,
+
+//         description:
+//         "Stock added by Inventory Manager",
+
+//         createdBy:userId
+
+//     });
+
+
+
+
+
+//     return updatedInventory;
+
+
+// };
+
+
+
+// ==============================
+// Add Stock
+// ==============================
+
 export const addStockService =
-async(
+async (
     productId,
     quantity,
     userId
-)=>{
+) => {
 
+    // =====================================
+    // VALIDATE QUANTITY
+    // =====================================
+
+    if (
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ) {
+
+        throw new Error(
+            "Quantity must be greater than 0"
+        );
+
+    }
+
+    // =====================================
+    // FIND INVENTORY
+    // =====================================
 
     const inventory =
-    await inventoryRepository
-    .getInventoryByProductId(
-        productId
-    );
+        await inventoryRepository
+            .getInventoryByProductId(
+                productId
+            );
 
-
-    if(!inventory){
+    if (!inventory) {
 
         throw new Error(
             "Inventory not found"
@@ -266,84 +571,109 @@ async(
 
     }
 
-
+    // =====================================
+    // PREVIOUS STOCK
+    // =====================================
 
     const previousStock =
-    inventory.currentStock;
+        Number(
+            inventory.currentStock || 0
+        );
 
-
+    // =====================================
+    // UPDATED STOCK
+    // =====================================
 
     const updatedStock =
-    previousStock + quantity;
+        previousStock + Number(quantity);
 
-
+    // =====================================
+    // STATUS
+    // =====================================
 
     const status =
-    calculateStatus(
-        updatedStock,
-        inventory.minimumStock
-    );
+        calculateStatus(
+            updatedStock,
+            inventory.minimumStock
+        );
 
-
-
+    // =====================================
+    // UPDATE INVENTORY
+    // =====================================
 
     const updatedInventory =
-    await inventoryRepository
-    .updateInventory(
+        await inventoryRepository
+            .updateInventory(
 
-        inventory._id,
+                inventory._id,
 
-        {
+                {
 
-            currentStock:updatedStock,
+                    currentStock:
+                        updatedStock,
 
-            status,
+                    status,
 
-            lastUpdatedBy:userId
+                    lastUpdatedBy:
+                        userId
 
-        }
+                }
 
-    );
+            );
 
-
-
-
-
-    // Create Stock History
+    // =====================================
+    // STOCK HISTORY
+    // =====================================
 
     await createStockTransactionService({
 
-        product:inventory.product,
+        product:
+            inventory.product,
 
-        inventory:inventory._id,
+        inventory:
+            inventory._id,
 
-        type:"STOCK_IN",
+        type:
+            "STOCK_IN",
 
-        quantity:quantity,
+        quantity:
+            quantity,
 
-        previousStock:previousStock,
+        previousStock:
+            previousStock,
 
-        updatedStock:updatedStock,
+        updatedStock:
+            updatedStock,
 
         description:
-        "Stock added by Inventory Manager",
+            "Stock added by Inventory Manager",
 
-        createdBy:userId
+        createdBy:
+            userId
 
     });
 
+    // =====================================
+    // INVENTORY NOTIFICATION
+    // =====================================
 
+    await sendInventoryNotification({
 
+        productId,
 
+        currentStock:
+            updatedStock,
+
+        minimumStock:
+            inventory.minimumStock,
+
+        status
+
+    });
 
     return updatedInventory;
 
-
 };
-
-
-
-
 
 
 
@@ -358,177 +688,555 @@ async(
 // Walk-in / Online / Repair / Rental
 // =======================================
 
-export const removeStockService = async (
-  productId,
-  quantity,
-  userId,
-  transactionType = "STOCK_OUT",
-  description = "Stock removed"
-) => {
+// export const removeStockService = async (
+//   productId,
+//   quantity,
+//   userId,
+//   transactionType = "STOCK_OUT",
+//   description = "Stock removed"
+// ) => {
 
-  // =====================================
-  // VALIDATE QUANTITY
-  // =====================================
+//   // =====================================
+//   // VALIDATE QUANTITY
+//   // =====================================
 
-  if (
-    !Number.isInteger(quantity) ||
-    quantity <= 0
-  ) {
-    throw new Error(
-      "Quantity must be greater than 0"
-    );
-  }
+//   if (
+//     !Number.isInteger(quantity) ||
+//     quantity <= 0
+//   ) {
+//     throw new Error(
+//       "Quantity must be greater than 0"
+//     );
+//   }
 
-  // =====================================
-  // FIND INVENTORY
-  // =====================================
+//   // =====================================
+//   // FIND INVENTORY
+//   // =====================================
 
-  const inventory =
-    await inventoryRepository
-      .getInventoryByProductId(
-        productId
-      );
+//   const inventory =
+//     await inventoryRepository
+//       .getInventoryByProductId(
+//         productId
+//       );
 
-  if (!inventory) {
-    throw new Error(
-      "Inventory not found"
-    );
-  }
+//   if (!inventory) {
+//     throw new Error(
+//       "Inventory not found"
+//     );
+//   }
 
-  // =====================================
-  // AVAILABLE STOCK
-  // =====================================
+//   // =====================================
+//   // AVAILABLE STOCK
+//   // =====================================
 
-  const availableStock =
-    inventory.currentStock -
-    inventory.reservedStock;
+//   const availableStock =
+//     inventory.currentStock -
+//     inventory.reservedStock;
 
-  // =====================================
-  // STOCK CHECK
-  // =====================================
+//   // =====================================
+//   // STOCK CHECK
+//   // =====================================
 
-  if (
-    availableStock < quantity
-  ) {
-    throw new Error(
-      "Not enough stock available"
-    );
-  }
+//   if (
+//     availableStock < quantity
+//   ) {
+//     throw new Error(
+//       "Not enough stock available"
+//     );
+//   }
 
-  // =====================================
-  // PREVIOUS STOCK
-  // =====================================
+//   // =====================================
+//   // PREVIOUS STOCK
+//   // =====================================
 
-  const previousStock =
-    inventory.currentStock;
+//   const previousStock =
+//     inventory.currentStock;
 
-  // =====================================
-  // DECREASE STOCK
-  // =====================================
+//   // =====================================
+//   // DECREASE STOCK
+//   // =====================================
 
-  const updatedStock =
-    previousStock - quantity;
+//   const updatedStock =
+//     previousStock - quantity;
 
-  // =====================================
-  // STATUS
-  // =====================================
+//   // =====================================
+//   // STATUS
+//   // =====================================
 
-  const status =
-    calculateStatus(
-      updatedStock,
-      inventory.minimumStock
-    );
+//   const status =
+//     calculateStatus(
+//       updatedStock,
+//       inventory.minimumStock
+//     );
 
-  // =====================================
-  // UPDATE INVENTORY
-  // =====================================
+//   // =====================================
+//   // UPDATE INVENTORY
+//   // =====================================
 
-  const updatedInventory =
-    await inventoryRepository
-      .updateInventory(
+//   const updatedInventory =
+//     await inventoryRepository
+//       .updateInventory(
 
-        inventory._id,
+//         inventory._id,
 
-        {
-          currentStock: updatedStock,
+//         {
+//           currentStock: updatedStock,
 
-          status,
+//           status,
 
-          lastUpdatedBy: userId,
-        }
-      );
+//           lastUpdatedBy: userId,
+//         }
+//       );
 
 
       
-  // =====================================
-  // STOCK HISTORY
-  // =====================================
+//   // =====================================
+//   // STOCK HISTORY
+//   // =====================================
 
-  await createStockTransactionService({
+//   await createStockTransactionService({
 
-    product: inventory.product,
+//     product: inventory.product,
 
-    inventory: inventory._id,
+//     inventory: inventory._id,
 
-    type: transactionType,
+//     type: transactionType,
 
-    quantity: quantity,
+//     quantity: quantity,
 
-    previousStock: previousStock,
+//     previousStock: previousStock,
 
-    updatedStock: updatedStock,
+//     updatedStock: updatedStock,
 
-    description: description,
+//     description: description,
 
-    createdBy: userId,
+//     createdBy: userId,
 
-  });
+//   });
 
 
-try {
+// try {
+
+//     if (
+//       status === INVENTORY_STATUS.OUT_OF_STOCK ||
+//       status === INVENTORY_STATUS.LOW_STOCK
+//     ) {
+
+//       const productData =
+//         await Product.findById(productId).select("name");
+
+//       const productName =
+//         productData?.name || "Product";
+
+
+//       if (status === INVENTORY_STATUS.OUT_OF_STOCK) {
+
+//         await notifyAdminsService({
+//           type: "STOCK_OUT",
+//           title: "Product Out of Stock",
+//           message: `${productName} is now OUT OF STOCK.`,
+//           relatedId: productId,
+//           relatedModel: "Product"
+//         });
+
+//       }
+//       else if (status === INVENTORY_STATUS.LOW_STOCK) {
+
+//         await notifyAdminsService({
+//           type: "STOCK_LOW",
+//           title: "Low Stock Alert",
+//           message: `${productName} stock is low — only ${updatedStock} left.`,
+//           relatedId: productId,
+//           relatedModel: "Product"
+//         });
+
+//       }
+
+//     }
+
+//   }
+//   catch (notifError) {
+//     console.error("STOCK NOTIFICATION ERROR:", notifError);
+//   }
+//   return updatedInventory;
+// };
+
+// =======================================
+// Remove Stock
+// Walk-in / Online / Repair / Rental
+// =======================================
+
+// export const removeStockService = async (
+//     productId,
+//     quantity,
+//     userId,
+//     transactionType = "STOCK_OUT",
+//     description = "Stock removed"
+// ) => {
+
+//     // =====================================
+//     // VALIDATE QUANTITY
+//     // =====================================
+
+//     if (
+//         !Number.isInteger(quantity) ||
+//         quantity <= 0
+//     ) {
+
+//         throw new Error(
+//             "Quantity must be greater than 0"
+//         );
+
+//     }
+
+//     // =====================================
+//     // FIND INVENTORY
+//     // =====================================
+
+//     const inventory =
+//         await inventoryRepository
+//             .getInventoryByProductId(
+//                 productId
+//             );
+
+//     if (!inventory) {
+
+//         throw new Error(
+//             "Inventory not found"
+//         );
+
+//     }
+
+//     // =====================================
+//     // AVAILABLE STOCK
+//     // =====================================
+
+//     const availableStock =
+//         Number(inventory.currentStock || 0) -
+//         Number(inventory.reservedStock || 0);
+
+//     // =====================================
+//     // STOCK CHECK
+//     // =====================================
+
+//     if (
+//         availableStock < quantity
+//     ) {
+
+//         throw new Error(
+//             "Not enough stock available"
+//         );
+
+//     }
+
+//     // =====================================
+//     // PREVIOUS STOCK
+//     // =====================================
+
+//     const previousStock =
+//         Number(
+//             inventory.currentStock || 0
+//         );
+
+//         const previousStatus =
+//     inventory.status;
+
+//     // =====================================
+//     // UPDATED STOCK
+//     // =====================================
+
+//     const updatedStock =
+//         previousStock - Number(quantity);
+
+//     // =====================================
+//     // STATUS
+//     // =====================================
+
+//     const status =
+//         calculateStatus(
+//             updatedStock,
+//             inventory.minimumStock
+//         );
+
+//         const shouldNotify =
+//     status !== previousStatus &&
+//     (
+//         status === INVENTORY_STATUS.LOW_STOCK ||
+//         status === INVENTORY_STATUS.OUT_OF_STOCK
+//     );
+
+//     // =====================================
+//     // UPDATE INVENTORY
+//     // =====================================
+
+//     const updatedInventory =
+//         await inventoryRepository
+//             .updateInventory(
+
+//                 inventory._id,
+
+//                 {
+
+//                     currentStock:
+//                         updatedStock,
+
+//                     status,
+
+//                     lastUpdatedBy:
+//                         userId
+
+//                 }
+
+//             );
+
+//     // =====================================
+//     // STOCK HISTORY
+//     // =====================================
+
+//     await createStockTransactionService({
+
+//         product:
+//             inventory.product,
+
+//         inventory:
+//             inventory._id,
+
+//         type:
+//             transactionType,
+
+//         quantity:
+//             quantity,
+
+//         previousStock:
+//             previousStock,
+
+//         updatedStock:
+//             updatedStock,
+
+//         description:
+//             description,
+
+//         createdBy:
+//             userId
+
+//     });
+
+//     // =====================================
+//     // INVENTORY NOTIFICATION
+//     // =====================================
+
+    
+//   if (shouldNotify) {
+
+//     await sendInventoryNotification({
+
+//         productId,
+
+//         currentStock:
+//             updatedStock,
+
+//         minimumStock:
+//             inventory.minimumStock,
+
+//         status
+
+//     });
+
+// }
+
+//     return updatedInventory;
+
+// };
+
+
+export const removeStockService = async (
+    productId,
+    quantity,
+    userId,
+    transactionType = "STOCK_OUT",
+    description = "Stock removed"
+) => {
+
+    // =====================================
+    // VALIDATE QUANTITY
+    // =====================================
 
     if (
-      status === INVENTORY_STATUS.OUT_OF_STOCK ||
-      status === INVENTORY_STATUS.LOW_STOCK
+        !Number.isInteger(quantity) ||
+        quantity <= 0
     ) {
 
-      const productData =
-        await Product.findById(productId).select("name");
-
-      const productName =
-        productData?.name || "Product";
-
-
-      if (status === INVENTORY_STATUS.OUT_OF_STOCK) {
-
-        await notifyAdminsService({
-          type: "STOCK_OUT",
-          title: "Product Out of Stock",
-          message: `${productName} is now OUT OF STOCK.`,
-          relatedId: productId,
-          relatedModel: "Product"
-        });
-
-      }
-      else if (status === INVENTORY_STATUS.LOW_STOCK) {
-
-        await notifyAdminsService({
-          type: "STOCK_LOW",
-          title: "Low Stock Alert",
-          message: `${productName} stock is low — only ${updatedStock} left.`,
-          relatedId: productId,
-          relatedModel: "Product"
-        });
-
-      }
+        throw new Error(
+            "Quantity must be greater than 0"
+        );
 
     }
 
-  }
-  catch (notifError) {
-    console.error("STOCK NOTIFICATION ERROR:", notifError);
-  }
-  return updatedInventory;
+    // =====================================
+    // FIND INVENTORY
+    // =====================================
+
+    const inventory =
+        await inventoryRepository
+            .getInventoryByProductId(
+                productId
+            );
+
+    if (!inventory) {
+
+        throw new Error(
+            "Inventory not found"
+        );
+
+    }
+
+    // =====================================
+    // AVAILABLE STOCK
+    // =====================================
+
+    const availableStock =
+        Number(inventory.currentStock || 0) -
+        Number(inventory.reservedStock || 0);
+
+    // =====================================
+    // STOCK CHECK
+    // =====================================
+
+    if (
+        availableStock < quantity
+    ) {
+
+        throw new Error(
+            "Not enough stock available"
+        );
+
+    }
+
+    // =====================================
+    // PREVIOUS STOCK
+    // =====================================
+
+    const previousStock =
+        Number(
+            inventory.currentStock || 0
+        );
+
+    // =====================================
+    // PREVIOUS STATUS
+    // =====================================
+
+    const previousStatus =
+        inventory.status;
+
+    // =====================================
+    // UPDATED STOCK
+    // =====================================
+
+    const updatedStock =
+        previousStock -
+        Number(quantity);
+
+    // =====================================
+    // NEW STATUS
+    // =====================================
+
+    const status =
+        calculateStatus(
+            updatedStock,
+            inventory.minimumStock
+        );
+
+    // =====================================
+    // SHOULD SEND ALERT?
+    // =====================================
+
+    const shouldNotify =
+        status !== previousStatus &&
+        (
+            status === INVENTORY_STATUS.LOW_STOCK ||
+            status === INVENTORY_STATUS.OUT_OF_STOCK
+        );
+
+    // =====================================
+    // UPDATE INVENTORY
+    // =====================================
+
+    const updatedInventory =
+        await inventoryRepository
+            .updateInventory(
+
+                inventory._id,
+
+                {
+
+                    currentStock:
+                        updatedStock,
+
+                    status,
+
+                    lastUpdatedBy:
+                        userId
+
+                }
+
+            );
+
+    // =====================================
+    // STOCK HISTORY
+    // =====================================
+
+    await createStockTransactionService({
+
+        product:
+            inventory.product,
+
+        inventory:
+            inventory._id,
+
+        type:
+            transactionType,
+
+        quantity:
+            quantity,
+
+        previousStock:
+            previousStock,
+
+        updatedStock:
+            updatedStock,
+
+        description:
+            description,
+
+        createdBy:
+            userId
+
+    });
+
+    // =====================================
+    // INVENTORY NOTIFICATION
+    // =====================================
+
+    if (shouldNotify) {
+
+        await sendInventoryNotification({
+
+            productId,
+
+            currentStock:
+                updatedStock,
+
+            minimumStock:
+                inventory.minimumStock,
+
+            status
+
+        });
+
+    }
+
+    return updatedInventory;
+
 };
 
 // ==============================
@@ -537,24 +1245,137 @@ try {
 // ==============================
 
 
+// export const returnStockService =
+// async(
+//     productId,
+//     quantity,
+//     userId,
+//     description="Stock returned"
+// )=>{
+
+
+//     const inventory =
+//     await inventoryRepository
+//     .getInventoryByProductId(
+//         productId
+//     );
+
+
+
+//     if(!inventory){
+
+//         throw new Error(
+//             "Inventory not found"
+//         );
+
+//     }
+
+
+
+
+//     const previousStock =
+//     inventory.currentStock;
+
+
+
+//     const updatedStock =
+//     previousStock + quantity;
+
+
+
+//     const status =
+//     calculateStatus(
+//         updatedStock,
+//         inventory.minimumStock
+//     );
+
+
+
+
+
+//     const updatedInventory =
+//     await inventoryRepository
+//     .updateInventory(
+
+//         inventory._id,
+
+//         {
+
+//             currentStock:updatedStock,
+
+//             status,
+
+//             lastUpdatedBy:userId
+
+//         }
+
+//     );
+
+
+
+
+
+
+//     // Create History
+
+//     await createStockTransactionService({
+
+//         product:inventory.product,
+
+//         inventory:inventory._id,
+
+//         type:"RETURN",
+
+//         quantity:quantity,
+
+//         previousStock:previousStock,
+
+//         updatedStock:updatedStock,
+
+//         description:description,
+
+//         createdBy:userId
+
+//     });
+
+
+
+
+
+
+//     return updatedInventory;
+
+
+// };
+
+
+
 export const returnStockService =
-async(
+async (
     productId,
     quantity,
     userId,
-    description="Stock returned"
-)=>{
+    description = "Stock returned"
+) => {
 
+    if (
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ) {
+
+        throw new Error(
+            "Quantity must be greater than 0"
+        );
+
+    }
 
     const inventory =
-    await inventoryRepository
-    .getInventoryByProductId(
-        productId
-    );
+        await inventoryRepository
+            .getInventoryByProductId(
+                productId
+            );
 
-
-
-    if(!inventory){
+    if (!inventory) {
 
         throw new Error(
             "Inventory not found"
@@ -562,87 +1383,89 @@ async(
 
     }
 
-
-
-
     const previousStock =
-    inventory.currentStock;
-
-
+        Number(
+            inventory.currentStock || 0
+        );
 
     const updatedStock =
-    previousStock + quantity;
-
-
+        previousStock +
+        Number(quantity);
 
     const status =
-    calculateStatus(
-        updatedStock,
-        inventory.minimumStock
-    );
-
-
-
-
+        calculateStatus(
+            updatedStock,
+            inventory.minimumStock
+        );
 
     const updatedInventory =
-    await inventoryRepository
-    .updateInventory(
+        await inventoryRepository
+            .updateInventory(
 
-        inventory._id,
+                inventory._id,
 
-        {
+                {
 
-            currentStock:updatedStock,
+                    currentStock:
+                        updatedStock,
 
-            status,
+                    status,
 
-            lastUpdatedBy:userId
+                    lastUpdatedBy:
+                        userId
 
-        }
+                }
 
-    );
-
-
-
-
-
-
-    // Create History
+            );
 
     await createStockTransactionService({
 
-        product:inventory.product,
+        product:
+            inventory.product,
 
-        inventory:inventory._id,
+        inventory:
+            inventory._id,
 
-        type:"RETURN",
+        type:
+            "RETURN",
 
-        quantity:quantity,
+        quantity:
+            quantity,
 
-        previousStock:previousStock,
+        previousStock:
+            previousStock,
 
-        updatedStock:updatedStock,
+        updatedStock:
+            updatedStock,
 
-        description:description,
+        description:
+            description,
 
-        createdBy:userId
+        createdBy:
+            userId
 
     });
 
+    // Usually return ke baad LOW/OUT nahi hoga,
+    // lekin future-safe notification check.
 
+    await sendInventoryNotification({
 
+        productId,
 
+        currentStock:
+            updatedStock,
 
+        minimumStock:
+            inventory.minimumStock,
+
+        status
+
+    });
 
     return updatedInventory;
 
-
 };
-
-
-
-
 
 
 
