@@ -2423,3 +2423,35 @@ const getDefaultTrackingMessage =
     }
 
   };
+
+
+  // ======================================================
+// FIND ORDER FOR PRODUCT REVIEW
+// ======================================================
+
+export const findOrderForReview = async (
+    orderId,
+    userId,
+    productId
+) => {
+
+    return await Order.findOne({
+
+        _id: orderId,
+
+        // Order isi customer ka hona chahiye
+        user: userId,
+
+        // Sirf delivered order review kar sakta hai
+        orderStatus: "DELIVERED",
+
+        // Product order ke andar hona chahiye
+        orderItems: {
+            $elemMatch: {
+                product: productId
+            }
+        }
+
+    });
+
+};

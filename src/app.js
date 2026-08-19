@@ -23,6 +23,7 @@ import shiftRoutes from "./modules/shift/shift.routes.js";
 import invoiceRoutes from "./modules/invoices/invoice.routes.js";
 import notificationRoute from "./modules/notification/notification.routes.js"; 
 import couponRoutes from "./modules/coupons/coupon.routes.js"; 
+import reviewRoutes from "./modules/review/review.routes.js";
 const app = express();
 
 app.use(cors({
@@ -78,7 +79,7 @@ app.use("/api/newAttendance", attendanceRoutes);
 app.use("/api/invoices",invoiceRoutes);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/coupons", couponRoutes);
-
+app.use("/api/reviews", reviewRoutes);
 
 
 export default app;
