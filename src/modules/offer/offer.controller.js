@@ -1,155 +1,563 @@
-import * as offerService from "./offer.service.js";
+// import * as offerService from "./offer.service.js";
 
+
+
+// // ================================
+// // Create Offer
+// // ================================
+
+// export const createOffer = async(req,res)=>{
+
+
+// try{
+
+
+// const offer =
+
+// await offerService.createOfferService(
+
+//     req.body,
+
+//     req.user._id
+
+// );
+
+
+
+// res.status(201).json({
+
+//     success:true,
+
+//     message:"Offer created successfully",
+
+//     offer
+
+// });
+
+
+// }
+
+// catch(error){
+
+
+// res.status(400).json({
+
+//     success:false,
+
+//     message:error.message
+
+// });
+
+
+// }
+
+
+// };
+
+
+
+
+
+// // ================================
+// // Get All Offers
+// // ================================
+
+// export const getOffers = async(req,res)=>{
+
+
+// try{
+
+
+// const offers =
+
+// await offerService.getOffersService();
+
+
+
+// res.status(200).json({
+
+// success:true,
+
+// offers
+
+// });
+
+
+// }
+
+// catch(error){
+
+// res.status(400).json({
+
+// success:false,
+
+// message:error.message
+
+// });
+
+
+// }
+
+
+// };
+
+
+
+
+
+// // ================================
+// // Homepage Offers
+// // ================================
+
+// export const getActiveOffers = async(req,res)=>{
+
+
+// try{
+
+
+// const offers =
+
+// await offerService.getActiveOffersService();
+
+
+
+// res.status(200).json({
+
+// success:true,
+
+// offers
+
+// });
+
+
+// }
+
+// catch(error){
+
+
+// res.status(400).json({
+
+// success:false,
+
+// message:error.message
+
+// });
+
+
+// }
+
+
+// };
+
+
+
+
+
+// // ================================
+// // Update Offer
+// // ================================
+
+// export const updateOffer = async(req,res)=>{
+
+
+// try{
+
+
+// const offer =
+
+// await offerService.updateOfferService(
+
+// req.params.id,
+
+// req.body
+
+// );
+
+
+
+// res.status(200).json({
+
+// success:true,
+
+// message:"Offer updated",
+
+// offer
+
+// });
+
+
+// }
+
+// catch(error){
+
+
+// res.status(400).json({
+
+// success:false,
+
+// message:error.message
+
+// });
+
+
+// }
+
+
+// };
+
+
+
+
+
+// // ================================
+// // Delete Offer
+// // ================================
+
+// export const deleteOffer = async(req,res)=>{
+
+
+// try{
+
+
+// await offerService.deleteOfferService(
+
+// req.params.id
+
+// );
+
+
+
+// res.status(200).json({
+
+// success:true,
+
+// message:"Offer deleted"
+
+// });
+
+
+// }
+
+// catch(error){
+
+
+// res.status(400).json({
+
+// success:false,
+
+// message:error.message
+
+// });
+
+
+// }
+
+
+// };
+
+// // ================================
+// // Get Single Offer
+// // ================================
+
+// export const getOfferById = async(req,res)=>{
+
+// try{
+
+//     const offer =
+//     await offerService.getOfferByIdService(
+//         req.params.id
+//     );
+
+//     res.status(200).json({
+//         success:true,
+//         offer
+//     });
+
+// }
+// catch(error){
+
+//     res.status(404).json({
+//         success:false,
+//         message:error.message
+//     });
+
+// }
+
+// };
+// // =====================================================
+// // PUBLIC ACTIVE OFFERS
+// // HOME PAGE
+// // =====================================================
+
+// export const getActiveOffersPublic = async (req, res) => {
+
+//     try {
+
+//         const offers =
+//             await getActiveOffersPublicService();
+
+//         return res.status(200).json({
+
+//             success: true,
+
+//             message: "Active offers fetched successfully",
+
+//             data: offers
+
+//         });
+
+//     } catch (error) {
+
+//         console.error(
+//             "PUBLIC ACTIVE OFFERS ERROR:",
+//             error
+//         );
+
+//         return res.status(500).json({
+
+//             success: false,
+
+//             message: error.message,
+
+//             data: []
+
+//         });
+
+//     }
+
+// };
+
+
+
+import * as offerService from "./offer.service.js";
 
 
 // ================================
 // Create Offer
 // ================================
 
-export const createOffer = async(req,res)=>{
+export const createOffer = async (req, res) => {
+
+    try {
+
+        const offer =
+            await offerService.createOfferService(
+                req.body,
+                req.user._id
+            );
 
 
-try{
+        return res.status(201).json({
 
+            success: true,
 
-const offer =
+            message: "Offer created successfully",
 
-await offerService.createOfferService(
+            offer
 
-    req.body,
+        });
 
-    req.user._id
+    }
 
-);
+    catch (error) {
 
+        console.error(
+            "CREATE OFFER ERROR:",
+            error
+        );
 
+        return res.status(400).json({
 
-res.status(201).json({
+            success: false,
 
-    success:true,
+            message: error.message
 
-    message:"Offer created successfully",
+        });
 
-    offer
-
-});
-
-
-}
-
-catch(error){
-
-
-res.status(400).json({
-
-    success:false,
-
-    message:error.message
-
-});
-
-
-}
-
+    }
 
 };
-
-
 
 
 
 // ================================
 // Get All Offers
+// ADMIN ONLY
 // ================================
 
-export const getOffers = async(req,res)=>{
+export const getOffers = async (req, res) => {
+
+    try {
+
+        const offers =
+            await offerService.getOffersService();
 
 
-try{
+        return res.status(200).json({
 
+            success: true,
 
-const offers =
+            offers
 
-await offerService.getOffersService();
+        });
 
+    }
 
+    catch (error) {
 
-res.status(200).json({
+        console.error(
+            "GET OFFERS ERROR:",
+            error
+        );
 
-success:true,
+        return res.status(400).json({
 
-offers
+            success: false,
 
-});
+            message: error.message
 
+        });
 
-}
-
-catch(error){
-
-res.status(400).json({
-
-success:false,
-
-message:error.message
-
-});
-
-
-}
-
+    }
 
 };
 
 
 
+// =====================================================
+// PUBLIC ACTIVE OFFERS
+// HOME PAGE
+//
+// NO LOGIN REQUIRED
+//
+// GET /api/offers/active
+// =====================================================
+
+export const getActiveOffersPublic = async (
+    req,
+    res
+) => {
+
+    try {
+
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "PUBLIC ACTIVE OFFERS API"
+        );
+
+        console.log(
+            "================================="
+        );
 
 
-// ================================
-// Homepage Offers
-// ================================
-
-export const getActiveOffers = async(req,res)=>{
+        const offers =
+            await offerService.getActiveOffersPublicService();
 
 
-try{
+        console.log(
+            "ACTIVE OFFERS COUNT:",
+            offers.length
+        );
 
 
-const offers =
+        return res.status(200).json({
 
-await offerService.getActiveOffersService();
+            success: true,
 
+            message:
+                "Active offers fetched successfully",
 
+            data: offers,
 
-res.status(200).json({
+            // Keep this also so existing
+            // frontend/admin code doesn't break.
+            offers: offers
 
-success:true,
+        });
 
-offers
+    }
 
-});
+    catch (error) {
 
-
-}
-
-catch(error){
-
-
-res.status(400).json({
-
-success:false,
-
-message:error.message
-
-});
+        console.error(
+            "PUBLIC ACTIVE OFFERS ERROR:",
+            error
+        );
 
 
-}
+        return res.status(500).json({
 
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to fetch active offers",
+
+            data: [],
+
+            offers: []
+
+        });
+
+    }
 
 };
 
 
+
+// ================================
+// Existing Homepage Active Offers
+// ================================
+//
+// Keep this function because it may
+// already be used somewhere else.
+//
+// ================================
+
+export const getActiveOffers = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const offers =
+            await offerService.getActiveOffersService();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            offers
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "GET ACTIVE OFFERS ERROR:",
+            error
+        );
+
+        return res.status(400).json({
+
+            success: false,
+
+            message: error.message,
+
+            offers: []
+
+        });
+
+    }
+
+};
 
 
 
@@ -157,55 +565,50 @@ message:error.message
 // Update Offer
 // ================================
 
-export const updateOffer = async(req,res)=>{
+export const updateOffer = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const offer =
+            await offerService.updateOfferService(
+                req.params.id,
+                req.body
+            );
 
 
-try{
+        return res.status(200).json({
 
+            success: true,
 
-const offer =
+            message: "Offer updated",
 
-await offerService.updateOfferService(
+            offer
 
-req.params.id,
+        });
 
-req.body
+    }
 
-);
+    catch (error) {
 
+        console.error(
+            "UPDATE OFFER ERROR:",
+            error
+        );
 
+        return res.status(400).json({
 
-res.status(200).json({
+            success: false,
 
-success:true,
+            message: error.message
 
-message:"Offer updated",
+        });
 
-offer
-
-});
-
-
-}
-
-catch(error){
-
-
-res.status(400).json({
-
-success:false,
-
-message:error.message
-
-});
-
-
-}
-
+    }
 
 };
-
-
 
 
 
@@ -213,74 +616,91 @@ message:error.message
 // Delete Offer
 // ================================
 
-export const deleteOffer = async(req,res)=>{
+export const deleteOffer = async (
+    req,
+    res
+) => {
+
+    try {
+
+        await offerService.deleteOfferService(
+            req.params.id
+        );
 
 
-try{
+        return res.status(200).json({
 
+            success: true,
 
-await offerService.deleteOfferService(
+            message: "Offer deleted"
 
-req.params.id
+        });
 
-);
+    }
 
+    catch (error) {
 
+        console.error(
+            "DELETE OFFER ERROR:",
+            error
+        );
 
-res.status(200).json({
+        return res.status(400).json({
 
-success:true,
+            success: false,
 
-message:"Offer deleted"
+            message: error.message
 
-});
+        });
 
-
-}
-
-catch(error){
-
-
-res.status(400).json({
-
-success:false,
-
-message:error.message
-
-});
-
-
-}
-
+    }
 
 };
+
+
 
 // ================================
 // Get Single Offer
 // ================================
 
-export const getOfferById = async(req,res)=>{
+export const getOfferById = async (
+    req,
+    res
+) => {
 
-try{
+    try {
 
-    const offer =
-    await offerService.getOfferByIdService(
-        req.params.id
-    );
+        const offer =
+            await offerService.getOfferByIdService(
+                req.params.id
+            );
 
-    res.status(200).json({
-        success:true,
-        offer
-    });
 
-}
-catch(error){
+        return res.status(200).json({
 
-    res.status(404).json({
-        success:false,
-        message:error.message
-    });
+            success: true,
 
-}
+            offer
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "GET OFFER BY ID ERROR:",
+            error
+        );
+
+        return res.status(404).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
 
 };

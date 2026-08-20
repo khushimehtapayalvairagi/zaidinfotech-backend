@@ -1,16 +1,178 @@
+// import Offer from "./offer.model.js";
+
+
+// // ================================
+// // Create Offer
+// // ================================
+
+// export const createOfferDB = async(data)=>{
+
+//     return await Offer.create(data);
+
+// };
+
+
+
+
+// // ================================
+// // Get All Offers
+// // ================================
+
+// export const getOffersDB = async()=>{
+
+//     return await Offer.find()
+
+//     .populate(
+//         "products",
+//         "name images pricing"
+//     )
+
+//     .sort({
+//         createdAt:-1
+//     });
+
+// };
+
+
+
+
+// // ================================
+// // Get Active Offers
+// // Homepage/Product ke liye
+// // ================================
+
+// export const getActiveOffersDB = async()=>{
+
+
+//     const today = new Date();
+
+
+//     return await Offer.find({
+
+//         status:"ACTIVE",
+
+//         startDate:{
+//             $lte:today
+//         },
+
+//         endDate:{
+//             $gte:today
+//         }
+
+//     })
+
+//     .populate(
+//         "products",
+//         "name images pricing"
+//     );
+
+
+// };
+
+
+
+
+// // ================================
+// // Get Single Offer
+// // ================================
+
+// export const getOfferByIdDB = async(id)=>{
+
+
+//     return await Offer.findById(id);
+
+
+// };
+
+
+
+
+// // ================================
+// // Update Offer
+// // ================================
+
+// export const updateOfferDB = async(
+//     id,
+//     data
+// )=>{
+
+
+//     return await Offer.findByIdAndUpdate(
+
+//         id,
+
+//         data,
+
+//         {
+//             new:true
+//         }
+
+//     );
+
+
+// };
+
+
+
+
+// // ================================
+// // Delete Offer
+// // ================================
+
+// export const deleteOfferDB = async(id)=>{
+
+
+//     return await Offer.findByIdAndDelete(id);
+
+
+// };
+
+
+// // =====================================================
+// // GET ACTIVE OFFERS FOR PUBLIC HOME PAGE
+// // =====================================================
+
+// export const getActiveOffersPublicDB = async () => {
+
+//     const now = new Date();
+
+//     return await Offer.find({
+
+//         status: "ACTIVE",
+
+//         startDate: {
+//             $lte: now
+//         },
+
+//         endDate: {
+//             $gte: now
+//         }
+
+//     })
+//     .sort({
+//         createdAt: -1
+//     });
+
+// };
+
+
 import Offer from "./offer.model.js";
+
 
 
 // ================================
 // Create Offer
 // ================================
 
-export const createOfferDB = async(data)=>{
+export const createOfferDB = async (
+    data
+) => {
 
-    return await Offer.create(data);
+    return await Offer.create(
+        data
+    );
 
 };
-
 
 
 
@@ -18,45 +180,44 @@ export const createOfferDB = async(data)=>{
 // Get All Offers
 // ================================
 
-export const getOffersDB = async()=>{
+export const getOffersDB = async () => {
 
     return await Offer.find()
 
-    .populate(
-        "products",
-        "name images pricing"
-    )
+        .populate(
+            "products",
+            "name images pricing"
+        )
 
-    .sort({
-        createdAt:-1
-    });
+        .sort({
+            createdAt: -1
+        });
 
 };
 
 
 
-
 // ================================
 // Get Active Offers
-// Homepage/Product ke liye
+// Existing function
 // ================================
 
-export const getActiveOffersDB = async()=>{
+export const getActiveOffersDB = async () => {
 
-
-    const today = new Date();
+    const today =
+        new Date();
 
 
     return await Offer.find({
 
-        status:"ACTIVE",
+        status: "ACTIVE",
 
-        startDate:{
-            $lte:today
+        startDate: {
+            $lte: today
         },
 
-        endDate:{
-            $gte:today
+        endDate: {
+            $gte: today
         }
 
     })
@@ -66,9 +227,60 @@ export const getActiveOffersDB = async()=>{
         "name images pricing"
     );
 
-
 };
 
+
+
+// =====================================================
+// GET ACTIVE OFFERS FOR PUBLIC HOME PAGE
+// =====================================================
+
+export const getActiveOffersPublicDB = async () => {
+
+    const now =
+        new Date();
+
+
+    console.log(
+        "PUBLIC OFFER CHECK TIME:",
+        now
+    );
+
+
+    const offers =
+        await Offer.find({
+
+            status: "ACTIVE",
+
+            startDate: {
+                $lte: now
+            },
+
+            endDate: {
+                $gte: now
+            }
+
+        })
+
+        .populate(
+            "products",
+            "name images pricing"
+        )
+
+        .sort({
+            createdAt: -1
+        });
+
+
+    console.log(
+        "PUBLIC ACTIVE OFFERS FOUND:",
+        offers.length
+    );
+
+
+    return offers;
+
+};
 
 
 
@@ -76,14 +288,15 @@ export const getActiveOffersDB = async()=>{
 // Get Single Offer
 // ================================
 
-export const getOfferByIdDB = async(id)=>{
+export const getOfferByIdDB = async (
+    id
+) => {
 
-
-    return await Offer.findById(id);
-
+    return await Offer.findById(
+        id
+    );
 
 };
-
 
 
 
@@ -91,11 +304,10 @@ export const getOfferByIdDB = async(id)=>{
 // Update Offer
 // ================================
 
-export const updateOfferDB = async(
+export const updateOfferDB = async (
     id,
     data
-)=>{
-
+) => {
 
     return await Offer.findByIdAndUpdate(
 
@@ -104,14 +316,12 @@ export const updateOfferDB = async(
         data,
 
         {
-            new:true
+            new: true
         }
 
     );
 
-
 };
-
 
 
 
@@ -119,10 +329,12 @@ export const updateOfferDB = async(
 // Delete Offer
 // ================================
 
-export const deleteOfferDB = async(id)=>{
+export const deleteOfferDB = async (
+    id
+) => {
 
-
-    return await Offer.findByIdAndDelete(id);
-
+    return await Offer.findByIdAndDelete(
+        id
+    );
 
 };

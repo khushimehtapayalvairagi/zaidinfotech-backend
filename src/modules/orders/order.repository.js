@@ -384,3 +384,30 @@ export const updatePaymentStatus =
     );
 
   };
+  // ==========================================
+// FIND ORDER FOR REVIEW
+// ==========================================
+
+export const findOrderForReview = async (
+    orderId,
+    userId,
+    productId
+) => {
+
+    const order = await Order.findOne({
+
+        _id: orderId,
+
+        user: userId,
+
+        "orderItems.product": productId
+
+    }).select(
+
+        "_id user orderItems status paymentStatus"
+
+    );
+
+    return order;
+
+};

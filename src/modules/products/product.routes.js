@@ -274,7 +274,6 @@ router.post(
 
 );
 
-
 // =====================================================
 // GET ALL PRODUCTS
 // =====================================================
@@ -333,14 +332,13 @@ router.get(
 // =====================================================
 // GET SINGLE PRODUCT
 // =====================================================
+// PUBLIC
+// Customer can open product details without login
+// =====================================================
 
 router.get(
 
     "/:id",
-
-    verifyToken,
-
-    allowRoles("ADMIN"),
 
     getProductById
 
@@ -383,6 +381,130 @@ router.delete(
     deleteProduct
 
 );
+
+// // =====================================================
+// // GET ALL PRODUCTS
+// // =====================================================
+
+// router.get(
+
+//     "/",
+
+//     verifyToken,
+
+//     allowRoles(
+//         "ADMIN",
+//         "RECEPTIONIST",
+//         "INVENTORY_MANAGER"
+//     ),
+
+//     getProducts
+
+// );
+
+
+// // =====================================================
+// // CUSTOMER SHOP
+// // =====================================================
+
+// router.get(
+
+//     "/shop",
+
+//     getShopProducts
+
+// );
+
+
+// // =====================================================
+// // SEARCH
+// // =====================================================
+
+// router.get(
+
+//     "/search",
+
+//     verifyToken,
+
+//     allowRoles(
+//         "ADMIN",
+//         "RECEPTIONIST",
+//         "INVENTORY_MANAGER"
+//     ),
+
+//     searchProduct
+
+// );
+
+
+// // =====================================================
+// // GET SINGLE PRODUCT
+// // =====================================================
+
+// // router.get(
+
+// //     "/:id",
+
+// //     verifyToken,
+
+// //     allowRoles("ADMIN"),
+
+// //     getProductById
+
+// // );
+
+// // =====================================================
+// // GET SINGLE PRODUCT
+// // =====================================================
+// // Public customer product details
+// // No authentication required
+// // =====================================================
+
+// router.get(
+
+//     "/:id",
+
+//     getProductById
+
+// );
+
+
+// // =====================================================
+// // UPDATE PRODUCT
+// // =====================================================
+
+// router.put(
+
+//     "/:id",
+
+//     verifyToken,
+
+//     allowRoles("ADMIN"),
+
+//     validate(
+//         updateProductValidation
+//     ),
+
+//     updateProduct
+
+// );
+
+
+// // =====================================================
+// // DELETE PRODUCT
+// // =====================================================
+
+// router.delete(
+
+//     "/:id",
+
+//     verifyToken,
+
+//     allowRoles("ADMIN"),
+
+//     deleteProduct
+
+// );
 
 
 export default router;

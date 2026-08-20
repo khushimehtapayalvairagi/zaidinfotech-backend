@@ -1,7 +1,7 @@
 import Product from "./product.model.js";
 import Inventory from "../inventory/inventory.model.js";
 import Offer from "../offer/offer.model.js";
-
+import mongoose from "mongoose";
 
 // Create Product
 
@@ -55,31 +55,54 @@ export const getProductsDB = async (query = {}) => {
 
 // Get Product By ID
 
-export const getProductByIdDB = async (id)=>{
+// export const getProductByIdDB = async (id)=>{
 
+
+//     return await Product.findOne({
+
+//         _id:id,
+
+//         isDeleted:false
+
+//     })
+
+//     .populate(
+//         "category",
+//         "name"
+//     )
+
+//     .populate(
+//         "brand",
+//         "name logo"
+//     );
+
+
+// };
+
+
+export const getProductByIdDB = async (id) => {
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return null;
+    }
 
     return await Product.findOne({
 
-        _id:id,
+        _id: id,
 
-        isDeleted:false
+        isDeleted: false
 
     })
-
     .populate(
         "category",
         "name"
     )
-
     .populate(
         "brand",
         "name logo"
     );
 
-
 };
-
-
 
 
 // Get Product By SKU
