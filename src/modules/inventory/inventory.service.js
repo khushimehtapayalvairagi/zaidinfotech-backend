@@ -1,10 +1,22 @@
 import * as inventoryRepository 
 from "./inventory.repository.js";
 
-import Product from "../products/product.model.js";   
+// import Product from "../products/product.model.js";   
+// import {
+//     notifyAdminsService
+// } from "../notification/notification.service.js";
+
+import Product from "../products/product.model.js";
+
+import User from "../users/user.model.js";
+
+import Notification from "../notification/notification.model.js";
+
 import {
     notifyAdminsService
 } from "../notification/notification.service.js";
+
+
 import {
     INVENTORY_STATUS
 }
@@ -22,30 +34,55 @@ from "./stockTransaction/stockTransaction.service.js";
 // Calculate Inventory Status
 // ==============================
 
+// const calculateStatus = (
+//     currentStock,
+//     minimumStock
+// )=>{
+
+
+//     if(currentStock <= 0){
+
+//         return INVENTORY_STATUS.OUT_OF_STOCK;
+
+//     }
+
+
+//     if(currentStock <= minimumStock){
+
+//         return INVENTORY_STATUS.LOW_STOCK;
+
+//     }
+
+
+//     return INVENTORY_STATUS.IN_STOCK;
+
+// };
+
+
 const calculateStatus = (
     currentStock,
     minimumStock
-)=>{
+) => {
 
-
-    if(currentStock <= 0){
+    if (currentStock <= 0) {
 
         return INVENTORY_STATUS.OUT_OF_STOCK;
 
     }
 
+    // =====================================
+    // LOW STOCK = 5 OR LESS
+    // =====================================
 
-    if(currentStock <= minimumStock){
+    if (currentStock <= 5) {
 
         return INVENTORY_STATUS.LOW_STOCK;
 
     }
 
-
     return INVENTORY_STATUS.IN_STOCK;
 
 };
-
 
 // ======================================================
 // INVENTORY ALERT NOTIFICATION
@@ -110,8 +147,8 @@ const sendInventoryNotification = async ({
                 title:
                     "🚨 Product Out of Stock",
 
-                message:
-                    `${product.name} (${product.sku || "No SKU"}) is OUT OF STOCK. Current stock: 0.`,
+               message:
+                       `${product.name} (${product.sku || "No SKU"}) is low in stock. Only ${currentStock} items remaining.`,
 
                 relatedId:
                     product._id,
@@ -170,6 +207,116 @@ const sendInventoryNotification = async ({
 };
 
 
+// ======================================================
+// CUSTOMER PRODUCT RESTOCK NOTIFICATION
+// Stock add hone ke baad customers ko notification
+// ======================================================
+
+// ======================================================
+// CUSTOMER PRODUCT RESTOCK NOTIFICATION
+// Stock add hone ke baad customers ko notification
+// ======================================================
+
+const sendProductRestockedNotification = async ({
+    productId
+}) => {
+
+    try {
+
+        // ==========================================
+        // PRODUCT FIND
+        // ==========================================
+
+        const product =
+            await Product
+                .findById(productId)
+                .select("name sku");
+
+        if (!product) {
+
+            console.log(
+                "Restock notification product not found:",
+                productId
+            );
+
+            return;
+
+        }
+
+        // ==========================================
+        // FIND ALL CUSTOMERS
+        // ==========================================
+
+        const customers =
+            await User
+                .find({
+                    role: "CUSTOMER"
+                })
+                .select("_id");
+
+        if (!customers.length) {
+
+            console.log(
+                "No customers found for restock notification"
+            );
+
+            return;
+
+        }
+
+        // ==========================================
+        // CREATE CUSTOMER NOTIFICATIONS
+        // ==========================================
+
+        const notifications =
+            customers.map((customer) => ({
+
+                user:
+                    customer._id,
+
+                type:
+                    "PRODUCT_RESTOCKED",
+
+                title:
+                    "🛍️ Product Back in Stock",
+
+                message:
+                    `${product.name} is now back in stock and available to purchase.`,
+
+                relatedId:
+                    product._id,
+
+                relatedModel:
+                    "Product",
+
+                isRead:
+                    false
+
+            }));
+
+        // ==========================================
+        // SAVE NOTIFICATIONS
+        // ==========================================
+
+        await Notification.insertMany(
+            notifications
+        );
+
+        console.log(
+            `RESTOCK NOTIFICATION SENT TO ${notifications.length} CUSTOMERS`
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "CUSTOMER RESTOCK NOTIFICATION ERROR:",
+            error
+        );
+
+    }
+
+};
 // ==============================
 // Create Inventory
 // ==============================
@@ -653,25 +800,67 @@ async (
 
     });
 
+    // // =====================================
+    // // INVENTORY NOTIFICATION
+    // // =====================================
+
+    // await sendInventoryNotification({
+
+    //     productId,
+
+    //     currentStock:
+    //         updatedStock,
+
+    //     minimumStock:
+    //         inventory.minimumStock,
+
+    //     status
+
+    // });
+
     // =====================================
-    // INVENTORY NOTIFICATION
-    // =====================================
+// INVENTORY NOTIFICATION
+// Admin ko LOW / OUT stock alert
+// =====================================
 
-    await sendInventoryNotification({
+await sendInventoryNotification({
 
-        productId,
+    productId,
 
-        currentStock:
-            updatedStock,
+    currentStock:
+        updatedStock,
 
-        minimumStock:
-            inventory.minimumStock,
+    minimumStock:
+        inventory.minimumStock,
 
-        status
+    status
 
-    });
+});
 
-    return updatedInventory;
+
+// =====================================
+// CUSTOMER NOTIFICATION
+// Product ka stock add hua
+// =====================================
+
+// await sendProductRestockedNotification({
+
+//     productId,
+
+//     previousStock,
+
+//     updatedStock
+
+// });
+
+await sendProductRestockedNotification({
+
+    productId
+
+});
+
+return updatedInventory;
+
 
 };
 
@@ -1150,12 +1339,9 @@ export const removeStockService = async (
     // SHOULD SEND ALERT?
     // =====================================
 
-    const shouldNotify =
-        status !== previousStatus &&
-        (
-            status === INVENTORY_STATUS.LOW_STOCK ||
-            status === INVENTORY_STATUS.OUT_OF_STOCK
-        );
+const shouldNotify =
+    status === INVENTORY_STATUS.LOW_STOCK ||
+    status === INVENTORY_STATUS.OUT_OF_STOCK;
 
     // =====================================
     // UPDATE INVENTORY

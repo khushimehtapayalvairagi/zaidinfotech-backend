@@ -24,6 +24,7 @@ const notificationSchema = new mongoose.Schema(
             "ORDER_STATUS",
             "STOCK_LOW",
             "STOCK_OUT",
+            "PRODUCT_RESTOCKED",
             "GENERAL"
         ],
         required:true
