@@ -24,6 +24,7 @@ import invoiceRoutes from "./modules/invoices/invoice.routes.js";
 import notificationRoute from "./modules/notification/notification.routes.js"; 
 import couponRoutes from "./modules/coupons/coupon.routes.js"; 
 import reviewRoutes from "./modules/review/review.routes.js";
+import leaveRoutes from "./modules/leave/leave.routes.js";
 const app = express();
 
 app.use(cors({
@@ -81,5 +82,10 @@ app.use("/api/notifications", notificationRoute);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/reviews", reviewRoutes);
 
+
+app.use(
+  "/api/leaves",
+  leaveRoutes
+);
 
 export default app;

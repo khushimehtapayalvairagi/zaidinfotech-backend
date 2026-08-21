@@ -257,3 +257,38 @@ export const deleteNotificationService = async (
     return notification;
 
 };
+
+
+// ======================================================
+// NOTIFY ALL EMPLOYEES
+// ======================================================
+
+export const notifyEmployeesService = async (data) => {
+
+    const employees = await User.find({
+        status: "ACTIVE",
+        isDeleted: false,
+
+        role: {
+            $nin: [
+                "CUSTOMER",
+            ]
+        }
+    }).select("_id");
+
+    if (!employees || employees.length === 0) {
+        return;
+    }
+
+    const notifications = employees.map((employee) => ({
+        ...data,
+
+        user: employee._id,
+
+        isRead: false,
+    }));
+
+    await Notification.insertMany(
+        notifications
+    );
+};
