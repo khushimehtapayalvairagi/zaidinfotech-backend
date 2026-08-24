@@ -1,91 +1,62 @@
-import mongoose from "mongoose";
+import express from "express";
 
-const notificationSchema = new mongoose.Schema(
-  {
-    // Kisko notification jaani hai
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
+import {
+    getMyNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification
+} from "./notification.controller.js";
 
-    // Notification type
-    type: {
-      type: String,
-      enum: [
-        "ORDER_PLACED",
-        "PAYMENT",
-        "ORDER_STATUS",
-        "STOCK_LOW",
-        "STOCK_OUT",
-        "PRODUCT_RESTOCKED",
+import {
+    verifyToken
+} from "../../common/middleware/auth.middleware.js";
 
-        // =====================================
-        // LEAVE MANAGEMENT
-        // =====================================
-        "LEAVE_REQUEST",
-        "LEAVE_APPROVED",
-        "LEAVE_REJECTED",
 
-        // =====================================
-        // HOLIDAY
-        // =====================================
-        "HOLIDAY_CREATED",
+const router = express.Router();
 
-        "GENERAL",
-      ],
-      required: true,
-    },
 
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+// =======================================
+// GET MY NOTIFICATIONS
+// =======================================
 
-    message: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    // Related record
-    relatedId: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: null,
-    },
-
-    relatedModel: {
-      type: String,
-      enum: [
-        "Order",
-        "Product",
-        "Leave",
-        "Holiday",
-        null,
-      ],
-      default: null,
-    },
-
-    isRead: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  {
-    timestamps: true,
-  }
+router.get(
+    "/",
+    verifyToken,
+    getMyNotifications
 );
 
-notificationSchema.index({
-  user: 1,
-  createdAt: -1,
-});
 
-const Notification = mongoose.model(
-  "Notification",
-  notificationSchema
+// =======================================
+// MARK SINGLE AS READ
+// =======================================
+
+router.patch(
+    "/:id/read",
+    verifyToken,
+    markAsRead
 );
 
-export default Notification;
+
+// =======================================
+// MARK ALL AS READ
+// =======================================
+
+router.patch(
+    "/read-all",
+    verifyToken,
+    markAllAsRead
+);
+
+
+// =======================================
+// DELETE NOTIFICATION
+// =======================================
+
+router.delete(
+    "/:id",
+    verifyToken,
+    deleteNotification
+);
+
+
+export default router;

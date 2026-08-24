@@ -27,8 +27,145 @@ import {
 }
 from "./stockTransaction/stockTransaction.service.js";
 
+import StockTransaction from "./stockTransaction/stockTransaction.model.js";
 
 
+// ======================================================
+// USE STOCK FOR REPAIR
+// ======================================================
+
+export const useStockForRepairService = async (
+  productId,
+  quantity,
+  userId,
+  repairId
+) => {
+
+  quantity = Number(quantity);
+
+  if (
+    !Number.isInteger(quantity) ||
+    quantity <= 0
+  ) {
+    throw new Error(
+      "Quantity must be a positive number"
+    );
+  }
+
+  // ==========================================
+  // FIND INVENTORY
+  // ==========================================
+
+  const inventory =
+    await Inventory.findOne({
+      product: productId,
+      isDeleted: false,
+    });
+
+  if (!inventory) {
+    throw new Error(
+      "Inventory not found for this product"
+    );
+  }
+
+  // ==========================================
+  // AVAILABLE STOCK
+  // ==========================================
+
+  const availableStock =
+    inventory.currentStock -
+    inventory.reservedStock;
+
+  if (availableStock < quantity) {
+
+    throw new Error(
+      `Insufficient stock. Available stock: ${availableStock}`
+    );
+
+  }
+
+  // ==========================================
+  // PREVIOUS STOCK
+  // ==========================================
+
+  const previousStock =
+    inventory.currentStock;
+
+  // ==========================================
+  // REMOVE STOCK
+  // ==========================================
+
+  inventory.currentStock -= quantity;
+
+  // ==========================================
+  // UPDATE STATUS
+  // ==========================================
+
+  if (
+    inventory.currentStock <= 0
+  ) {
+
+    inventory.status =
+      INVENTORY_STATUS.OUT_OF_STOCK;
+
+  }
+  else if (
+    inventory.currentStock <=
+    inventory.minimumStock
+  ) {
+
+    inventory.status =
+      INVENTORY_STATUS.LOW_STOCK;
+
+  }
+  else {
+
+    inventory.status =
+      INVENTORY_STATUS.IN_STOCK;
+
+  }
+
+  inventory.lastUpdatedBy =
+    userId;
+
+  await inventory.save();
+
+  // ==========================================
+  // STOCK TRANSACTION
+  // ==========================================
+
+  await StockTransaction.create({
+
+    product: productId,
+
+    inventory: inventory._id,
+
+    repair: repairId,
+
+    type: "REPAIR_USAGE",
+
+    quantity,
+
+    previousStock,
+
+    updatedStock:
+      inventory.currentStock,
+
+    salePrice: 0,
+
+    totalAmount: 0,
+
+    orderSource: "MANUAL",
+
+    description:
+      "Spare part used in repair",
+
+    createdBy: userId,
+
+  });
+
+  return inventory;
+};
 
 // ==============================
 // Calculate Inventory Status

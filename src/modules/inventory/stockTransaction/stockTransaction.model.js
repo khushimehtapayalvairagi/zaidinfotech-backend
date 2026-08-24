@@ -182,22 +182,24 @@ const stockTransactionSchema =
                 required: true
 
             },
-
+               
+            
 
             // =================================
             // Order
             // =================================
 
-            order: {
+          order: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Order",
+  default: null
+},
 
-                type:
-                    mongoose.Schema.Types.ObjectId,
-
-                ref: "Order",
-
-                default: null
-
-            },
+repair: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Repair",
+  default: null
+},
 
 
             // =================================
