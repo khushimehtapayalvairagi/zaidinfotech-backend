@@ -130,6 +130,31 @@ export const createProductService = async (
 
         }
 
+        // =================================================
+// SUBCATEGORY VALIDATION
+// =================================================
+
+let subcategory = null;
+
+if (data.subcategory) {
+
+    subcategory = await Category.findOne({
+        _id: data.subcategory,
+        parentCategory: data.category,
+        isDeleted: false,
+        status: "ACTIVE"
+    });
+
+    if (!subcategory) {
+
+        throw new Error(
+            "Selected subcategory does not belong to selected category"
+        );
+
+    }
+
+}
+
 
         // =================================================
         // BRAND VALIDATION
@@ -259,6 +284,9 @@ export const createProductService = async (
 
             category:
                 data.category,
+
+            subcategory: 
+            data.subcategory || null,
 
             brand:
                 data.brand,
@@ -659,85 +687,6 @@ export const searchProductService = async (
 };
 
 
-// =====================================================
-// CUSTOMER SHOP PRODUCTS
-// =====================================================
-
-// export const getShopProductsService = async() => {
-
-//     const products = await getShopProductsDB();
-
-//     const activeOffers = await getActiveOffersDB(); 
-//     // offer.repository.js se already ban chuka hai
-
-//     return products.map((product) => {
-//         const offer = matchOfferToProduct(product, activeOffers);
-//         return {
-//             ...product.toObject(),
-//             offer: offer || null,
-//             finalPrice: calculateDiscountedPrice(
-//                 product.pricing.sellingPrice,
-//                 offer
-//             )
-//         };
-//     });
-// };
-
-
-// =====================================================
-// CUSTOMER SHOP PRODUCTS
-// =====================================================
-
-// export const getShopProductsService = async () => {
-
-//     const products =
-//         await getShopProductsDB();
-
-
-//     // =================================================
-//     // ACTIVE OFFERS
-//     // =================================================
-
-//     const activeOffers =
-//         await getActiveOffersDB();
-
-
-//     // =================================================
-//     // APPLY OFFER
-//     // =================================================
-
-//     return products.map(
-//         (product) => {
-
-//             const offer =
-//                 matchOfferToProduct(
-//                     product,
-//                     activeOffers
-//                 );
-
-
-//             const finalPrice =
-//                 calculateDiscountedPrice(
-//                     product.pricing.sellingPrice,
-//                     offer
-//                 );
-
-
-//             return {
-
-//                 ...product.toObject(),
-
-//                 offer:
-//                     offer || null,
-
-//                 finalPrice
-
-//             };
-
-//         }
-//     );
-
-// };
 
 
 // =====================================================

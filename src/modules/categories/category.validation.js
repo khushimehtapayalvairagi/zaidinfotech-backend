@@ -13,8 +13,9 @@ export const categoryValidation = Joi.object({
     .allow(""),
 
 
-    parentCategory:Joi.string()
+    parentCategory: Joi.string()
+    .trim()
     .allow(null)
-
+    .optional()
 
 });

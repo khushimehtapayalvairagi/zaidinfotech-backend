@@ -298,7 +298,11 @@ const productSchema =
                 required: true
 
             },
-
+           subcategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    default: null
+},
 
             // =================================================
             // BRAND

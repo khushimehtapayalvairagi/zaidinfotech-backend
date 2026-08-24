@@ -11,21 +11,45 @@ deleteCategoryDB
 
 
 
-export const createCategoryService = async(data,userId)=>{
+import Category from "./category.model.js";
 
+export const createCategoryService = async (data, userId) => {
 
-    data.createdBy=userId;
+    data.createdBy = userId;
 
+    // --------------------------------
+    // Parent Category Validation
+    // --------------------------------
 
-    data.slug=data.name
-    .toLowerCase()
-    .replaceAll(" ","-");
+    if (data.parentCategory) {
 
+        const parentCategory = await Category.findOne({
+            _id: data.parentCategory,
+            isDeleted: false
+        });
+
+        if (!parentCategory) {
+            throw new Error("Parent category not found");
+        }
+
+        if (parentCategory.status !== "ACTIVE") {
+            throw new Error("Parent category is inactive");
+        }
+    } else {
+        data.parentCategory = null;
+    }
+
+    // --------------------------------
+    // Slug
+    // --------------------------------
+
+    data.slug = data.name
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-");
 
     return await createCategoryDB(data);
-
 };
-
 
 
 

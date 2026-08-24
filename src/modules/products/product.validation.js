@@ -133,6 +133,12 @@ export const createProductValidation = Joi.object({
     category: Joi.string()
         .trim()
         .required(),
+   
+        subcategory: Joi.string()
+    .trim()
+    .allow("")
+    .allow(null)
+    .optional(),
 
     brand: Joi.string()
         .trim()
@@ -218,6 +224,11 @@ export const updateProductValidation = Joi.object({
 
     category: Joi.string()
         .trim(),
+
+   subcategory: Joi.string()
+    .trim()
+    .allow("")
+    .allow(null),
 
     brand: Joi.string()
         .trim(),

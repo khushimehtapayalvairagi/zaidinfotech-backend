@@ -34,7 +34,7 @@ export const registerSchema = z.object({
   role: z.enum([
     "SUPER_ADMIN",
     "ADMIN",
-    "RECEPTIONIST",
+    "SALES",
     "TECHNICIAN",
     "INVENTORY",
     "ACCOUNTANT",
@@ -79,7 +79,7 @@ export const createUserSchema = z.object({
   role: z.enum([
     "SUPER_ADMIN",
     "ADMIN",
-    "RECEPTIONIST",
+    "SALES",
     "TECHNICIAN",
     "INVENTORY",
     "ACCOUNTANT",

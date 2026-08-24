@@ -23,6 +23,7 @@ export const getProductsDB = async (query = {}) => {
         ...query
     })
     .populate("category", "name slug")
+    .populate("subcategory", "name slug parentCategory")
     .populate("brand", "name slug logo")
     .populate("createdBy", "name email")
     .sort({ createdAt: -1 });
@@ -53,31 +54,7 @@ export const getProductsDB = async (query = {}) => {
 
 
 
-// Get Product By ID
 
-// export const getProductByIdDB = async (id)=>{
-
-
-//     return await Product.findOne({
-
-//         _id:id,
-
-//         isDeleted:false
-
-//     })
-
-//     .populate(
-//         "category",
-//         "name"
-//     )
-
-//     .populate(
-//         "brand",
-//         "name logo"
-//     );
-
-
-// };
 
 
 export const getProductByIdDB = async (id) => {
@@ -97,6 +74,10 @@ export const getProductByIdDB = async (id) => {
         "category",
         "name"
     )
+    .populate(
+    "subcategory",
+    "name slug parentCategory"
+)
     .populate(
         "brand",
         "name logo"
@@ -231,7 +212,10 @@ export const searchProductsDB = async(keyword)=>{
         "category",
         "name"
     )
-
+     .populate(
+    "subcategory",
+    "name slug"
+)
     .populate(
         "brand",
         "name"
@@ -253,60 +237,7 @@ export const getProductByBarcodeDB = async (barcode) => {
 };
 
 
-// Customer Shop Products
-// export const getShopProductsDB = async () => {
 
-//     const products = await Product.find({
-//         status:"ACTIVE",
-//         isDeleted:false
-//     })
-//     .populate("category")
-//     .populate("brand");
-
-
-//     const activeOffers = await Offer.find({
-
-//         status:"ACTIVE",
-
-//         startDate:{
-//             $lte:new Date()
-//         },
-
-//         endDate:{
-//             $gte:new Date()
-//         }
-
-//     });
-
-
-
-//     const productsWithOffer = products.map(product => {
-
-
-//         const offer = activeOffers.find(
-//             offer =>
-//             offer.products.some(
-//                 id => id.toString() === product._id.toString()
-//             )
-//         );
-
-
-//         return {
-
-//             ...product.toObject(),
-
-//             offer: offer || null
-
-//         };
-
-
-//     });
-
-
-
-//     return productsWithOffer;
-
-// };
 
 
 // =====================================================
@@ -327,6 +258,10 @@ export const getShopProductsDB = async () => {
         "category",
         "name slug"
     )
+    .populate(
+    "subcategory",
+    "name slug"
+)
 
     .populate(
         "brand",

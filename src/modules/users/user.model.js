@@ -128,7 +128,7 @@ role: {
     enum: [
         "SUPER_ADMIN",
         "ADMIN",
-        "RECEPTIONIST",
+        "SALES",
         "TECHNICIAN",
         "INVENTORY",
         "ACCOUNTANT",

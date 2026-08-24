@@ -93,7 +93,7 @@ export const findEmployees = async () => {
 
     role: {
   $in: [
-    "RECEPTIONIST",
+    "SALES",
     "TECHNICIAN",
     "INVENTORY",
     "ACCOUNTANT",
