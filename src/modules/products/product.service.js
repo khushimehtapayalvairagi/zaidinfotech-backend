@@ -122,7 +122,7 @@ export const createProductService = async (
             );
 
 
-        if (!category) {
+           if (!category) {
 
             throw new Error(
                 "Category not found"
@@ -130,28 +130,41 @@ export const createProductService = async (
 
         }
 
-        // =================================================
-// SUBCATEGORY VALIDATION
-// =================================================
 
-let subcategory = null;
-
-if (data.subcategory) {
-
-    subcategory = await Category.findOne({
-        _id: data.subcategory,
-        parentCategory: data.category,
-        isDeleted: false,
-        status: "ACTIVE"
-    });
-
-    if (!subcategory) {
-
-        throw new Error(
-            "Selected subcategory does not belong to selected category"
+        console.log(
+            "PARENT CATEGORY:",
+            category._id,
+            category.name
         );
 
-    }
+
+        // =================================================
+        // SUBCATEGORY VALIDATION
+        // =================================================
+
+        let subcategory = null;
+
+        if (data.subcategory) {
+
+            subcategory =
+                await Category.findById(
+                    data.subcategory
+                );
+
+            if (!subcategory) {
+
+                throw new Error(
+                    "Subcategory not found"
+                );
+
+            }
+
+
+            console.log(
+                "SUBCATEGORY:",
+                subcategory._id,
+                subcategory.name
+            );
 
 }
 
@@ -288,6 +301,10 @@ if (data.subcategory) {
             subcategory: 
             data.subcategory || null,
 
+
+          productType: 
+           data.productType || "NEW",
+
             brand:
                 data.brand,
 
@@ -309,7 +326,34 @@ if (data.subcategory) {
                 userId
 
         };
+             
+        // =================================================
+// REFURBISHED DETAILS
+// =================================================
 
+if (data.productType === "REFURBISHED") {
+
+    productData.refurbishedDetails = {
+
+        grade:
+            data.refurbishedDetails?.grade || null,
+
+        batteryHealth:
+            Number(
+                data.refurbishedDetails?.batteryHealth ?? 0
+            ),
+
+        warrantyMonths:
+            Number(
+                data.refurbishedDetails?.warrantyMonths ?? 0
+            ),
+
+        testingStatus:
+            data.refurbishedDetails?.testingStatus || null
+
+    };
+
+}
 
         // =================================================
         // BARCODE

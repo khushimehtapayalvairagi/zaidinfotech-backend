@@ -302,6 +302,38 @@ const productSchema =
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
     default: null
+},  
+         productType: {
+    type: String,
+    enum: ["NEW", "REFURBISHED"],
+    default: "NEW"
+},
+
+      refurbishedDetails: {
+    grade: {
+        type: String,
+        enum: ["A+", "A", "B", "C"],
+        default: null
+    },
+
+    batteryHealth: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: null
+    },
+
+    warrantyMonths: {
+        type: Number,
+        min: 0,
+        default: null
+    },
+
+    testingStatus: {
+        type: String,
+        enum: ["TESTED", "NOT_TESTED"],
+        default: null
+    }
 },
 
             // =================================================
