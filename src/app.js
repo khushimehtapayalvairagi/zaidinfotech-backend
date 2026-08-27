@@ -26,6 +26,7 @@ import couponRoutes from "./modules/coupons/coupon.routes.js";
 import reviewRoutes from "./modules/review/review.routes.js";
 import newRepair from './modules/repair/repair.routes.js'
 import leaveRoutes from "./modules/leave/leave.routes.js";
+import availabilityRequestRoutes from "./modules/availabilityRequest/availabilityRequest.routes.js";
 const app = express();
 
 app.use(cors({
@@ -84,5 +85,6 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/leaves",leaveRoutes);
 app.use("/api/newRepair", newRepair)
+app.use("/api/availability-requests",availabilityRequestRoutes);
 
 export default app;

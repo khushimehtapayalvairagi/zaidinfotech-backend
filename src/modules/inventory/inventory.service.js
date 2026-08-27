@@ -12,6 +12,7 @@ import User from "../users/user.model.js";
 
 import Notification from "../notification/notification.model.js";
 
+
 import {
     notifyAdminsService
 } from "../notification/notification.service.js";
@@ -28,7 +29,7 @@ import {
 from "./stockTransaction/stockTransaction.service.js";
 
 import StockTransaction from "./stockTransaction/stockTransaction.model.js";
-
+import Inventory from "./inventory.model.js";
 
 // ======================================================
 // USE STOCK FOR REPAIR
@@ -202,25 +203,15 @@ const calculateStatus = (
 ) => {
 
     if (currentStock <= 0) {
-
         return INVENTORY_STATUS.OUT_OF_STOCK;
-
     }
 
-    // =====================================
-    // LOW STOCK = 5 OR LESS
-    // =====================================
-
-    if (currentStock <= 5) {
-
+    if (currentStock <= minimumStock) {
         return INVENTORY_STATUS.LOW_STOCK;
-
     }
 
     return INVENTORY_STATUS.IN_STOCK;
-
 };
-
 // ======================================================
 // INVENTORY ALERT NOTIFICATION
 // Admin ko Low Stock / Out of Stock notification
@@ -1806,13 +1797,33 @@ async(
     userId
 )=>{
 
+    // =====================================
+    // VALIDATE QUANTITY
+    // =====================================
+
+    quantity = Number(quantity);
+
+    if(
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ){
+
+        throw new Error(
+            "Quantity must be a positive number"
+        );
+
+    }
+
+
+    // =====================================
+    // FIND INVENTORY
+    // =====================================
 
     const inventory =
-    await inventoryRepository
-    .getInventoryByProductId(
-        productId
-    );
-
+        await inventoryRepository
+        .getInventoryByProductId(
+            productId
+        );
 
 
     if(!inventory){
@@ -1824,26 +1835,33 @@ async(
     }
 
 
+    // =====================================
+    // AVAILABLE STOCK
+    // =====================================
 
     const availableStock =
-    inventory.currentStock -
-    inventory.reservedStock;
+        Number(inventory.currentStock || 0) -
+        Number(inventory.reservedStock || 0);
 
 
-
+    // =====================================
+    // STOCK CHECK
+    // =====================================
 
     if(
         availableStock < quantity
     ){
 
         throw new Error(
-            "Product not available"
+            `Product not available. Available stock: ${availableStock}`
         );
 
     }
 
 
-
+    // =====================================
+    // RESERVE STOCK
+    // =====================================
 
     return await inventoryRepository
     .updateInventory(
@@ -1864,11 +1882,7 @@ async(
 
     );
 
-
 };
-
-
-
 
 
 
@@ -1887,13 +1901,33 @@ async(
     userId
 )=>{
 
+    // =====================================
+    // VALIDATE QUANTITY
+    // =====================================
+
+    quantity = Number(quantity);
+
+    if(
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ){
+
+        throw new Error(
+            "Quantity must be a positive number"
+        );
+
+    }
+
+
+    // =====================================
+    // FIND INVENTORY
+    // =====================================
 
     const inventory =
-    await inventoryRepository
-    .getInventoryByProductId(
-        productId
-    );
-
+        await inventoryRepository
+        .getInventoryByProductId(
+            productId
+        );
 
 
     if(!inventory){
@@ -1905,7 +1939,24 @@ async(
     }
 
 
+    // =====================================
+    // CHECK RESERVED STOCK
+    // =====================================
 
+    if(
+        inventory.reservedStock < quantity
+    ){
+
+        throw new Error(
+            "Cannot release more than reserved stock"
+        );
+
+    }
+
+
+    // =====================================
+    // RELEASE RESERVED STOCK
+    // =====================================
 
     return await inventoryRepository
     .updateInventory(
@@ -1920,12 +1971,10 @@ async(
 
             },
 
-
             lastUpdatedBy:userId
 
         }
 
     );
-
 
 };

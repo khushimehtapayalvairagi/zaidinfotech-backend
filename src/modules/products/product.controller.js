@@ -574,6 +574,62 @@ export const parseProductMultipartData = (
 
 
         // =================================================
+// REFURBISHED DETAILS
+// =================================================
+//
+// FormData mein refurbishedDetails JSON string
+// ke form mein aata hai.
+//
+// Example:
+//
+// '{"grade":"A+","batteryHealth":70,
+//   "warrantyMonths":6,"testingStatus":"TESTED"}'
+//
+// Joi ko object chahiye.
+// Isliye JSON.parse() kar rahe hain.
+// =================================================
+
+if (
+    typeof req.body.refurbishedDetails === "string"
+) {
+
+    if (
+        req.body.refurbishedDetails.trim() === ""
+    ) {
+
+        req.body.refurbishedDetails = {};
+
+    } else {
+
+        try {
+
+            req.body.refurbishedDetails =
+                JSON.parse(
+                    req.body.refurbishedDetails
+                );
+
+        } catch (error) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid refurbishedDetails JSON",
+
+                errors: [
+                    "refurbishedDetails must contain valid JSON"
+                ]
+
+            });
+
+        }
+
+    }
+
+}
+
+        // =================================================
         // SPECIFICATIONS
         // =================================================
 

@@ -1,6 +1,3 @@
-
-
-
 import Joi from "joi";
 
 
@@ -137,7 +134,92 @@ export const createProductValidation = Joi.object({
 // UPDATE PRODUCT VALIDATION
 // =====================================================
 
+// export const updateProductValidation = Joi.object({
+
+//     name: Joi.string()
+//         .trim()
+//         .min(2)
+//         .max(150),
+
+//     barcode: Joi.string()
+//         .trim()
+//         .allow(""),
+
+//     category: Joi.string()
+//         .trim(),
+
+//    subcategory: Joi.string()
+//     .trim()
+//     .allow("")
+//     .allow(null),
+
+//     productType: Joi.string()
+//     .valid("NEW", "REFURBISHED"),
+
+//     brand: Joi.string()
+//         .trim(),
+
+//     description: Joi.string()
+//         .allow(""),
+
+//     shortDescription: Joi.string()
+//         .allow(""),
+
+
+//     // =================================================
+//     // PRICING
+//     // =================================================
+
+//     pricing: Joi.object({
+
+//         purchasePrice: Joi.number()
+//             .min(0),
+
+//         sellingPrice: Joi.number()
+//             .min(0),
+
+//         mrp: Joi.number()
+//             .min(0),
+
+//         discount: Joi.number()
+//             .min(0)
+//             .max(100),
+
+//         gst: Joi.number()
+//             .min(0)
+//             .max(100)
+
+//     }),
+
+
+//     // =================================================
+//     // SEO
+//     // =================================================
+
+//     metaTitle: Joi.string()
+//         .allow(""),
+
+//     metaDescription: Joi.string()
+//         .allow(""),
+
+
+//     // =================================================
+//     // SPECIFICATIONS
+//     // =================================================
+
+//     specifications: Joi.object()
+
+// });
+
+// =====================================================
+// UPDATE PRODUCT VALIDATION
+// =====================================================
+
 export const updateProductValidation = Joi.object({
+
+    // =================================================
+    // BASIC INFORMATION
+    // =================================================
 
     name: Joi.string()
         .trim()
@@ -151,23 +233,55 @@ export const updateProductValidation = Joi.object({
     category: Joi.string()
         .trim(),
 
-   subcategory: Joi.string()
-    .trim()
-    .allow("")
-    .allow(null),
+    subcategory: Joi.string()
+        .trim()
+        .allow("")
+        .allow(null),
+
+    // =================================================
+    // PRODUCT TYPE
+    // =================================================
 
     productType: Joi.string()
-    .valid("NEW", "REFURBISHED"),
+        .valid("NEW", "REFURBISHED"),
+
+    // =================================================
+    // REFURBISHED DETAILS
+    // =================================================
+
+    refurbishedDetails: Joi.object({
+
+        grade: Joi.string()
+            .valid("A+", "A", "B", "C"),
+
+        batteryHealth: Joi.number()
+            .min(0)
+            .max(100),
+
+        warrantyMonths: Joi.number()
+            .min(0),
+
+        testingStatus: Joi.string()
+            .valid("TESTED", "NOT_TESTED")
+
+    }),
+
+    // =================================================
+    // BRAND
+    // =================================================
 
     brand: Joi.string()
         .trim(),
+
+    // =================================================
+    // DESCRIPTION
+    // =================================================
 
     description: Joi.string()
         .allow(""),
 
     shortDescription: Joi.string()
         .allow(""),
-
 
     // =================================================
     // PRICING
@@ -194,7 +308,6 @@ export const updateProductValidation = Joi.object({
 
     }),
 
-
     // =================================================
     // SEO
     // =================================================
@@ -204,7 +317,6 @@ export const updateProductValidation = Joi.object({
 
     metaDescription: Joi.string()
         .allow(""),
-
 
     // =================================================
     // SPECIFICATIONS
