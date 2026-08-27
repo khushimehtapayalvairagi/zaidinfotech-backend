@@ -60,3 +60,29 @@ export const getAllEmployeesSalaryDB = async () => {
     .sort({ createdAt: -1 });
 
 };
+
+// =====================================================
+// UPDATE EMPLOYEE BANK DETAILS
+// =====================================================
+
+export const updateEmployeeBankDetails = async (
+    employeeId,
+    bankDetails
+) => {
+
+    return await User.findByIdAndUpdate(
+        employeeId,
+        {
+            $set: {
+                bankDetails
+            }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    ).select(
+        "firstName lastName employeeId email bankDetails"
+    );
+
+};

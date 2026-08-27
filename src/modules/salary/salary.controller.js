@@ -126,3 +126,52 @@ export const getSalarySummaryController = async (req, res) => {
     });
   }
 };
+
+// =====================================================
+// UPDATE BANK DETAILS
+// =====================================================
+
+export const updateBankDetailsController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { employeeId } =
+            req.params;
+
+        const result =
+            await salaryService.updateBankDetails(
+                employeeId,
+                req.body
+            );
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Bank details updated successfully",
+
+            data:
+                result?.bankDetails || null
+
+        });
+
+    }
+
+    catch (error) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                error.message
+
+        });
+
+    }
+
+};

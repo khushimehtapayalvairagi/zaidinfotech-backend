@@ -4,12 +4,96 @@ import {
   pushSalaryHistory,
   saveEmployee,
   findAllEmployeesSalaryData,
-  findEmployeeSalarySummary
+  findEmployeeSalarySummary,
+  updateEmployeeBankDetails
 } from "./salary.repository.js";
 
 import ExcelJS from "exceljs";
 
+// =====================================================
+// UPDATE BANK DETAILS
+// =====================================================
 
+const updateBankDetails = async (
+  employeeId,
+  payload
+) => {
+
+  const employee =
+    await findEmployeeById(employeeId);
+
+  if (!employee) {
+
+    throw new Error(
+      "Employee not found"
+    );
+
+  }
+
+  if (
+    employee.role === "CUSTOMER"
+  ) {
+
+    throw new Error(
+      "Customer cannot have salary bank details"
+    );
+
+  }
+
+  const {
+    accountHolderName,
+    accountNumber,
+    ifscCode,
+    bankName,
+    accountType
+  } = payload;
+
+
+  if (
+    !accountHolderName ||
+    !accountNumber ||
+    !ifscCode ||
+    !bankName ||
+    !accountType
+  ) {
+
+    throw new Error(
+      "All bank details are required"
+    );
+
+  }
+
+
+  const cleanBankDetails = {
+
+    accountHolderName:
+      String(accountHolderName).trim(),
+
+    accountNumber:
+      String(accountNumber).trim(),
+
+    ifscCode:
+      String(ifscCode)
+        .trim()
+        .toUpperCase(),
+
+    bankName:
+      String(bankName).trim(),
+
+    accountType:
+      String(accountType)
+        .trim()
+        .toUpperCase()
+
+  };
+
+
+  return await updateEmployeeBankDetails(
+    employeeId,
+    cleanBankDetails
+  );
+
+};
 // =====================================================
 // EXPORT SALARY EXCEL
 // =====================================================
@@ -804,6 +888,8 @@ export const salaryService = {
 
   getAllEmployeesSalarySummary,
 
-  getSalarySummary
+  getSalarySummary,
+
+  updateBankDetails
 
 };

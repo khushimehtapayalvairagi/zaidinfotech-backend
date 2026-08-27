@@ -7,6 +7,7 @@ import {
   getAllEmployeesSalaryController,
   getSalarySummaryController,
   exportSalaryExcel,
+  updateBankDetailsController,
 } from "./salary.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -85,7 +86,22 @@ router.put(
   allowRoles(ROLES.ADMIN),
   updateSalaryController
 );
+// ======================================================
+// UPDATE BANK DETAILS
+// PUT /api/salary/bank/:employeeId
+// ======================================================
 
+router.put(
+
+  "/bank/:employeeId",
+
+  verifyToken,
+
+  allowRoles(ROLES.ADMIN),
+
+  updateBankDetailsController
+
+);
 
 // ======================================================
 // GET SINGLE EMPLOYEE SALARY
@@ -98,6 +114,7 @@ router.get(
   allowRoles(ROLES.ADMIN),
   getSalaryController
 );
+
 
 
 export default router;
