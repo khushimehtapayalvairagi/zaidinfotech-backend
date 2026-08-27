@@ -123,6 +123,45 @@ resetPasswordExpires: {
       unique: true,
       sparse: true,
     },
+
+    bankDetails: {
+  accountHolderName: {
+    type: String,
+    default: "",
+    trim: true
+  },
+
+  accountNumber: {
+    type: String,
+    default: "",
+    trim: true
+  },
+
+  ifscCode: {
+    type: String,
+    default: "",
+    trim: true,
+    uppercase: true
+  },
+
+  bankName: {
+    type: String,
+    default: "",
+    trim: true
+  },
+
+  branchName: {
+    type: String,
+    default: "",
+    trim: true
+  },
+
+  accountType: {
+    type: String,
+    enum: ["SAVINGS", "CURRENT"],
+    default: "SAVINGS"
+  }
+},
 role: {
     type: String,
     enum: [

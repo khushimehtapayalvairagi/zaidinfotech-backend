@@ -85,6 +85,29 @@ export const createUserSchema = z.object({
     "ACCOUNTANT",
      "CUSTOMER",
   ]).optional(),
+  bankDetails: z.object({
+
+  accountHolderName: z.string().min(2),
+
+  accountNumber: z.string().min(6),
+
+  ifscCode: z
+    .string()
+    .regex(
+      /^[A-Z]{4}0[A-Z0-9]{6}$/,
+      "Invalid IFSC code"
+    ),
+
+  bankName: z.string().min(2),
+
+  branchName: z.string().optional(),
+
+  accountType: z.enum([
+    "SAVINGS",
+    "CURRENT"
+  ])
+
+}).optional(),
 
   department: z.enum([
     "ADMINISTRATION",
@@ -110,7 +133,13 @@ export const createUserSchema = z.object({
 
   })
 
+  
+
 }).superRefine((data, ctx) => {
+
+  // ==============================
+  // SYSTEM ACCESS VALIDATION
+  // ==============================
 
   if (data.hasSystemAccess) {
 
@@ -136,6 +165,46 @@ export const createUserSchema = z.object({
         path: ["role"],
         message: "Role is required"
       });
+    }
+  }
+
+  // ==============================
+  // EMPLOYEE BANK DETAILS
+  // ==============================
+
+  const employeeRoles = [
+    "SUPER_ADMIN",
+    "ADMIN",
+    "SALES",
+    "TECHNICIAN",
+    "INVENTORY",
+    "ACCOUNTANT",
+    "OTHER"
+  ];
+
+  if (
+    data.role &&
+    employeeRoles.includes(data.role)
+  ) {
+
+    if (!data.bankDetails) {
+
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankDetails"],
+        message: "Bank details are required for employees"
+      });
+
+    }
+
+    if (!data.salaryDetails) {
+
+      ctx.addIssue({
+        code: "custom",
+        path: ["salaryDetails"],
+        message: "Salary details are required for employees"
+      });
+
     }
 
   }

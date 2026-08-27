@@ -37,7 +37,7 @@ export const findAllEmployeesSalaryData = async () => {
     isDeleted: false,
   })
     .select(
-      "firstName lastName employeeId email department designation salaryDetails salaryHistory status"
+      "firstName lastName employeeId email department designation salaryDetails bankDetails salaryHistory status"
     )
     .sort({ createdAt: -1 });
 };
@@ -45,7 +45,7 @@ export const findAllEmployeesSalaryData = async () => {
 
 export const findEmployeeSalarySummary = async (employeeId) => {
   return await User.findById(employeeId).select(
-    "firstName lastName designation email salaryDetails salaryHistory"
+    "firstName lastName designation email salaryDetails  bankDetails salaryHistory"
   );
 };
 
