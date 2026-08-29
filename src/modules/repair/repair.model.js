@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const repairPartSchema = new mongoose.Schema(
   {
-    product: {
+    repairPart: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+      ref: "RepairPart", // 
       required: true,
     },
 
@@ -36,15 +36,33 @@ const repairSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
 
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: true,
     },
-
+    customerName: {  //customerName
+      type: String,
+      required: true,
+      trim: true
+    },
+    customerPhone: {   //customephone
+      type: String,
+      required: true,
+      trim: true
+    },
+    customerEmail: {  //customrEmail
+      type: String,
+      unique: true,
+      required: true,
+      trim: true
+    },
+    deviceModel: {
+      type: String,
+      required: true,
+      trim: true
+    },
     issueDescription: {
       type: String,
       required: true,
@@ -56,6 +74,8 @@ const repairSchema = new mongoose.Schema(
       enum: [
         "Received",
         "In Progress",
+        "Assigned",
+        "Waiting for Parts",
         "Completed",
         "Cancelled",
       ],
@@ -77,7 +97,11 @@ const repairSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-
+    assignedTechnician: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     remarks: {
       type: String,
       trim: true,

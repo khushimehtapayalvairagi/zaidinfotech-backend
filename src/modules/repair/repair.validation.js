@@ -5,32 +5,37 @@ import Joi from "joi";
 // ==========================================
 
 export const createRepairValidation = Joi.object({
-  user: Joi.string().required().messages({
-    "string.empty": "User is required.",
-    "any.required": "User is required.",
-  }),
+  // user: Joi.string().messages({
+  //   "string.empty": "User is required.",
+  //   "any.required": "User is required.",
+  // }).optional(),
 
-  product: Joi.string().required().messages({
-    "string.empty": "Product is required.",
-    "any.required": "Product is required.",
-  }),
+  // product: Joi.string().messages({
+  //   "string.empty": "Product is required.",
+  //   "any.required": "Product is required.",
+  // }).optional(),
 
-  issueDescription: Joi.string()
-    .trim()
-    .min(5)
-    .max(500)
-    .required()
-    .messages({
-      "string.empty": "Issue description is required.",
-      "string.min": "Issue description must be at least 5 characters.",
-      "string.max": "Issue description cannot exceed 500 characters.",
-      "any.required": "Issue description is required.",
-    }),
-
+  customerName: Joi.string().trim().required(),
+  customerPhone: Joi.string().required(), // <-- Add this
+  customerEmail: Joi.string().email().required(), // <-- Add this
   deviceModel: Joi.string()
     .trim()
     .optional()
-    .allow(""),
+  ,
+  issueDescription: Joi.string().trim().min(5).max(500).required().messages({
+    "string.empty": "Issue description is required.",
+    "string.min": "Issue description must be at least 5 characters.",
+    "string.max": "Issue description cannot exceed 500 characters.",
+    "any.required": "Issue description is required.",
+  }),
+
+  repairCost: Joi.number()
+    .min(0)
+    .default(0),
+
+  // assignedTechnician: Joi.string().hex().length(24).allow(null, "").optional(),
+  // technicianName: Joi.string().allow("").optional(),
+
 
   serialNumber: Joi.string()
     .trim()
@@ -48,15 +53,12 @@ export const createRepairValidation = Joi.object({
   estimatedCompletionDate: Joi.date()
     .optional(),
 
-  repairCost: Joi.number()
-    .min(0)
-    .default(0),
 
   technicianName: Joi.string()
     .trim()
     .allow("")
     .max(100),
-
+  assignedTechnician: Joi.string().hex().length(24).allow(null, "").optional(),
   remarks: Joi.string()
     .trim()
     .allow("")
@@ -110,6 +112,30 @@ export const updateRepairValidation = Joi.object({
     .min(0)
     .optional(),
 
+  // repairCost: Joi.number().required(),
+  // services: Joi.array().items(
+  //   Joi.object({
+  //     serviceId: Joi.string().hex().length(24).required(),
+  //     serviceName: Joi.string().required(),
+  //     category: Joi.string().required(),
+  //     partCost: Joi.number().min(0).required(),
+  //     laborCost: Joi.number().min(0).required(),
+  //     totalCost: Joi.number().min(0).required()
+  //   })
+  // ).required(),
+  services: Joi.array().items(
+    Joi.object({
+      serviceId: Joi.string().allow(null, "").optional(),
+      serviceName: Joi.string().trim().required(),
+      category: Joi.string().trim().required(),
+      partCost: Joi.number().min(0).required(),
+      laborCost: Joi.number().min(0).required(),
+      totalCost: Joi.number().min(0).required(),
+      isCustom: Joi.boolean().optional()
+    })
+  ).optional(),
+  repairCost: Joi.number().min(0).required(),
+
   priority: Joi.string()
     .valid("Low", "Medium", "High", "Urgent")
     .optional(),
@@ -118,6 +144,8 @@ export const updateRepairValidation = Joi.object({
     .valid(
       "Received",
       "In Progress",
+      "Assigned",
+      "Waiting for Parts",
       "Completed",
       "Cancelled"
     )
@@ -134,6 +162,8 @@ export const updateRepairStatusValidation = Joi.object({
     .valid(
       "Received",
       "In Progress",
+      "Assigned",
+      "Waiting for Parts",
       "Completed",
       "Cancelled"
     )

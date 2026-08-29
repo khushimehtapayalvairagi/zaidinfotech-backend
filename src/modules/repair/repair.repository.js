@@ -74,3 +74,14 @@ export const deleteRepair = async (id) => {
   return await Repair.findByIdAndDelete(id);
 };
 
+
+export const findByTechnician = async (technicianId) => {
+  return await RepairModel.find({ assignedTechnician: technicianId })
+    .populate("assignedTechnician", "firstName lastName name email")
+    .sort({ createdAt: -1 });
+};
+
+// export const findByTechnician = async (technicianId) => {
+//   return await RepairModel.find({ assignedTechnician: technicianId })
+//     .sort({ createdAt: -1 });
+// };

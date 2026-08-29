@@ -1,10 +1,10 @@
 import * as repairRepository from "./repair.repository.js"
 
 import * as inventoryService
-from "../inventory/inventory.service.js";
+  from "../inventory/inventory.service.js";
 
 import Product
-from "../products/product.model.js";
+  from "../products/product.model.js";
 import User from "../users/user.model.js";
 
 // ======================================================
@@ -162,23 +162,29 @@ export const addRepairPart = async (
 // Create Repair Request
 export const createRepair = async (repairData) => {
   const {
-    user,
-    product,
+    customerName,
+    customerPhone,
+    customerEmail,
+    deviceModel,
     issueDescription,
     estimatedCompletionDate,
     repairCost,
     technicianName,
+    assignedTechnician,
     remarks,
   } = repairData;
 
   const repair = await repairRepository.createRepair({
-    user,
-    product,
+    customerName,
+    customerPhone,
+    customerEmail,
+    deviceModel,
     issueDescription,
     estimatedCompletionDate,
     repairCost: repairCost || 0,
     technicianName: technicianName || "",
     remarks: remarks || "",
+    assignedTechnician: assignedTechnician || null,
   });
 
   return repair;
@@ -324,6 +330,10 @@ export const deleteRepair = async (id) => {
   return repair;
 };
 
+
+export const getRepairsByTechnician = async (technicianId) => {
+  return await repairRepository.findByTechnician(technicianId);
+};
 
 
 // export {

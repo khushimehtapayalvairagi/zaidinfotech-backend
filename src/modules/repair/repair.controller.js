@@ -1,5 +1,5 @@
 import * as repairService from "./repair.service.js"
-
+import User from '../users/user.model.js'
 // Create Repair Request
 export const createRepair = async (req, res, next) => {
   try {
@@ -144,6 +144,40 @@ export const deleteRepair = async (req, res, next) => {
 };
 
 
+// export const getRepairsByTechnician = async (req, res, next) => {
+//   try {
+//     const { technicianId } = req.params;
+//     const repairs = await repairService.getRepairsByTechnician(technicianId);
+//     return res.status(200).json({
+//       success: true,
+//       count: repairs.length,
+//       data: repairs,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+
+// export const getTechniciansList = async (req, res, next) => {
+//   try {
+//     const technicians = await repairService.getTechniciansList();
+//     return res.status(200).json({ success: true, data: technicians });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+export const getMyAssignedRepairs = async (req, res, next) => {
+  try {
+    const technicianId = req.user._id || req.user.id;
+    const repairs = await repairService.getRepairsByTechnician(technicianId);
+    return res.status(200).json({ success: true, count: repairs.length, data: repairs });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ======================================================
 // ADD REPAIR PART
 // ======================================================
@@ -189,6 +223,44 @@ export const addRepairPart = async (
 
 };
 
+// export const getTechniciansList = async (req, res) => {
+//   try {
+//     const technicians = await User.find({
+//       role: { $regex: /^technician$/i }
+//     }).select("-password");
+
+//     return res.status(200).json({
+//       success: true,
+//       technicians: technicians
+//     });
+//   } catch (error) {
+//     console.log(error.message)
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
+export const getTechniciansList = async (req, res) => {
+  try {
+    const technicians = await User.find(
+      { role: "TECHNICIAN" }
+    );
+
+    console.log("TECHNICIANS:", technicians);
+
+    return res.status(200).json({
+      success: true,
+      technicians,
+    });
+  } catch (error) {
+    console.error("GET TECHNICIANS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 // export {
 //   createRepair,
 //   getAllRepairs,

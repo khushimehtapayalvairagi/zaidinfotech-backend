@@ -25,6 +25,9 @@ import notificationRoute from "./modules/notification/notification.routes.js";
 import couponRoutes from "./modules/coupons/coupon.routes.js"; 
 import reviewRoutes from "./modules/review/review.routes.js";
 import newRepair from './modules/repair/repair.routes.js'
+import repairInventry from "./modules/repair/repairparts/repairParts.routes.js"
+
+import repairserviceRoutes from './modules/repair/services/service.routes.js'
 import leaveRoutes from "./modules/leave/leave.routes.js";
 import availabilityRequestRoutes from "./modules/availabilityRequest/availabilityRequest.routes.js";
 const app = express();
@@ -85,6 +88,8 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/leaves",leaveRoutes);
 app.use("/api/newRepair", newRepair)
+app.use("/api/repair-service", repairserviceRoutes)
+app.use("/api/repairInventory", repairInventry)
 app.use("/api/availability-requests",availabilityRequestRoutes);
 
 export default app;

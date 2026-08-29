@@ -27,6 +27,8 @@ router.post(
   repairController.createRepair
 );
 
+router.get("/technicians", repairController.getTechniciansList)
+
 // ==========================================
 // Get All Repair Requests
 // ==========================================
@@ -109,5 +111,20 @@ router.post(
   verifyToken,
   repairController.addRepairPart
 );
+
+
+// router.get(
+//   "/technician/:technicianId",
+//   verifyToken,
+//   repairController.getRepairsByTechnician
+// );
+
+router.get(
+  "/my-assigned-repairs",
+  verifyToken,
+  repairController.getMyAssignedRepairs
+);
+
+//get all techinicinas
 
 export default router;
