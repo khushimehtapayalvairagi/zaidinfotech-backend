@@ -4,23 +4,23 @@
 import express from "express";
 
 import {
-  register,
   createUser,
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
+  register,
   updateCustomerProfile,
   getProfile,
   getEmployees,
   updateEmployeeStatus,
-  getSalaryHistory,
-  addSalaryHistory,
   updateSalary,
+  addSalaryHistory,
+  getSalaryHistory,
   forgotPassword,
-  resetPassword
-
-
+  resetPassword,
+  verifyEmail,
+  resendEmailVerificationOtp
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -199,6 +199,17 @@ router.post(
   resetPassword
 );
 
+// Verify Email
+router.post(
+  "/verify-email",
+  verifyEmail
+);
 
+
+// Resend Email Verification OTP
+router.post(
+  "/resend-verification-otp",
+  resendEmailVerificationOtp
+);
 
 export default router;

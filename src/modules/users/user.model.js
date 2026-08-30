@@ -302,7 +302,17 @@ salaryHistory: [
       type: Boolean,
       default: false,
     },
+       
 
+emailVerificationOtp: {
+  type: String,
+  default: null,
+},
+
+emailVerificationExpires: {
+  type: Date,
+  default: null,
+},
     isDeleted: {
       type: Boolean,
       default: false,

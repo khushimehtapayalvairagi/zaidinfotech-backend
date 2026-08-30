@@ -1,80 +1,227 @@
 import bcrypt from "bcrypt";
 import User from "./user.model.js";
 import * as userRepository from "./user.repository.js";
-import { sendResetPasswordEmail } from "../services/mail.service.js";
+import { sendResetPasswordEmail, sendEmailVerificationOtp } from "../services/mail.service.js";
+import crypto from "crypto";
 
+
+const generateOtp = () => {
+  return Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+};
 // ===============================
 // Create User
 // ===============================
 export const createUser = async (data) => {
 
-  // Phone Check (sabke liye)
-  const existingPhone = await userRepository.findByPhone(data.phone);
+  // ==========================================
+  // Phone Check
+  // ==========================================
+
+  const existingPhone =
+    await userRepository.findByPhone(data.phone);
 
   if (existingPhone) {
     throw new Error("Phone number already exists");
-    
   }
 
+
   // ==========================================
-  // Employee ID Generate (Only Staff)
+  // Employee ID Generate
   // ==========================================
+
   if (data.role !== "CUSTOMER") {
 
-    const totalUsers = await userRepository.countUsers();
+    const totalUsers =
+      await userRepository.countUsers();
 
-    data.employeeId = `EMP${String(totalUsers + 1).padStart(5, "0")}`;
+    data.employeeId =
+      `EMP${String(totalUsers + 1).padStart(5, "0")}`;
   }
 
+
   // ==========================================
-  // Employee With System Access
+  // SYSTEM ACCESS
   // ==========================================
+
   if (data.hasSystemAccess) {
 
     // Email Check
-    const existingUser = await userRepository.findByEmail(data.email);
+    const existingUser =
+      await userRepository.findByEmail(data.email);
 
     if (existingUser) {
       throw new Error("Email already exists");
     }
+
 
     // Password Required
     if (!data.password) {
       throw new Error("Password is required");
     }
 
+
+    // ==========================================
     // Password Hash
-    data.password = await bcrypt.hash(data.password, 10);
+    // ==========================================
+
+    data.password =
+      await bcrypt.hash(data.password, 10);
+
+
+    // ==========================================
+    // EMAIL VERIFICATION
+    // ==========================================
+
+    const otp = generateOtp();
+
+    data.emailVerificationOtp =
+      otp;
+
+    data.emailVerificationExpires =
+      new Date(Date.now() + 10 * 60 * 1000);
+
+    data.isVerified = false;
 
   }
 
+
   // ==========================================
-  // Employee Without System Access
+  // WITHOUT SYSTEM ACCESS
   // ==========================================
-  // else {
 
-  //   data.email = "";
-  //   data.password = "";
-  //   data.role = null;
-
-  // }
-
-else {
+  else {
 
     if (!data.email) {
-        throw new Error("Email is required");
+      throw new Error("Email is required");
     }
 
     delete data.password;
 
     data.role = "OTHER";
 
-}
+    // No login access
+    data.isVerified = false;
+  }
 
-  return await userRepository.create(data);
 
+  // ==========================================
+  // CREATE USER
+  // ==========================================
+
+  const user =
+    await userRepository.create(data);
+
+
+  // ==========================================
+  // SEND OTP AFTER USER CREATED
+  // ==========================================
+
+  if (
+    data.hasSystemAccess &&
+    user.emailVerificationOtp
+  ) {
+
+    await sendEmailVerificationOtp(
+      user.email,
+      user.emailVerificationOtp
+    );
+
+  }
+
+
+  return user;
 };
 
+export const verifyEmail = async (email, otp) => {
+
+  const user =
+    await User.findOne({ email });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+
+  // Already verified
+  if (user.isVerified) {
+    throw new Error("Email is already verified");
+  }
+
+
+  // OTP check
+  if (
+    !user.emailVerificationOtp ||
+    user.emailVerificationOtp !== otp
+  ) {
+
+    throw new Error("Invalid OTP");
+
+  }
+
+
+  // Expiry check
+  if (
+    !user.emailVerificationExpires ||
+    user.emailVerificationExpires < new Date()
+  ) {
+
+    throw new Error("OTP has expired");
+
+  }
+
+
+  // ==========================================
+  // VERIFY EMAIL
+  // ==========================================
+
+  user.isVerified = true;
+
+  user.emailVerificationOtp = null;
+
+  user.emailVerificationExpires = null;
+
+  await user.save();
+
+
+  return user;
+};
+export const resendEmailVerificationOtp = async (email) => {
+
+  const user =
+    await User.findOne({ email });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+
+  if (user.isVerified) {
+    throw new Error("Email is already verified");
+  }
+
+
+  const otp = generateOtp();
+
+
+  user.emailVerificationOtp = otp;
+
+  user.emailVerificationExpires =
+    new Date(Date.now() + 10 * 60 * 1000);
+
+
+  await user.save();
+
+
+  await sendEmailVerificationOtp(
+    user.email,
+    otp
+  );
+
+
+  return "Verification OTP sent successfully";
+};
 // ===============================
 // Get All Users
 // ===============================

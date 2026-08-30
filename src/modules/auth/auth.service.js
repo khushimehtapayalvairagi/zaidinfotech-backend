@@ -36,6 +36,11 @@ export const loginService = async (body) => {
     throw new Error("Invalid Password");
   }
 
+  if (!user.isVerified) {
+  throw new Error(
+    "Please verify your email before logging in"
+  );
+}
   if (user.status !== "ACTIVE") {
     throw new Error("Your account is inactive");
   }

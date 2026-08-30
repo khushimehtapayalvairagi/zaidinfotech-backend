@@ -439,3 +439,78 @@ export const resetPassword = async (req, res) => {
 };
 
 
+export const verifyEmail = async (req, res) => {
+
+  try {
+
+    const { email, otp } = req.body;
+
+    const user =
+      await userService.verifyEmail(
+        email,
+        otp
+      );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message: "Email verified successfully",
+
+      data: {
+        id: user._id,
+        email: user.email,
+        isVerified: user.isVerified
+      }
+
+    });
+
+  } catch (error) {
+
+    return res.status(400).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+
+export const resendEmailVerificationOtp = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const { email } = req.body;
+
+    const message =
+      await userService.resendEmailVerificationOtp(
+        email
+      );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message
+
+    });
+
+  } catch (error) {
+
+    return res.status(400).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
