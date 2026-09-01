@@ -5,6 +5,14 @@ import * as inventoryService
 
 import Product
   from "../products/product.model.js";
+
+import {
+  createNotificationService,
+  notifyAdminsService,
+  notifyUserService,
+} from "../notification/notification.service.js";
+
+
 import User from "../users/user.model.js";
 
 // ======================================================
@@ -160,6 +168,37 @@ export const addRepairPart = async (
 };
 
 // Create Repair Request
+// export const createRepair = async (repairData) => {
+//   const {
+//     customerName,
+//     customerPhone,
+//     customerEmail,
+//     deviceModel,
+//     issueDescription,
+//     estimatedCompletionDate,
+//     repairCost,
+//     technicianName,
+//     assignedTechnician,
+//     remarks,
+//   } = repairData;
+
+//   const repair = await repairRepository.createRepair({
+//     customerName,
+//     customerPhone,
+//     customerEmail,
+//     deviceModel,
+//     issueDescription,
+//     estimatedCompletionDate,
+//     repairCost: repairCost || 0,
+//     technicianName: technicianName || "",
+//     remarks: remarks || "",
+//     assignedTechnician: assignedTechnician || null,
+//   });
+
+//   return repair;
+// };
+
+
 export const createRepair = async (repairData) => {
   const {
     customerName,
@@ -172,6 +211,10 @@ export const createRepair = async (repairData) => {
     technicianName,
     assignedTechnician,
     remarks,
+    serialNumber,
+    priority,
+    estimatedCost,
+    status,
   } = repairData;
 
   const repair = await repairRepository.createRepair({
@@ -183,8 +226,39 @@ export const createRepair = async (repairData) => {
     estimatedCompletionDate,
     repairCost: repairCost || 0,
     technicianName: technicianName || "",
-    remarks: remarks || "",
     assignedTechnician: assignedTechnician || null,
+    remarks: remarks || "",
+    serialNumber: serialNumber || "",
+    priority: priority || "Medium",
+    estimatedCost: estimatedCost || 0,
+    status: status || "Received",
+  });
+
+  // ==========================================
+  // TECHNICIAN NOTIFICATION
+  // ==========================================
+
+  if (assignedTechnician) {
+    await notifyUserService({
+      userId: assignedTechnician,
+      type: "REPAIR_ASSIGNED",
+      title: "New Repair Assigned",
+      message: `Repair for ${customerName} (${deviceModel || "Device"}) has been assigned to you.`,
+      relatedId: repair._id,
+      relatedModel: "Repair",
+    });
+  }
+
+  // ==========================================
+  // ADMIN NOTIFICATION
+  // ==========================================
+
+  await notifyAdminsService({
+    type: "GENERAL",
+    title: "New Repair Request",
+    message: `New repair request created for ${customerName}.`,
+    relatedId: repair._id,
+    relatedModel: "Repair",
   });
 
   return repair;
@@ -207,9 +281,19 @@ export const getAllRepairs = async () => {
 };
 
 // Get Repairs By User
+// export const getRepairsByUser = async (userId) => {
+//   return await repairRepository.getRepairsByUser(userId);
+// };
+
 export const getRepairsByUser = async (userId) => {
-  return await repairRepository.getRepairsByUser(userId);
+  return await Repair.find({
+    user: userId,
+  })
+    .populate("user")
+    .populate("product")
+    .sort({ createdAt: -1 });
 };
+
 
 // Get Repairs By Product
 export const getRepairsByProduct = async (productId) => {
@@ -227,94 +311,252 @@ export const updateRepair = async (id, data) => {
 };
 
 // Update Repair Status
+// export const updateRepairStatus = async (id, status) => {
+
+//   const repair =
+//     await repairRepository.updateRepairStatus(
+//       id,
+//       status
+//     );
+
+//   if (!repair) {
+//     throw new Error(
+//       "Repair request not found."
+//     );
+//   }
+
+
+//   // ==========================================
+//   // REPAIR COMPLETED
+//   // ==========================================
+
+//   if (status === "Completed") {
+
+//     // -----------------------------
+//     // CUSTOMER NOTIFICATION
+//     // -----------------------------
+
+//     if (repair.user) {
+
+//       await createNotificationService({
+
+//         user: repair.user._id || repair.user,
+
+//         type: "REPAIR_COMPLETED",
+
+//         title: "Repair Completed",
+
+//         message:
+//           "Your repair has been completed successfully.",
+
+//         relatedId: repair._id,
+
+//         relatedModel: "Repair"
+
+//       });
+
+//     }
+
+
+//     // -----------------------------
+//     // RECEPTIONIST NOTIFICATION
+//     // -----------------------------
+
+//     // Agar repair mein receptionist saved hai
+//     if (repair.receptionist) {
+
+//       await createNotificationService({
+
+//         user:
+//           repair.receptionist._id ||
+//           repair.receptionist,
+
+//         type: "REPAIR_COMPLETED",
+
+//         title: "Repair Completed",
+
+//         message:
+//           "The assigned repair has been completed by the technician.",
+
+//         relatedId: repair._id,
+
+//         relatedModel: "Repair"
+
+//       });
+
+//     }
+
+//   }
+
+
+//   return repair;
+
+// };
+
 export const updateRepairStatus = async (id, status) => {
-
   const repair =
-    await repairRepository.updateRepairStatus(
-      id,
-      status
-    );
-
-  if (!repair) {
-    throw new Error(
-      "Repair request not found."
-    );
-  }
-
-
-  // ==========================================
-  // REPAIR COMPLETED
-  // ==========================================
-
-  if (status === "Completed") {
-
-    // -----------------------------
-    // CUSTOMER NOTIFICATION
-    // -----------------------------
-
-    if (repair.user) {
-
-      await createNotificationService({
-
-        user: repair.user._id || repair.user,
-
-        type: "REPAIR_COMPLETED",
-
-        title: "Repair Completed",
-
-        message:
-          "Your repair has been completed successfully.",
-
-        relatedId: repair._id,
-
-        relatedModel: "Repair"
-
-      });
-
-    }
-
-
-    // -----------------------------
-    // RECEPTIONIST NOTIFICATION
-    // -----------------------------
-
-    // Agar repair mein receptionist saved hai
-    if (repair.receptionist) {
-
-      await createNotificationService({
-
-        user:
-          repair.receptionist._id ||
-          repair.receptionist,
-
-        type: "REPAIR_COMPLETED",
-
-        title: "Repair Completed",
-
-        message:
-          "The assigned repair has been completed by the technician.",
-
-        relatedId: repair._id,
-
-        relatedModel: "Repair"
-
-      });
-
-    }
-
-  }
-
-
-  return repair;
-
-};
-// Mark Repair Delivered
-export const markDelivered = async (id) => {
-  const repair = await repairRepository.markDelivered(id);
+    await repairRepository.updateRepairStatus(id, status);
 
   if (!repair) {
     throw new Error("Repair request not found.");
   }
+
+  // ==========================================
+  // COMPLETED
+  // ==========================================
+
+  if (status === "Completed") {
+    // Customer
+    if (repair.user) {
+      await notifyUserService({
+        userId: repair.user._id || repair.user,
+        type: "REPAIR_COMPLETED",
+        title: "Repair Completed",
+        message:
+          "Your repair has been completed successfully.",
+        relatedId: repair._id,
+        relatedModel: "Repair",
+      });
+    }
+
+    // Assigned technician
+    if (repair.assignedTechnician) {
+      await notifyUserService({
+        userId:
+          repair.assignedTechnician._id ||
+          repair.assignedTechnician,
+        type: "REPAIR_COMPLETED",
+        title: "Repair Completed",
+        message:
+          "The repair has been marked as completed.",
+        relatedId: repair._id,
+        relatedModel: "Repair",
+      });
+    }
+
+    // Admin
+    await notifyAdminsService({
+      type: "REPAIR_COMPLETED",
+      title: "Repair Completed",
+      message:
+        `Repair for ${repair.customerName || "customer"} has been completed.`,
+      relatedId: repair._id,
+      relatedModel: "Repair",
+    });
+  }
+
+  // ==========================================
+  // CANCELLED
+  // ==========================================
+
+  if (status === "Cancelled") {
+    if (repair.assignedTechnician) {
+      await notifyUserService({
+        userId:
+          repair.assignedTechnician._id ||
+          repair.assignedTechnician,
+        type: "REPAIR_CANCELLED",
+        title: "Repair Cancelled",
+        message:
+          `Repair for ${repair.customerName || "customer"} has been cancelled.`,
+        relatedId: repair._id,
+        relatedModel: "Repair",
+      });
+    }
+
+    await notifyAdminsService({
+      type: "REPAIR_CANCELLED",
+      title: "Repair Cancelled",
+      message:
+        `Repair for ${repair.customerName || "customer"} has been cancelled.`,
+      relatedId: repair._id,
+      relatedModel: "Repair",
+    });
+  }
+
+  // ==========================================
+  // OTHER STATUS
+  // ==========================================
+
+  if (
+    status === "In Progress" ||
+    status === "Assigned" ||
+    status === "Waiting for Parts"
+  ) {
+    if (repair.user) {
+      await notifyUserService({
+        userId: repair.user._id || repair.user,
+        type: "REPAIR_STATUS_CHANGED",
+        title: "Repair Status Updated",
+        message: `Your repair status is now "${status}".`,
+        relatedId: repair._id,
+        relatedModel: "Repair",
+      });
+    }
+  }
+
+  return repair;
+};
+
+
+
+// Mark Repair Delivered
+// export const markDelivered = async (id) => {
+//   const repair = await repairRepository.markDelivered(id);
+
+//   if (!repair) {
+//     throw new Error("Repair request not found.");
+//   }
+
+//   return repair;
+// };
+
+
+export const markDelivered = async (id) => {
+  const repair =
+    await repairRepository.markDelivered(id);
+
+  if (!repair) {
+    throw new Error("Repair request not found.");
+  }
+
+  // Customer notification
+  if (repair.user) {
+    await notifyUserService({
+      userId: repair.user._id || repair.user,
+      type: "REPAIR_DELIVERED",
+      title: "Repair Delivered",
+      message:
+        "Your repaired device has been marked as delivered.",
+      relatedId: repair._id,
+      relatedModel: "Repair",
+    });
+  }
+
+  // Technician notification
+  if (repair.assignedTechnician) {
+    await notifyUserService({
+      userId:
+        repair.assignedTechnician._id ||
+        repair.assignedTechnician,
+      type: "REPAIR_DELIVERED",
+      title: "Repair Delivered",
+      message:
+        "The repair has been delivered to the customer.",
+      relatedId: repair._id,
+      relatedModel: "Repair",
+    });
+  }
+
+  // Admin notification
+  await notifyAdminsService({
+    type: "REPAIR_DELIVERED",
+    title: "Repair Delivered",
+    message:
+      `Repair for ${repair.customerName || "customer"} has been delivered.`,
+    relatedId: repair._id,
+    relatedModel: "Repair",
+  });
 
   return repair;
 };

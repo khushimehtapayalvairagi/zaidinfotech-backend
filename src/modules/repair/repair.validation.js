@@ -147,7 +147,8 @@ export const updateRepairValidation = Joi.object({
       "Assigned",
       "Waiting for Parts",
       "Completed",
-      "Cancelled"
+      "Cancelled",
+      "Delivered"
     )
     .optional(),
 });

@@ -27,6 +27,13 @@ router.post(
   repairController.createRepair
 );
 
+router.get(
+  "/my-assigned-repairs",
+  verifyToken,
+  repairController.getMyAssignedRepairs
+);
+
+
 router.get("/technicians", repairController.getTechniciansList)
 
 // ==========================================
@@ -119,11 +126,11 @@ router.post(
 //   repairController.getRepairsByTechnician
 // );
 
-router.get(
-  "/my-assigned-repairs",
-  verifyToken,
-  repairController.getMyAssignedRepairs
-);
+// router.get(
+//   "/my-assigned-repairs",
+//   verifyToken,
+//   repairController.getMyAssignedRepairs
+// );
 
 //get all techinicinas
 

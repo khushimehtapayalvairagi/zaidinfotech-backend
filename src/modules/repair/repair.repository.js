@@ -75,10 +75,38 @@ export const deleteRepair = async (id) => {
 };
 
 
+// export const findByTechnician = async (technicianId) => {
+//   return await RepairModel.find({ assignedTechnician: technicianId })
+//     .populate("assignedTechnician", "firstName lastName name email")
+//     .sort({ createdAt: -1 });
+// };
+
 export const findByTechnician = async (technicianId) => {
-  return await RepairModel.find({ assignedTechnician: technicianId })
-    .populate("assignedTechnician", "firstName lastName name email")
+  return await Repair.find({
+    assignedTechnician: technicianId,
+  })
+    .populate(
+      "assignedTechnician",
+      "firstName lastName name email"
+    )
+    .populate("user", "firstName lastName email phone")
+    .populate("product", "name sku")
     .sort({ createdAt: -1 });
+};
+
+
+export const markDelivered = async (id) => {
+  return await Repair.findByIdAndUpdate(
+    id,
+    {
+      status: "Delivered",
+      deliveredAt: new Date(),
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 };
 
 // export const findByTechnician = async (technicianId) => {

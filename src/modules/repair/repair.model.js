@@ -78,6 +78,7 @@ const repairSchema = new mongoose.Schema(
         "Waiting for Parts",
         "Completed",
         "Cancelled",
+        "Delivered",
       ],
       default: "Received",
     },

@@ -32,6 +32,7 @@ const notificationSchema = new mongoose.Schema(
         "REPAIR_COMPLETED",
         "REPAIR_CANCELLED",
         "REPAIR_DELIVERED",
+         "REPAIR_STATUS_CHANGED",
 
         // =========================
         // Common
@@ -83,6 +84,7 @@ const notificationSchema = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false,
+       index: true,
     },
   },
   {
