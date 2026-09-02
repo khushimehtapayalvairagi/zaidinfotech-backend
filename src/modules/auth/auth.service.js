@@ -36,7 +36,10 @@ export const loginService = async (body) => {
     throw new Error("Invalid Password");
   }
 
-  if (!user.isVerified) {
+ if (
+  !["ADMIN", "SUPER_ADMIN"].includes(user.role) &&
+  !user.isVerified
+) {
   throw new Error(
     "Please verify your email before logging in"
   );
