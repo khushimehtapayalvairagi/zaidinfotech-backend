@@ -5,22 +5,64 @@ import * as userService from "./user.service.js";
 // ===============================
 // Create User
 // ===============================
-export const createUser = async (req, res) => {
+// export const createUser = async (req, res) => {
+//   try {
+//     const user = await userService.createUser(req.body);
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "User Created Successfully",
+//       data: user,
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+export const createUser = async (
+  req,
+  res
+) => {
+
   try {
-    const user = await userService.createUser(req.body);
+
+    const user =
+      await userService.createUser(
+        req.body
+      );
 
     return res.status(201).json({
+
       success: true,
-      message: "User Created Successfully",
+
+      message:
+        "User Created Successfully",
+
       data: user,
+
     });
+
   } catch (error) {
+
+    console.error(
+      "CREATE USER ERROR:",
+      error
+    );
+
     return res.status(400).json({
+
       success: false,
+
       message: error.message,
+
     });
   }
 };
+
+
 
 // ===============================
 // Get All Users
@@ -439,11 +481,99 @@ export const resetPassword = async (req, res) => {
 };
 
 
-export const verifyEmail = async (req, res) => {
+// export const verifyEmail = async (req, res) => {
+
+//   try {
+
+//     const { email, otp } = req.body;
+
+//     const user =
+//       await userService.verifyEmail(
+//         email,
+//         otp
+//       );
+
+//     return res.status(200).json({
+
+//       success: true,
+
+//       message: "Email verified successfully",
+
+//       data: {
+//         id: user._id,
+//         email: user.email,
+//         isVerified: user.isVerified
+//       }
+
+//     });
+
+//   } catch (error) {
+
+//     return res.status(400).json({
+
+//       success: false,
+
+//       message: error.message
+
+//     });
+
+//   }
+
+// };
+
+// export const resendEmailVerificationOtp = async (
+//   req,
+//   res
+// ) => {
+
+//   try {
+
+//     const { email } = req.body;
+
+//     const message =
+//       await userService.resendEmailVerificationOtp(
+//         email
+//       );
+
+//     return res.status(200).json({
+
+//       success: true,
+
+//       message
+
+//     });
+
+//   } catch (error) {
+
+//     return res.status(400).json({
+
+//       success: false,
+
+//       message: error.message
+
+//     });
+
+//   }
+
+// };
+
+
+
+// ======================================================
+// VERIFY EMAIL
+// ======================================================
+
+export const verifyEmail = async (
+  req,
+  res
+) => {
 
   try {
 
-    const { email, otp } = req.body;
+    const {
+      email,
+      otp,
+    } = req.body;
 
     const user =
       await userService.verifyEmail(
@@ -455,29 +585,37 @@ export const verifyEmail = async (req, res) => {
 
       success: true,
 
-      message: "Email verified successfully",
+      message:
+        "Email verified successfully",
 
       data: {
         id: user._id,
         email: user.email,
-        isVerified: user.isVerified
-      }
+        isVerified: user.isVerified,
+      },
 
     });
 
   } catch (error) {
 
+    console.error(
+      "VERIFY EMAIL ERROR:",
+      error
+    );
+
     return res.status(400).json({
 
       success: false,
 
-      message: error.message
+      message: error.message,
 
     });
-
   }
-
 };
+
+// ======================================================
+// RESEND VERIFICATION OTP
+// ======================================================
 
 export const resendEmailVerificationOtp = async (
   req,
@@ -486,7 +624,9 @@ export const resendEmailVerificationOtp = async (
 
   try {
 
-    const { email } = req.body;
+    const {
+      email,
+    } = req.body;
 
     const message =
       await userService.resendEmailVerificationOtp(
@@ -497,20 +637,23 @@ export const resendEmailVerificationOtp = async (
 
       success: true,
 
-      message
+      message,
 
     });
 
   } catch (error) {
 
+    console.error(
+      "RESEND VERIFICATION OTP ERROR:",
+      error
+    );
+
     return res.status(400).json({
 
       success: false,
 
-      message: error.message
+      message: error.message,
 
     });
-
   }
-
 };

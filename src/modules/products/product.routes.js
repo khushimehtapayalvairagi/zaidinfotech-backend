@@ -287,6 +287,7 @@ router.get(
     allowRoles(
         "ADMIN",
         "RECEPTIONIST",
+        "SALES",
         "INVENTORY_MANAGER"
     ),
 
@@ -321,6 +322,7 @@ router.get(
     allowRoles(
         "ADMIN",
         "RECEPTIONIST",
+        "SALES",
         "INVENTORY_MANAGER"
     ),
 

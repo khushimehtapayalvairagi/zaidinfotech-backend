@@ -6,7 +6,13 @@ import { ROLES } from "../../common/constants/roles.js";
 
 const router = express.Router();
 
-router.get("/profile", getProfile);
+// router.get("/profile", getProfile);
+
+router.get(
+  "/profile",
+  verifyToken,
+  getProfile
+);
 
 router.post("/login", login);
 router.get(
