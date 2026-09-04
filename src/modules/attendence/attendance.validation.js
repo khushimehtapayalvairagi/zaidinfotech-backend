@@ -46,7 +46,9 @@ export const manualAttendanceValidation = Joi.object({
 
     remark: Joi.string()
         .allow("")
-        .optional()
+        .optional(),
+     checkIn: Joi.date().allow(null).optional(), 
+     checkOut: Joi.date().allow(null).optional(),    
 });
 
 export const biometricAttendanceValidation = Joi.object({

@@ -1,8 +1,28 @@
-
-
 import AvailabilityRequest
     from "./availabilityRequest.model.js";
 
+// ==========================================
+// GET REQUESTS FOR PRODUCT
+// ==========================================
+
+export const getPendingAvailabilityRequestsByProduct =
+  async (productId) => {
+    return await AvailabilityRequest.find({
+      product: productId,
+      status: {
+        $in: [
+          "PENDING",
+          "CONTACTED",
+        ],
+      },
+      isDeleted: false,
+      customer: {
+        $ne: null,
+      },
+    }).select(
+      "_id customer product status"
+    );
+  };
 // ==========================================
 // Create Request
 // ==========================================

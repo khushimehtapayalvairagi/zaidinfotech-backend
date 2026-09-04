@@ -1,89 +1,914 @@
-import * as inventoryService 
-from "./inventory.service.js";
+// import * as inventoryService 
+// from "./inventory.service.js";
 
+
+// import {
+// successResponse,
+// errorResponse
+// }
+// from "../../common/utils/apiResponse.js";
+
+
+// import Inventory from "./inventory.model.js";
+
+// // ======================================================
+// // PUBLIC SHOP INVENTORY
+// // Customer ke liye stock dekhne ka API
+// // ======================================================
+
+// export const getShopInventory = async (req, res) => {
+//     try {
+
+//         const inventory = await Inventory.find({
+//             isDeleted: false
+//         })
+//         .populate({
+//             path: "product",
+//             select: "_id name sku"
+//         })
+//         .lean();
+
+//         const data = inventory.map((item) => {
+
+//             const currentStock =
+//                 Number(item.currentStock || 0);
+
+//             const reservedStock =
+//                 Number(item.reservedStock || 0);
+
+//             const availableStock =
+//                 Math.max(
+//                     currentStock - reservedStock,
+//                     0
+//                 );
+
+//             let status = "OUT_OF_STOCK";
+
+//             if (availableStock > 0) {
+
+//                 if (
+//                     item.minimumStock !== undefined &&
+//                     availableStock <= Number(item.minimumStock)
+//                 ) {
+
+//                     status = "LOW_STOCK";
+
+//                 } else {
+
+//                     status = "IN_STOCK";
+
+//                 }
+
+//             }
+
+//             return {
+
+//                 _id: item._id,
+
+//                 product: item.product,
+
+//                 currentStock,
+
+//                 reservedStock,
+
+//                 availableStock,
+
+//                 minimumStock:
+//                     Number(item.minimumStock || 0),
+
+//                 maximumStock:
+//                     Number(item.maximumStock || 0),
+
+//                 status
+
+//             };
+
+//         });
+
+//         return res.status(200).json({
+
+//             success: true,
+
+//             message:
+//                 "Shop inventory fetched successfully",
+
+//             data
+
+//         });
+
+//     }
+
+//     catch (error) {
+
+//         console.error(
+//             "SHOP INVENTORY ERROR:",
+//             error
+//         );
+
+//         return res.status(500).json({
+
+//             success: false,
+
+//             message:
+//                 "Failed to fetch shop inventory",
+
+//             error:
+//                 error.message
+
+//         });
+
+//     }
+// };
+
+// // ==============================
+// // Create Inventory
+// // ==============================
+
+// export const createInventory = async(req,res)=>{
+
+//     try{
+
+
+//         const inventory =
+//         await inventoryService
+//         .createInventoryService({
+
+//             ...req.body,
+
+//             lastUpdatedBy:req.user.id
+
+//         });
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             201,
+
+//             "Inventory created successfully",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+//     }
+
+// };
+
+
+
+
+
+
+
+// // ==============================
+// // Get All Inventory
+// // ==============================
+
+// export const getAllInventory = async(req,res)=>{
+
+//     try{
+
+
+//         const inventory =
+//         await inventoryService
+//         .getAllInventoryService();
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Inventory fetched successfully",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             500,
+
+//             error.message
+
+//         );
+
+
+//     }
+
+// };
+
+
+
+
+
+
+
+
+// // ==============================
+// // Get Inventory By ID
+// // ==============================
+
+// export const getInventoryById = async(req,res)=>{
+
+
+//     try{
+
+
+//         const inventory =
+//         await inventoryService
+//         .getInventoryByIdService(
+//             req.params.id
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Inventory fetched successfully",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+//         return errorResponse(
+
+//             res,
+
+//             404,
+
+//             error.message
+
+//         );
+
+//     }
+
+
+// };
+
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Update Inventory
+// // ==============================
+
+// export const updateInventory = async(req,res)=>{
+
+
+//     try{
+
+
+//         const inventory =
+//         await inventoryService
+//         .updateInventoryService(
+
+//             req.params.id,
+
+//             {
+
+//             ...req.body,
+
+//             lastUpdatedBy:req.user.id
+
+//             }
+
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Inventory updated successfully",
+
+//             inventory
+
+//         );
+
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+
+//     }
+
+
+// };
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Delete Inventory
+// // ==============================
+
+// export const deleteInventory = async(req,res)=>{
+
+
+//     try{
+
+
+//         await inventoryService
+//         .deleteInventoryService(
+//             req.params.id
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Inventory deleted successfully"
+
+//         );
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+//     }
+
+
+// };
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Add Stock
+// // ==============================
+
+// export const addStock = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {
+
+//             productId,
+
+//             quantity
+
+//         } = req.body;
+
+
+
+
+//         const inventory =
+//         await inventoryService
+//         .addStockService(
+
+//             productId,
+
+//             quantity,
+
+//             req.user.id
+
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Stock added successfully",
+
+//             inventory
+
+//         );
+
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+
+//     }
+
+
+// };
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Remove Stock
+// // ==============================
+
+// export const removeStock = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {
+
+//             productId,
+
+//             quantity
+
+//         } = req.body;
+
+
+
+
+//         const inventory =
+//         await inventoryService
+//         .removeStockService(
+
+//             productId,
+
+//             quantity,
+
+//             req.user.id
+
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Stock removed successfully",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+//     }
+
+// };
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Reserve Stock
+// // Order Pending
+// // ==============================
+
+// export const reserveStock = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {
+
+//             productId,
+
+//             quantity
+
+//         } = req.body;
+
+
+
+//         const inventory =
+//         await inventoryService
+//         .reserveStockService(
+
+//             productId,
+
+//             quantity,
+
+//             req.user.id
+
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Stock reserved successfully",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+
+//     }
+
+
+// };
+
+
+
+
+
+
+
+
+
+// // ==============================
+// // Release Reserved Stock
+// // Order Cancel
+// // ==============================
+
+// export const releaseReservedStock = async(req,res)=>{
+
+
+//     try{
+
+
+//         const {
+
+//             productId,
+
+//             quantity
+
+//         } = req.body;
+
+
+
+//         const inventory =
+//         await inventoryService
+//         .releaseReservedStockService(
+
+//             productId,
+
+//             quantity,
+
+//             req.user.id
+
+//         );
+
+
+
+//         return successResponse(
+
+//             res,
+
+//             200,
+
+//             "Reserved stock released",
+
+//             inventory
+
+//         );
+
+
+//     }
+//     catch(error){
+
+
+//         return errorResponse(
+
+//             res,
+
+//             400,
+
+//             error.message
+
+//         );
+
+
+//     }
+
+
+// };
+
+// // ==============================
+// // Return Stock
+// // ==============================
+
+
+// export const returnStock = async(req,res)=>{
+
+
+// try{
+
+
+// const {
+
+// productId,
+
+// quantity,
+
+// description
+
+// }=req.body;
+
+
+
+
+// const inventory =
+// await inventoryService
+// .returnStockService(
+
+// productId,
+
+// quantity,
+
+// req.user.id,
+
+// description
+
+// );
+
+
+
+
+// return successResponse(
+
+// res,
+
+// 200,
+
+// "Stock returned successfully",
+
+// inventory
+
+// );
+
+
+
+// }
+// catch(error){
+
+
+// return errorResponse(
+
+// res,
+
+// 400,
+
+// error.message
+
+// );
+
+
+// }
+
+
+
+// };
+import * as inventoryService
+    from "./inventory.service.js";
 
 import {
-successResponse,
-errorResponse
-}
-from "../../common/utils/apiResponse.js";
-
+    successResponse,
+    errorResponse
+} from "../../common/utils/apiResponse.js";
 
 import Inventory from "./inventory.model.js";
 
+
 // ======================================================
 // PUBLIC SHOP INVENTORY
-// Customer ke liye stock dekhne ka API
 // ======================================================
 
-export const getShopInventory = async (req, res) => {
+export const getShopInventory = async (
+    req,
+    res
+) => {
+
     try {
 
-        const inventory = await Inventory.find({
-            isDeleted: false
-        })
-        .populate({
-            path: "product",
-            select: "_id name sku"
-        })
-        .lean();
+        const inventory =
+            await Inventory.find({
 
-        const data = inventory.map((item) => {
+                isDeleted: false
 
-            const currentStock =
-                Number(item.currentStock || 0);
+            })
 
-            const reservedStock =
-                Number(item.reservedStock || 0);
+            .populate({
 
-            const availableStock =
-                Math.max(
-                    currentStock - reservedStock,
-                    0
-                );
+                path: "product",
 
-            let status = "OUT_OF_STOCK";
+                select: "_id name sku"
 
-            if (availableStock > 0) {
+            })
+
+            .lean();
+
+
+        const data =
+            inventory.map((item) => {
+
+                const currentStock =
+                    Number(
+                        item.currentStock || 0
+                    );
+
+
+                const reservedStock =
+                    Number(
+                        item.reservedStock || 0
+                    );
+
+
+                const availableStock =
+                    Math.max(
+
+                        currentStock -
+                        reservedStock,
+
+                        0
+
+                    );
+
+
+                let status =
+                    "OUT_OF_STOCK";
+
 
                 if (
-                    item.minimumStock !== undefined &&
-                    availableStock <= Number(item.minimumStock)
+                    availableStock > 0
                 ) {
 
-                    status = "LOW_STOCK";
+                    if (
+                        item.minimumStock !== undefined &&
+                        availableStock <=
+                        Number(
+                            item.minimumStock
+                        )
+                    ) {
 
-                } else {
+                        status =
+                            "LOW_STOCK";
 
-                    status = "IN_STOCK";
+                    }
+                    else {
+
+                        status =
+                            "IN_STOCK";
+
+                    }
 
                 }
 
-            }
 
-            return {
+                return {
 
-                _id: item._id,
+                    _id:
+                        item._id,
 
-                product: item.product,
+                    product:
+                        item.product,
 
-                currentStock,
+                    currentStock,
 
-                reservedStock,
+                    reservedStock,
 
-                availableStock,
+                    availableStock,
 
-                minimumStock:
-                    Number(item.minimumStock || 0),
+                    minimumStock:
+                        Number(
+                            item.minimumStock || 0
+                        ),
 
-                maximumStock:
-                    Number(item.maximumStock || 0),
+                    maximumStock:
+                        Number(
+                            item.maximumStock || 0
+                        ),
 
-                status
+                    status
 
-            };
+                };
 
-        });
+            });
+
 
         return res.status(200).json({
 
@@ -97,13 +922,13 @@ export const getShopInventory = async (req, res) => {
         });
 
     }
-
     catch (error) {
 
         console.error(
             "SHOP INVENTORY ERROR:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -118,27 +943,37 @@ export const getShopInventory = async (req, res) => {
         });
 
     }
+
 };
 
-// ==============================
-// Create Inventory
-// ==============================
 
-export const createInventory = async(req,res)=>{
+// ======================================================
+// CREATE INVENTORY
+// ======================================================
 
-    try{
+export const createInventory =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
 
         const inventory =
-        await inventoryService
-        .createInventoryService({
+            await inventoryService
+                .createInventoryService({
 
-            ...req.body,
+                    ...req.body,
 
-            lastUpdatedBy:req.user.id
+                    lastUpdatedBy:
+                        userId
 
-        });
-
+                });
 
 
         return successResponse(
@@ -153,9 +988,8 @@ export const createInventory = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
+    catch (error) {
 
         return errorResponse(
 
@@ -172,24 +1006,21 @@ export const createInventory = async(req,res)=>{
 };
 
 
+// ======================================================
+// GET ALL INVENTORY
+// ======================================================
 
+export const getAllInventory =
+async (
+    req,
+    res
+) => {
 
-
-
-
-// ==============================
-// Get All Inventory
-// ==============================
-
-export const getAllInventory = async(req,res)=>{
-
-    try{
-
+    try {
 
         const inventory =
-        await inventoryService
-        .getAllInventoryService();
-
+            await inventoryService
+                .getAllInventoryService();
 
 
         return successResponse(
@@ -204,10 +1035,8 @@ export const getAllInventory = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
-
+    catch (error) {
 
         return errorResponse(
 
@@ -219,34 +1048,28 @@ export const getAllInventory = async(req,res)=>{
 
         );
 
-
     }
 
 };
 
 
+// ======================================================
+// GET INVENTORY BY ID
+// ======================================================
 
+export const getInventoryById =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-// ==============================
-// Get Inventory By ID
-// ==============================
-
-export const getInventoryById = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         const inventory =
-        await inventoryService
-        .getInventoryByIdService(
-            req.params.id
-        );
-
+            await inventoryService
+                .getInventoryByIdService(
+                    req.params.id
+                );
 
 
         return successResponse(
@@ -261,9 +1084,8 @@ export const getInventoryById = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
+    catch (error) {
 
         return errorResponse(
 
@@ -277,44 +1099,42 @@ export const getInventoryById = async(req,res)=>{
 
     }
 
-
 };
 
 
+// ======================================================
+// UPDATE INVENTORY
+// ======================================================
 
+export const updateInventory =
+async (
+    req,
+    res
+) => {
 
+    try {
 
-
-
-
-
-
-// ==============================
-// Update Inventory
-// ==============================
-
-export const updateInventory = async(req,res)=>{
-
-
-    try{
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
 
         const inventory =
-        await inventoryService
-        .updateInventoryService(
+            await inventoryService
+                .updateInventoryService(
 
-            req.params.id,
+                    req.params.id,
 
-            {
+                    {
 
-            ...req.body,
+                        ...req.body,
 
-            lastUpdatedBy:req.user.id
+                        lastUpdatedBy:
+                            userId
 
-            }
+                    }
 
-        );
-
+                );
 
 
         return successResponse(
@@ -329,11 +1149,8 @@ export const updateInventory = async(req,res)=>{
 
         );
 
-
-
     }
-    catch(error){
-
+    catch (error) {
 
         return errorResponse(
 
@@ -345,35 +1162,27 @@ export const updateInventory = async(req,res)=>{
 
         );
 
-
     }
-
 
 };
 
 
+// ======================================================
+// DELETE INVENTORY
+// ======================================================
 
+export const deleteInventory =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-
-// ==============================
-// Delete Inventory
-// ==============================
-
-export const deleteInventory = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         await inventoryService
-        .deleteInventoryService(
-            req.params.id
-        );
-
+            .deleteInventoryService(
+                req.params.id
+            );
 
 
         return successResponse(
@@ -386,10 +1195,8 @@ export const deleteInventory = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
-
+    catch (error) {
 
         return errorResponse(
 
@@ -403,50 +1210,77 @@ export const deleteInventory = async(req,res)=>{
 
     }
 
-
 };
 
 
+// ======================================================
+// ADD STOCK
+// ======================================================
 
+export const addStock =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-
-// ==============================
-// Add Stock
-// ==============================
-
-export const addStock = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         const {
-
             productId,
-
             quantity
-
         } = req.body;
 
 
+        if (!productId) {
+
+            return errorResponse(
+
+                res,
+
+                400,
+
+                "Product ID is required"
+
+            );
+
+        }
+
+
+        if (
+            quantity === undefined ||
+            quantity === null ||
+            quantity === ""
+        ) {
+
+            return errorResponse(
+
+                res,
+
+                400,
+
+                "Quantity is required"
+
+            );
+
+        }
+
+
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
 
         const inventory =
-        await inventoryService
-        .addStockService(
+            await inventoryService
+                .addStockService(
 
-            productId,
+                    productId,
 
-            quantity,
+                    quantity,
 
-            req.user.id
+                    userId
 
-        );
-
+                );
 
 
         return successResponse(
@@ -461,10 +1295,13 @@ export const addStock = async(req,res)=>{
 
         );
 
-
-
     }
-    catch(error){
+    catch (error) {
+
+        console.error(
+            "ADD STOCK ERROR:",
+            error
+        );
 
 
         return errorResponse(
@@ -477,53 +1314,45 @@ export const addStock = async(req,res)=>{
 
         );
 
-
     }
-
 
 };
 
 
+// ======================================================
+// REMOVE STOCK
+// ======================================================
 
+export const removeStock =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-
-// ==============================
-// Remove Stock
-// ==============================
-
-export const removeStock = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         const {
-
             productId,
-
             quantity
-
         } = req.body;
 
 
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
 
         const inventory =
-        await inventoryService
-        .removeStockService(
+            await inventoryService
+                .removeStockService(
 
-            productId,
+                    productId,
 
-            quantity,
+                    quantity,
 
-            req.user.id
+                    userId
 
-        );
-
+                );
 
 
         return successResponse(
@@ -538,9 +1367,8 @@ export const removeStock = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
+    catch (error) {
 
         return errorResponse(
 
@@ -557,46 +1385,40 @@ export const removeStock = async(req,res)=>{
 };
 
 
+// ======================================================
+// RESERVE STOCK
+// ======================================================
 
+export const reserveStock =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-
-// ==============================
-// Reserve Stock
-// Order Pending
-// ==============================
-
-export const reserveStock = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         const {
-
             productId,
-
             quantity
-
         } = req.body;
 
 
+        const userId =
+            req.user?.id ||
+            req.user?._id;
+
 
         const inventory =
-        await inventoryService
-        .reserveStockService(
+            await inventoryService
+                .reserveStockService(
 
-            productId,
+                    productId,
 
-            quantity,
+                    quantity,
 
-            req.user.id
+                    userId
 
-        );
-
+                );
 
 
         return successResponse(
@@ -611,10 +1433,8 @@ export const reserveStock = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
-
+    catch (error) {
 
         return errorResponse(
 
@@ -626,53 +1446,45 @@ export const reserveStock = async(req,res)=>{
 
         );
 
-
     }
-
 
 };
 
 
+// ======================================================
+// RELEASE RESERVED STOCK
+// ======================================================
 
+export const releaseReservedStock =
+async (
+    req,
+    res
+) => {
 
-
-
-
-
-
-// ==============================
-// Release Reserved Stock
-// Order Cancel
-// ==============================
-
-export const releaseReservedStock = async(req,res)=>{
-
-
-    try{
-
+    try {
 
         const {
-
             productId,
-
             quantity
-
         } = req.body;
 
 
+        const userId =
+            req.user?.id ||
+            req.user?._id;
+
 
         const inventory =
-        await inventoryService
-        .releaseReservedStockService(
+            await inventoryService
+                .releaseReservedStockService(
 
-            productId,
+                    productId,
 
-            quantity,
+                    quantity,
 
-            req.user.id
+                    userId
 
-        );
-
+                );
 
 
         return successResponse(
@@ -687,10 +1499,8 @@ export const releaseReservedStock = async(req,res)=>{
 
         );
 
-
     }
-    catch(error){
-
+    catch (error) {
 
         return errorResponse(
 
@@ -702,84 +1512,75 @@ export const releaseReservedStock = async(req,res)=>{
 
         );
 
-
     }
-
 
 };
 
-// ==============================
-// Return Stock
-// ==============================
+
+// ======================================================
+// RETURN STOCK
+// ======================================================
+
+export const returnStock =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            productId,
+            quantity,
+            description
+        } = req.body;
 
 
-export const returnStock = async(req,res)=>{
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
 
-try{
+        const inventory =
+            await inventoryService
+                .returnStockService(
+
+                    productId,
+
+                    quantity,
+
+                    userId,
+
+                    description
+
+                );
 
 
-const {
+        return successResponse(
 
-productId,
+            res,
 
-quantity,
+            200,
 
-description
+            "Stock returned successfully",
 
-}=req.body;
+            inventory
 
+        );
 
+    }
+    catch (error) {
 
+        return errorResponse(
 
-const inventory =
-await inventoryService
-.returnStockService(
+            res,
 
-productId,
+            400,
 
-quantity,
+            error.message
 
-req.user.id,
+        );
 
-description
-
-);
-
-
-
-
-return successResponse(
-
-res,
-
-200,
-
-"Stock returned successfully",
-
-inventory
-
-);
-
-
-
-}
-catch(error){
-
-
-return errorResponse(
-
-res,
-
-400,
-
-error.message
-
-);
-
-
-}
-
-
+    }
 
 };
