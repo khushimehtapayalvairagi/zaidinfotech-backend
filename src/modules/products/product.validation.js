@@ -125,7 +125,76 @@ export const createProductValidation = Joi.object({
     // =================================================
 
     specifications: Joi.object()
-        .default({})
+        .default({}),
+        // =====================================================
+// RENTAL
+// =====================================================
+
+rental: Joi.object({
+
+    isAvailableForRent:
+        Joi.boolean()
+            .required(),
+
+    monthlyRent:
+        Joi.number()
+            .min(0)
+            .when("isAvailableForRent", {
+                is: true,
+                then: Joi.required(),
+                otherwise: Joi.optional()
+            }),
+
+    securityDeposit:
+        Joi.number()
+            .min(0)
+            .when("isAvailableForRent", {
+                is: true,
+                then: Joi.required(),
+                otherwise: Joi.optional()
+            }),
+
+    minimumRentalMonths:
+        Joi.number()
+            .integer()
+            .min(1)
+            .when("isAvailableForRent", {
+                is: true,
+                then: Joi.required(),
+                otherwise: Joi.optional()
+            }),
+
+    gst:
+        Joi.number()
+            .min(0)
+            .max(100)
+            .default(0),
+
+    availableQuantity:
+        Joi.number()
+            .integer()
+            .min(0)
+            .required(),
+
+    basicSoftwareInstalled:
+        Joi.boolean()
+            .default(false),
+
+    includedItems:
+        Joi.array()
+            .items(
+                Joi.string().trim()
+            )
+            .default([]),
+
+    notes:
+        Joi.string()
+            .allow("")
+            .default("")
+
+})
+
+        
 
 });
 
@@ -322,6 +391,45 @@ export const updateProductValidation = Joi.object({
     // SPECIFICATIONS
     // =================================================
 
-    specifications: Joi.object()
+    specifications: Joi.object(),
+    // =================================================
+// RENTAL
+// =================================================
+
+// =====================================================
+// RENTAL
+// =====================================================
+
+rental: Joi.object({
+
+    isAvailableForRent: Joi.boolean(),
+
+    monthlyRent: Joi.number()
+        .min(0),
+
+    securityDeposit: Joi.number()
+        .min(0),
+
+    minimumRentalMonths: Joi.number()
+        .integer()
+        .min(1),
+
+    gst: Joi.number()
+        .min(0)
+        .max(100),
+
+    availableQuantity: Joi.number()
+        .integer()
+        .min(0),
+
+    basicSoftwareInstalled: Joi.boolean(),
+
+    includedItems: Joi.array()
+        .items(Joi.string().trim()),
+
+    notes: Joi.string()
+        .allow("")
+
+}),
 
 });

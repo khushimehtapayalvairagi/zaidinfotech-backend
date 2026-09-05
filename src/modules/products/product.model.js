@@ -463,7 +463,14 @@ const productSchema =
                 default: {}
 
             },
+          rental: {
+    isAvailableForRent: {
+        type: Boolean,
+        default: false
+    },
 
+ 
+},
 
             // =================================================
             // SEO

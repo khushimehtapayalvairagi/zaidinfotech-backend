@@ -628,6 +628,45 @@ if (
     }
 
 }
+       if (
+    typeof req.body.rental === "string"
+) {
+
+    if (
+        req.body.rental.trim() === ""
+    ) {
+
+        req.body.rental = {};
+
+    } else {
+
+        try {
+
+            req.body.rental =
+                JSON.parse(
+                    req.body.rental
+                );
+
+        } catch (error) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid rental JSON",
+
+                errors: [
+                    "rental must contain valid JSON"
+                ]
+
+            });
+
+        }
+
+    }
+
+}
 
         // =================================================
         // SPECIFICATIONS
@@ -1053,8 +1092,18 @@ export const updateProduct = async (
                 );
 
         }
+        if (
+    typeof req.body.rental === "string"
+) {
 
+    req.body.rental =
+        JSON.parse(
+            req.body.rental
+        );
 
+}
+
+              
         const product =
             await updateProductService(
 

@@ -26,6 +26,8 @@ import couponRoutes from "./modules/coupons/coupon.routes.js";
 import reviewRoutes from "./modules/review/review.routes.js";
 import newRepair from './modules/repair/repair.routes.js'
 import repairInventry from "./modules/repair/repairparts/repairParts.routes.js"
+import rentalRoutes from "./modules/rental/rental.routes.js";
+
 
 import repairserviceRoutes from './modules/repair/services/service.routes.js'
 import leaveRoutes from "./modules/leave/leave.routes.js";
@@ -91,5 +93,6 @@ app.use("/api/newRepair", newRepair)
 app.use("/api/repair-service", repairserviceRoutes)
 app.use("/api/repairInventory", repairInventry)
 app.use("/api/availability-requests",availabilityRequestRoutes);
+app.use("/api/rentals",rentalRoutes);
 
 export default app;

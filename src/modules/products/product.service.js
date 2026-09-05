@@ -14,6 +14,7 @@ import {
 import Category from "../categories/category.model.js";
 
 import Brand from "../brands/brand.model.js";
+import RentalProduct from "../rental/rentalProduct.model.js";
 
 import Inventory from "../inventory/inventory.model.js";
 
@@ -321,6 +322,10 @@ export const createProductService = async (
             sku,
 
             images,
+              rental: {
+        isAvailableForRent:
+            data.rental?.isAvailableForRent === true
+    },
 
             createdBy:
                 userId
@@ -428,8 +433,92 @@ if (data.productType === "REFURBISHED") {
         const product =
             await createProductDB(
                 productData
-            );
+            );// =====================================================
+// CREATE RENTAL PRODUCT
+// =====================================================
 
+if (data.rental?.isAvailableForRent === true) {
+
+    await RentalProduct.create({
+
+        productId:
+            product._id,
+
+        isAvailableForRent:
+            true,
+
+        monthlyRent:
+            Number(data.rental.monthlyRent ?? 0),
+
+        securityDeposit:
+            Number(data.rental.securityDeposit ?? 0),
+
+        minimumRentalMonths:
+            Number(data.rental.minimumRentalMonths ?? 1),
+
+        gst:
+            Number(data.rental.gst ?? 0),
+
+        availableQuantity:
+            Number(data.rental.availableQuantity ?? 0),
+
+        basicSoftwareInstalled:
+            data.rental.basicSoftwareInstalled ?? false,
+
+        includedItems:
+            data.rental.includedItems ?? [],
+
+        notes:
+            data.rental.notes ?? "",
+
+        createdBy:
+            userId
+
+    });
+
+}
+            // =================================================
+// CREATE RENTAL PRODUCT
+// =================================================
+if (data.rental?.isAvailableForRent) {
+
+    await RentalProduct.create({
+        productId: product._id,
+
+        isAvailableForRent: true,
+
+        monthlyRent:
+            Number(data.rental.monthlyRent || 0),
+
+        securityDeposit:
+            Number(data.rental.securityDeposit || 0),
+
+        minimumRentalMonths:
+            Number(data.rental.minimumRentalMonths || 3),
+
+        gst:
+            Number(data.rental.gst || 0),
+
+        availableQuantity:
+            Number(data.rental.availableQuantity || 0),
+
+        basicSoftwareInstalled:
+            data.rental.basicSoftwareInstalled ?? true,
+
+        includedItems:
+            data.rental.includedItems || [
+                "LAPTOP",
+                "CHARGING_ADAPTER",
+                "BACKPACK"
+            ],
+
+        notes:
+            data.rental.notes || "",
+
+        createdBy:
+            userId
+    });
+}
 
         // =================================================
         // AUTO CREATE INVENTORY
