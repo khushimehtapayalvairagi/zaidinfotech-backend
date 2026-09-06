@@ -5,9 +5,53 @@ import {
     getAllRentalsService,
     approveRentalService,
     rejectRentalService,
-    requestReturnService,
-    markRentalReturnedService
+    markDepositReceivedService,
+    markRentalReturnedService,
+    allocateRentalService
 } from "./rental.service.js";
+
+
+// =====================================================
+// RECEPTIONIST ALLOCATE RENTAL
+// =====================================================
+
+export const allocateRentalController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const rental =
+            await allocateRentalService(
+                req.params.id,
+                req.user._id
+            );
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Rental product allocated successfully",
+
+            data: rental
+
+        });
+
+    } catch (error) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};
 
 
 // =====================================================
@@ -132,7 +176,7 @@ export const getRentalController = async (
 
 
 // =====================================================
-// ADMIN - ALL RENTALS
+// ALL RENTALS
 // =====================================================
 
 export const getAllRentalsController = async (
@@ -169,7 +213,7 @@ export const getAllRentalsController = async (
 
 
 // =====================================================
-// ADMIN APPROVE
+// APPROVE RENTAL
 // =====================================================
 
 export const approveRentalController = async (
@@ -212,7 +256,7 @@ export const approveRentalController = async (
 
 
 // =====================================================
-// ADMIN REJECT
+// REJECT RENTAL
 // =====================================================
 
 export const rejectRentalController = async (
@@ -255,10 +299,10 @@ export const rejectRentalController = async (
 
 
 // =====================================================
-// CUSTOMER RETURN REQUEST
+// RECEPTIONIST - DEPOSIT RECEIVED
 // =====================================================
 
-export const requestReturnController = async (
+export const markDepositReceivedController = async (
     req,
     res
 ) => {
@@ -266,9 +310,10 @@ export const requestReturnController = async (
     try {
 
         const rental =
-            await requestReturnService(
+            await markDepositReceivedService(
                 req.params.id,
-                req.user._id
+                req.user._id,
+                req.body.paymentId || null
             );
 
         return res.status(200).json({
@@ -276,7 +321,7 @@ export const requestReturnController = async (
             success: true,
 
             message:
-                "Return request submitted",
+                "Security deposit received. Rental is ready for allocation.",
 
             data: rental
 
@@ -298,7 +343,7 @@ export const requestReturnController = async (
 
 
 // =====================================================
-// ADMIN MARK RETURNED
+// RECEPTIONIST - RECEIVE RETURN
 // =====================================================
 
 export const markRentalReturnedController = async (
@@ -319,7 +364,7 @@ export const markRentalReturnedController = async (
             success: true,
 
             message:
-                "Rental marked for settlement",
+                "Rental returned successfully. Settlement is pending.",
 
             data: rental
 

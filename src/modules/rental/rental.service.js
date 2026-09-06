@@ -1,4 +1,3 @@
-import Rental from "./rental.model.js";
 import RentalProduct from "./rentalProduct.model.js";
 
 import {
@@ -25,7 +24,7 @@ const generateRentalNumber = () => {
 
 
 // =====================================================
-// CREATE RENTAL REQUEST
+// CREATE RENTAL
 // =====================================================
 
 export const createRentalService = async (
@@ -46,7 +45,6 @@ export const createRentalService = async (
 
     }
 
-
     if (
         !rentalProduct.isAvailableForRent ||
         rentalProduct.status !== "ACTIVE"
@@ -58,7 +56,6 @@ export const createRentalService = async (
 
     }
 
-
     if (
         rentalProduct.availableQuantity <= 0
     ) {
@@ -69,14 +66,13 @@ export const createRentalService = async (
 
     }
 
-
     const rentalMonths =
         Number(data.rentalMonths);
 
-
     if (
         !rentalMonths ||
-        rentalMonths < rentalProduct.minimumRentalMonths
+        rentalMonths <
+        rentalProduct.minimumRentalMonths
     ) {
 
         throw new Error(
@@ -84,7 +80,6 @@ export const createRentalService = async (
         );
 
     }
-
 
     if (
         !["INDIVIDUAL", "COMPANY"]
@@ -96,7 +91,6 @@ export const createRentalService = async (
         );
 
     }
-
 
     const rental = await createRentalDB({
 
@@ -138,7 +132,6 @@ export const createRentalService = async (
             data.notes || ""
 
     });
-
 
     return rental;
 
@@ -187,7 +180,7 @@ export const getRentalService = async (
 
 
 // =====================================================
-// ADMIN - ALL RENTALS
+// ALL RENTALS
 // =====================================================
 
 export const getAllRentalsService = async () => {
@@ -198,12 +191,12 @@ export const getAllRentalsService = async () => {
 
 
 // =====================================================
-// ADMIN APPROVE RENTAL
+// APPROVE RENTAL
 // =====================================================
 
 export const approveRentalService = async (
     rentalId,
-    adminId
+    receptionistId
 ) => {
 
     const rental =
@@ -219,7 +212,6 @@ export const approveRentalService = async (
 
     }
 
-
     if (
         rental.status !== "PENDING" &&
         rental.status !== "DOCUMENT_VERIFICATION"
@@ -231,21 +223,20 @@ export const approveRentalService = async (
 
     }
 
-
     const updatedRental =
         await updateRentalDB(
             rentalId,
             {
-                status: "DEPOSIT_PENDING",
+                status:
+                    "DEPOSIT_PENDING",
 
                 approvedBy:
-                    adminId,
+                    receptionistId,
 
                 approvedAt:
                     new Date()
             }
         );
-
 
     return updatedRental;
 
@@ -274,13 +265,15 @@ export const rejectRentalService = async (
 
     }
 
-
     return await updateRentalDB(
         rentalId,
         {
-            status: "REJECTED",
+            status:
+                "REJECTED",
+
             rejectionReason:
-                reason || "Rental rejected"
+                reason ||
+                "Rental rejected"
         }
     );
 
@@ -288,12 +281,19 @@ export const rejectRentalService = async (
 
 
 // =====================================================
-// REQUEST RETURN
+// DEPOSIT RECEIVED
+// =====================================================
+// Security deposit physically received by receptionist
+//
+// DEPOSIT_PENDING
+//        ↓
+// READY_FOR_ALLOCATION
 // =====================================================
 
-export const requestReturnService = async (
+export const markDepositReceivedService = async (
     rentalId,
-    customerId
+    receptionistId,
+    paymentId = null
 ) => {
 
     const rental =
@@ -309,40 +309,53 @@ export const requestReturnService = async (
 
     }
 
-
     if (
-        rental.customerId._id.toString() !==
-        customerId.toString()
+        rental.status !== "DEPOSIT_PENDING"
     ) {
 
         throw new Error(
-            "Unauthorized"
+            "Security deposit is not pending"
         );
 
     }
 
+    const updateData = {
 
-    if (rental.status !== "ACTIVE") {
+        status:
+            "READY_FOR_ALLOCATION"
 
-        throw new Error(
-            "Rental is not active"
-        );
+    };
+
+    if (paymentId) {
+
+        updateData.securityDepositPaymentId =
+            paymentId;
 
     }
 
+    const updatedRental =
+        await updateRentalDB(
+            rentalId,
+            updateData
+        );
 
-    return await updateRentalDB(
-        rentalId,
-        {
-            status: "RETURN_REQUESTED"
-        }
-    );
+    return updatedRental;
 
 };
 
 
 // =====================================================
-// ADMIN MARK RETURNED
+// RECEIVE RENTAL RETURN
+// =====================================================
+// Offline rental flow:
+//
+// Customer physically returns product
+//              ↓
+// Receptionist receives product
+//              ↓
+// Condition check
+//              ↓
+// Settlement Pending
 // =====================================================
 
 export const markRentalReturnedService = async (
@@ -364,16 +377,91 @@ export const markRentalReturnedService = async (
     }
 
 
+    // =================================================
+    // ONLY ACTIVE RENTAL CAN BE RETURNED
+    // =================================================
+
+    if (
+        rental.status !== "ACTIVE"
+    ) {
+
+        throw new Error(
+            "Only active rental can be returned"
+        );
+
+    }
+
+
+    // =================================================
+    // RETURN CONDITION
+    // =================================================
+
+    const allowedConditions = [
+        "GOOD",
+        "DAMAGED",
+        "HEAVILY_DAMAGED",
+        "MISSING"
+    ];
+
+    if (
+        !allowedConditions.includes(
+            data.returnCondition
+        )
+    ) {
+
+        throw new Error(
+            "Invalid return condition"
+        );
+
+    }
+
+
+    // =================================================
+    // DAMAGE CHARGES
+    // =================================================
+
     const damageCharges =
-        Number(data.damageCharges || 0);
+        Number(
+            data.damageCharges || 0
+        );
 
     const otherDeductions =
-        Number(data.otherDeductions || 0);
+        Number(
+            data.otherDeductions || 0
+        );
 
+
+    if (damageCharges < 0) {
+
+        throw new Error(
+            "Damage charges cannot be negative"
+        );
+
+    }
+
+
+    if (otherDeductions < 0) {
+
+        throw new Error(
+            "Other deductions cannot be negative"
+        );
+
+    }
+
+
+    // =================================================
+    // SECURITY DEPOSIT
+    // =================================================
 
     const deposit =
-        rental.securityDeposit;
+        Number(
+            rental.securityDeposit || 0
+        );
 
+
+    // =================================================
+    // REFUND CALCULATION
+    // =================================================
 
     const refundAmount =
         Math.max(
@@ -383,6 +471,10 @@ export const markRentalReturnedService = async (
             0
         );
 
+
+    // =================================================
+    // UPDATE RENTAL
+    // =================================================
 
     const updated =
         await updateRentalDB(
@@ -412,18 +504,153 @@ export const markRentalReturnedService = async (
         );
 
 
-    // Rental quantity वापस available
+    // =================================================
+    // UPDATE RENTAL INVENTORY
+    // =================================================
+    //
+    // Product returned:
+    //
+    // availableQuantity + 1
+    // rentedQuantity - 1
+    //
+    // =================================================
 
     await RentalProduct.findByIdAndUpdate(
         rental.rentalProductId,
         {
             $inc: {
-                availableQuantity: 1
+
+                availableQuantity: 1,
+
+                rentedQuantity: -1
+
             }
         }
     );
 
 
     return updated;
+
+};
+
+
+// =====================================================
+// ALLOCATE RENTAL PRODUCT
+// =====================================================
+
+export const allocateRentalService = async (
+    rentalId,
+    receptionistId
+) => {
+
+    const rental =
+        await getRentalByIdDB(
+            rentalId
+        );
+
+    if (!rental) {
+
+        throw new Error(
+            "Rental not found"
+        );
+
+    }
+
+
+    // =================================================
+    // READY FOR ALLOCATION
+    // =================================================
+
+    if (
+        rental.status !==
+        "READY_FOR_ALLOCATION"
+    ) {
+
+        throw new Error(
+            "Rental is not ready for allocation"
+        );
+
+    }
+
+
+    // =================================================
+    // FIND RENTAL PRODUCT
+    // =================================================
+
+    const rentalProduct =
+        await RentalProduct.findById(
+            rental.rentalProductId
+        );
+
+    if (!rentalProduct) {
+
+        throw new Error(
+            "Rental product not found"
+        );
+
+    }
+
+
+    // =================================================
+    // AVAILABLE QUANTITY
+    // =================================================
+
+    if (
+        rentalProduct.availableQuantity <= 0
+    ) {
+
+        throw new Error(
+            "No product available for allocation"
+        );
+
+    }
+
+
+    // =================================================
+    // UPDATE INVENTORY
+    // =================================================
+
+    await RentalProduct.findByIdAndUpdate(
+        rentalProduct._id,
+        {
+            $inc: {
+
+                availableQuantity: -1,
+
+                rentedQuantity: 1
+
+            }
+        }
+    );
+
+
+    // =================================================
+    // START RENTAL
+    // =================================================
+
+    const startDate =
+        new Date();
+
+    const updatedRental =
+        await updateRentalDB(
+            rentalId,
+            {
+
+                status:
+                    "ACTIVE",
+
+                allocatedAt:
+                    startDate,
+
+                allocatedBy:
+                    receptionistId,
+
+                startDate
+
+            }
+        );
+
+
+    return updatedRental;
 
 };

@@ -164,6 +164,16 @@ const notificationSchema = new mongoose.Schema(
         "REPAIR_DELIVERED",
         "REPAIR_STATUS_CHANGED",
 
+            // ======================================
+// RENTAL
+// ======================================
+
+"RENTAL_CREATED",
+"RENTAL_APPROVED",
+"RENTAL_REJECTED",
+"RENTAL_RETURN_REQUESTED",
+"RENTAL_RETURNED",
+"RENTAL_OVERDUE",
         // ======================================
         // COMMON
         // ======================================
@@ -207,20 +217,21 @@ const notificationSchema = new mongoose.Schema(
     // RELATED MODEL
     // ==========================================
 
-    relatedModel: {
-      type: String,
+ relatedModel: {
+    type: String,
 
-      enum: [
+    enum: [
         "Order",
         "Product",
         "Repair",
         "Inventory",
         "AvailabilityRequest",
+        "Rental",
         null,
-      ],
+    ],
 
-      default: null,
-    },
+    default: null,
+},
 
     // ==========================================
     // READ STATUS

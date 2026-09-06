@@ -49,6 +49,17 @@ const rentalProductSchema = new mongoose.Schema(
             default: 0,
             min: 0
         },
+        totalQuantity: {
+    type: Number,
+    default: 0,
+    min: 0
+},
+
+rentedQuantity: {
+    type: Number,
+    default: 0,
+    min: 0
+},
 
         basicSoftwareInstalled: {
             type: Boolean,

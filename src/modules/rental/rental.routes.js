@@ -13,15 +13,18 @@ import {
     getAllRentalsController,
     approveRentalController,
     rejectRentalController,
-    requestReturnController,
-    markRentalReturnedController
+    markDepositReceivedController,
+    markRentalReturnedController,
+    allocateRentalController
 } from "./rental.controller.js";
 
+import {
+    getRentalInventoryController
+} from "./rentalInventory.controller.js";
 
-// IMPORTANT:
-// apne project ka existing auth middleware use karo
-import { verifyToken } from "../../common/middleware/auth.middleware.js";
-
+import {
+    verifyToken
+} from "../../common/middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -59,7 +62,19 @@ router.put(
 
 
 // =====================================================
-// CUSTOMER - CREATE RENTAL
+// ADMIN - RENTAL INVENTORY
+// IMPORTANT: /inventory MUST COME BEFORE /:id
+// =====================================================
+
+router.get(
+    "/inventory",
+    verifyToken,
+    getRentalInventoryController
+);
+
+
+// =====================================================
+// CREATE RENTAL
 // =====================================================
 
 router.post(
@@ -81,18 +96,7 @@ router.get(
 
 
 // =====================================================
-// CUSTOMER / ADMIN - SINGLE RENTAL
-// =====================================================
-
-router.get(
-    "/:id",
-    verifyToken,
-    getRentalController
-);
-
-
-// =====================================================
-// ADMIN - ALL RENTALS
+// ALL RENTALS
 // =====================================================
 
 router.get(
@@ -103,7 +107,19 @@ router.get(
 
 
 // =====================================================
-// ADMIN - APPROVE
+// SINGLE RENTAL
+// =====================================================
+
+router.get(
+    "/:id",
+    verifyToken,
+    getRentalController
+);
+
+
+// =====================================================
+// APPROVE RENTAL
+// PENDING → DEPOSIT_PENDING
 // =====================================================
 
 router.patch(
@@ -114,7 +130,7 @@ router.patch(
 
 
 // =====================================================
-// ADMIN - REJECT
+// REJECT RENTAL
 // =====================================================
 
 router.patch(
@@ -125,22 +141,42 @@ router.patch(
 
 
 // =====================================================
-// CUSTOMER - RETURN REQUEST
+// SECURITY DEPOSIT RECEIVED
+// DEPOSIT_PENDING → READY_FOR_ALLOCATION
 // =====================================================
 
 router.patch(
-    "/:id/return-request",
+    "/:id/deposit-received",
     verifyToken,
-    requestReturnController
+    markDepositReceivedController
 );
 
 
 // =====================================================
-// ADMIN - MARK RETURNED
+// ALLOCATE PHYSICAL PRODUCT
+// READY_FOR_ALLOCATION → ACTIVE
+//
+// availableQuantity - 1
+// rentedQuantity + 1
 // =====================================================
 
 router.patch(
-    "/:id/returned",
+    "/:id/allocate",
+    verifyToken,
+    allocateRentalController
+);
+
+
+// =====================================================
+// RECEIVE PHYSICAL RETURN
+// ACTIVE → SETTLEMENT_PENDING
+//
+// availableQuantity + 1
+// rentedQuantity - 1
+// =====================================================
+
+router.patch(
+    "/:id/return",
     verifyToken,
     markRentalReturnedController
 );
