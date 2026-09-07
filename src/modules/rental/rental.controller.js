@@ -302,43 +302,30 @@ export const rejectRentalController = async (
 // RECEPTIONIST - DEPOSIT RECEIVED
 // =====================================================
 
-export const markDepositReceivedController = async (
-    req,
-    res
-) => {
-
+export const markDepositReceivedController = async (req, res) => {
     try {
 
-        const rental =
+        const result =
             await markDepositReceivedService(
                 req.params.id,
-                req.user._id,
-                req.body.paymentId || null
+                req.body.paymentMethod
             );
 
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Security deposit received. Rental is ready for allocation.",
-
-            data: rental
-
+            data: result
         });
 
     } catch (error) {
 
         return res.status(400).json({
-
             success: false,
-
             message: error.message
-
         });
 
     }
-
 };
 
 

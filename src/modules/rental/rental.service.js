@@ -1,4 +1,5 @@
 import RentalProduct from "./rentalProduct.model.js";
+import { createPayment } from "../payments/payment.service.js";
 
 import {
     createRentalDB,
@@ -290,10 +291,21 @@ export const rejectRentalService = async (
 // READY_FOR_ALLOCATION
 // =====================================================
 
+// =====================================================
+// DEPOSIT RECEIVED
+// =====================================================
+// Security deposit physically received
+//
+// DEPOSIT_PENDING
+//        ↓
+// Create Payment
+//        ↓
+// READY_FOR_ALLOCATION
+// =====================================================
+
 export const markDepositReceivedService = async (
     rentalId,
-    receptionistId,
-    paymentId = null
+    paymentMethod = "CASH"
 ) => {
 
     const rental =
@@ -319,27 +331,79 @@ export const markDepositReceivedService = async (
 
     }
 
-    const updateData = {
 
-        status:
-            "READY_FOR_ALLOCATION"
+    // =================================================
+    // CREATE SECURITY DEPOSIT PAYMENT
+    // =================================================
 
-    };
+    const payment =
+        await createPayment({
 
-    if (paymentId) {
+            user:
+                rental.customerId,
 
-        updateData.securityDepositPaymentId =
-            paymentId;
+            paymentFor:
+                "RENTAL",
 
-    }
+            paymentType:
+                "SECURITY_DEPOSIT",
+
+            referenceId:
+                rental._id,
+
+            amount:
+                rental.securityDeposit,
+
+            paymentMethod,
+
+            paymentStatus:
+                "SUCCESS",
+
+            paymentDate:
+                new Date(),
+
+            paidAt:
+                new Date(),
+
+            gateway:
+                "",
+
+            transactionId:
+                "",
+
+            gatewayPaymentId:
+                ""
+
+        });
+
+
+    // =================================================
+    // UPDATE RENTAL
+    // =================================================
 
     const updatedRental =
         await updateRentalDB(
             rentalId,
-            updateData
+            {
+
+                status:
+                    "READY_FOR_ALLOCATION",
+
+                securityDepositPaymentId:
+                    payment._id
+
+            }
         );
 
-    return updatedRental;
+
+    return {
+
+        rental:
+            updatedRental,
+
+        payment
+
+    };
 
 };
 

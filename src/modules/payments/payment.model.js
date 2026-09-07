@@ -25,7 +25,17 @@ const paymentSchema = new mongoose.Schema(
             enum: Object.values(PAYMENT_FOR),
             required: true
         },
-
+          // Payment Type
+paymentType: {
+    type: String,
+    enum: [
+        "SECURITY_DEPOSIT",
+        "RENTAL_MONTHLY",
+        "DAMAGE_CHARGE",
+        "OTHER"
+    ],
+    default: null
+},
         // Order Id / Repair Id / Rental Id
         referenceId: {
             type: mongoose.Schema.Types.ObjectId,
