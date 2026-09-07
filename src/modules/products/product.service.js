@@ -332,7 +332,7 @@ export const createProductService = async (
 
         };
              
-        // =================================================
+// =================================================
 // REFURBISHED DETAILS
 // =================================================
 
@@ -433,92 +433,172 @@ if (data.productType === "REFURBISHED") {
         const product =
             await createProductDB(
                 productData
-            );// =====================================================
-// CREATE RENTAL PRODUCT
+            );
+
+
+            // =====================================================
+// CREATE RENTAL PRODUCT - ONLY ONCE
 // =====================================================
 
-if (data.rental?.isAvailableForRent === true) {
+if (
+    data.productType === "RENTAL" ||
+    data.rental?.isAvailableForRent === true
+) {
 
-    await RentalProduct.create({
+    const rentalAvailableQuantity =
+        Number(data.rental?.availableQuantity ?? 0);
 
-        productId:
-            product._id,
+    const rentalData = {
 
-        isAvailableForRent:
-            true,
-
-        monthlyRent:
-            Number(data.rental.monthlyRent ?? 0),
-
-        securityDeposit:
-            Number(data.rental.securityDeposit ?? 0),
-
-        minimumRentalMonths:
-            Number(data.rental.minimumRentalMonths ?? 1),
-
-        gst:
-            Number(data.rental.gst ?? 0),
-
-        availableQuantity:
-            Number(data.rental.availableQuantity ?? 0),
-
-        basicSoftwareInstalled:
-            data.rental.basicSoftwareInstalled ?? false,
-
-        includedItems:
-            data.rental.includedItems ?? [],
-
-        notes:
-            data.rental.notes ?? "",
-
-        createdBy:
-            userId
-
-    });
-
-}
-            // =================================================
-// CREATE RENTAL PRODUCT
-// =================================================
-if (data.rental?.isAvailableForRent) {
-
-    await RentalProduct.create({
         productId: product._id,
 
         isAvailableForRent: true,
 
         monthlyRent:
-            Number(data.rental.monthlyRent || 0),
+            Number(data.rental?.monthlyRent ?? 0),
 
         securityDeposit:
-            Number(data.rental.securityDeposit || 0),
+            Number(data.rental?.securityDeposit ?? 0),
 
         minimumRentalMonths:
-            Number(data.rental.minimumRentalMonths || 3),
+            Math.max(
+                Number(
+                    data.rental?.minimumRentalMonths ?? 3
+                ),
+                3
+            ),
 
         gst:
-            Number(data.rental.gst || 0),
+            Number(data.rental?.gst ?? 0),
+
+        // First time:
+        // total = available
+        totalQuantity:
+            rentalAvailableQuantity,
 
         availableQuantity:
-            Number(data.rental.availableQuantity || 0),
+            rentalAvailableQuantity,
+
+        rentedQuantity:
+            0,
 
         basicSoftwareInstalled:
-            data.rental.basicSoftwareInstalled ?? true,
+            data.rental?.basicSoftwareInstalled ?? true,
 
         includedItems:
-            data.rental.includedItems || [
-                "LAPTOP",
-                "CHARGING_ADAPTER",
-                "BACKPACK"
-            ],
+            data.rental?.includedItems?.length
+                ? data.rental.includedItems
+                : [
+                    "LAPTOP",
+                    "CHARGING_ADAPTER",
+                    "BACKPACK"
+                ],
+
+        status:
+            "ACTIVE",
 
         notes:
-            data.rental.notes || "",
+            data.rental?.notes ?? "",
 
         createdBy:
             userId
-    });
+
+    };
+
+    await RentalProduct.create(
+        rentalData
+    );
+
 }
+            
+ // =====================================================
+// CREATE RENTAL PRODUCT
+// =====================================================
+
+// if (data.rental?.isAvailableForRent === true) {
+
+//     await RentalProduct.create({
+
+//         productId:
+//             product._id,
+
+//         isAvailableForRent:
+//             true,
+
+//         monthlyRent:
+//             Number(data.rental.monthlyRent ?? 0),
+
+//         securityDeposit:
+//             Number(data.rental.securityDeposit ?? 0),
+
+//         minimumRentalMonths:
+//             Number(data.rental.minimumRentalMonths ?? 1),
+
+//         gst:
+//             Number(data.rental.gst ?? 0),
+
+//         availableQuantity:
+//             Number(data.rental.availableQuantity ?? 0),
+
+//         basicSoftwareInstalled:
+//             data.rental.basicSoftwareInstalled ?? false,
+
+//         includedItems:
+//             data.rental.includedItems ?? [],
+
+//         notes:
+//             data.rental.notes ?? "",
+
+//         createdBy:
+//             userId
+
+//     });
+
+// }
+           
+
+// =================================================
+// CREATE RENTAL PRODUCT
+// =================================================
+// if (data.rental?.isAvailableForRent) {
+
+//     await RentalProduct.create({
+//         productId: product._id,
+
+//         isAvailableForRent: true,
+
+//         monthlyRent:
+//             Number(data.rental.monthlyRent || 0),
+
+//         securityDeposit:
+//             Number(data.rental.securityDeposit || 0),
+
+//         minimumRentalMonths:
+//             Number(data.rental.minimumRentalMonths || 3),
+
+//         gst:
+//             Number(data.rental.gst || 0),
+
+//         availableQuantity:
+//             Number(data.rental.availableQuantity || 0),
+
+//         basicSoftwareInstalled:
+//             data.rental.basicSoftwareInstalled ?? true,
+
+//         includedItems:
+//             data.rental.includedItems || [
+//                 "LAPTOP",
+//                 "CHARGING_ADAPTER",
+//                 "BACKPACK"
+//             ],
+
+//         notes:
+//             data.rental.notes || "",
+
+//         createdBy:
+//             userId
+//     });
+// }
 
         // =================================================
         // AUTO CREATE INVENTORY

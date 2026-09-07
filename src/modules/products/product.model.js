@@ -303,9 +303,21 @@ const productSchema =
     ref: "Category",
     default: null
 },  
-         productType: {
+//          productType: {
+//     type: String,
+//     enum: ["NEW", "REFURBISHED"],
+//     default: "NEW"
+// },
+
+productType: {
     type: String,
-    enum: ["NEW", "REFURBISHED"],
+
+    enum: [
+        "NEW",
+        "REFURBISHED",
+        "RENTAL"
+    ],
+
     default: "NEW"
 },
 

@@ -33,7 +33,7 @@ export const createProductValidation = Joi.object({
     .optional(),
 
     productType: Joi.string()
-    .valid("NEW", "REFURBISHED")
+    .valid("NEW", "REFURBISHED", "RENTAL")
     .default("NEW"),
     refurbishedDetails: Joi.when("productType", {
     is: "REFURBISHED",
@@ -199,86 +199,7 @@ rental: Joi.object({
 });
 
 
-// =====================================================
-// UPDATE PRODUCT VALIDATION
-// =====================================================
 
-// export const updateProductValidation = Joi.object({
-
-//     name: Joi.string()
-//         .trim()
-//         .min(2)
-//         .max(150),
-
-//     barcode: Joi.string()
-//         .trim()
-//         .allow(""),
-
-//     category: Joi.string()
-//         .trim(),
-
-//    subcategory: Joi.string()
-//     .trim()
-//     .allow("")
-//     .allow(null),
-
-//     productType: Joi.string()
-//     .valid("NEW", "REFURBISHED"),
-
-//     brand: Joi.string()
-//         .trim(),
-
-//     description: Joi.string()
-//         .allow(""),
-
-//     shortDescription: Joi.string()
-//         .allow(""),
-
-
-//     // =================================================
-//     // PRICING
-//     // =================================================
-
-//     pricing: Joi.object({
-
-//         purchasePrice: Joi.number()
-//             .min(0),
-
-//         sellingPrice: Joi.number()
-//             .min(0),
-
-//         mrp: Joi.number()
-//             .min(0),
-
-//         discount: Joi.number()
-//             .min(0)
-//             .max(100),
-
-//         gst: Joi.number()
-//             .min(0)
-//             .max(100)
-
-//     }),
-
-
-//     // =================================================
-//     // SEO
-//     // =================================================
-
-//     metaTitle: Joi.string()
-//         .allow(""),
-
-//     metaDescription: Joi.string()
-//         .allow(""),
-
-
-//     // =================================================
-//     // SPECIFICATIONS
-//     // =================================================
-
-//     specifications: Joi.object()
-
-// });
 
 // =====================================================
 // UPDATE PRODUCT VALIDATION
@@ -311,8 +232,16 @@ export const updateProductValidation = Joi.object({
     // PRODUCT TYPE
     // =================================================
 
+    // productType: Joi.string()
+    //     .valid("NEW", "REFURBISHED"),
+
     productType: Joi.string()
-        .valid("NEW", "REFURBISHED"),
+    .valid(
+        "NEW",
+        "REFURBISHED",
+        "RENTAL"
+    )
+    .default("NEW"),
 
     // =================================================
     // REFURBISHED DETAILS
@@ -401,35 +330,56 @@ export const updateProductValidation = Joi.object({
 // =====================================================
 
 rental: Joi.object({
+  isAvailableForRent: Joi.boolean().required(),
 
-    isAvailableForRent: Joi.boolean(),
+  monthlyRent: Joi.number()
+    .min(0)
+    .when("isAvailableForRent", {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.optional()
+    }),
 
-    monthlyRent: Joi.number()
-        .min(0),
+  securityDeposit: Joi.number()
+    .min(0)
+    .when("isAvailableForRent", {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.optional()
+    }),
 
-    securityDeposit: Joi.number()
-        .min(0),
+  minimumRentalMonths: Joi.number()
+    .integer()
+    .min(3)
+    .when("isAvailableForRent", {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.optional()
+    }),
 
-    minimumRentalMonths: Joi.number()
-        .integer()
-        .min(1),
+  gst: Joi.number()
+    .min(0)
+    .max(100)
+    .default(0),
 
-    gst: Joi.number()
-        .min(0)
-        .max(100),
+  availableQuantity: Joi.number()
+    .integer()
+    .min(1)
+    .when("isAvailableForRent", {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.optional()
+    }),
 
-    availableQuantity: Joi.number()
-        .integer()
-        .min(0),
+  basicSoftwareInstalled: Joi.boolean()
+    .default(true),
 
-    basicSoftwareInstalled: Joi.boolean(),
+  includedItems: Joi.array()
+    .items(Joi.string().trim())
+    .default([]),
 
-    includedItems: Joi.array()
-        .items(Joi.string().trim()),
-
-    notes: Joi.string()
-        .allow("")
-
-}),
-
+  notes: Joi.string()
+    .allow("")
+    .default("")
+})
 });
