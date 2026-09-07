@@ -1,10 +1,20 @@
 import express from "express";
 
+
+// =====================================================
+// RENTAL PRODUCT CONTROLLERS
+// =====================================================
+
 import {
     getRentalProductsController,
     getRentalProductController,
     saveRentalProductController
 } from "./rentalProduct.controller.js";
+
+
+// =====================================================
+// RENTAL CONTROLLERS
+// =====================================================
 
 import {
     createRentalController,
@@ -18,13 +28,40 @@ import {
     allocateRentalController
 } from "./rental.controller.js";
 
+
+// =====================================================
+// RENTAL INVENTORY CONTROLLER
+// =====================================================
+
 import {
     getRentalInventoryController
 } from "./rentalInventory.controller.js";
 
+
+// =====================================================
+// RENTAL DOCUMENT CONTROLLERS
+// =====================================================
+
 import {
-    verifyToken
+    uploadRentalDocumentController,
+    getRentalDocumentsController,
+    verifyRentalDocumentController
+} from "./rentalDocument.controller.js";
+
+
+// =====================================================
+// MIDDLEWARE
+// =====================================================
+
+import {
+    verifyToken,
+    allowRoles
 } from "../../common/middleware/auth.middleware.js";
+
+import {
+    rentalDocumentUpload
+} from "../../common/middleware/upload.middleware.js";
+
 
 const router = express.Router();
 
@@ -85,6 +122,41 @@ router.post(
 
 
 // =====================================================
+// CUSTOMER - UPLOAD RENTAL DOCUMENT
+// =====================================================
+
+router.post(
+    "/:rentalId/documents",
+    verifyToken,
+    rentalDocumentUpload.single("document"),
+    uploadRentalDocumentController
+);
+
+
+// =====================================================
+// CUSTOMER / STAFF - GET RENTAL DOCUMENTS
+// =====================================================
+
+router.get(
+    "/:rentalId/documents",
+    verifyToken,
+    getRentalDocumentsController
+);
+
+
+// =====================================================
+// ADMIN / STAFF - VERIFY RENTAL DOCUMENT
+// =====================================================
+
+router.patch(
+    "/documents/:documentId/verify",
+    verifyToken,
+    allowRoles("ADMIN", "STAFF"),
+    verifyRentalDocumentController
+);
+
+
+// =====================================================
 // CUSTOMER - MY RENTALS
 // =====================================================
 
@@ -108,6 +180,7 @@ router.get(
 
 // =====================================================
 // SINGLE RENTAL
+// IMPORTANT: Keep after specific routes
 // =====================================================
 
 router.get(

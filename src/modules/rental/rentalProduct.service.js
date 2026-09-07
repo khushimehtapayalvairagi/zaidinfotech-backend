@@ -276,6 +276,7 @@ export const saveRentalProductService = async (
     };
 
 
+    
     return await updateRentalProductDB(
         productId,
         rentalData
