@@ -7,7 +7,7 @@ import Joi from "joi";
 
 export const createAddressValidation = Joi.object({
 
-    type:Joi.string()
+    type: Joi.string()
         .valid(
             "HOME",
             "OFFICE",
@@ -17,7 +17,7 @@ export const createAddressValidation = Joi.object({
 
 
 
-    fullName:Joi.string()
+    fullName: Joi.string()
         .trim()
         .min(2)
         .max(100)
@@ -25,76 +25,77 @@ export const createAddressValidation = Joi.object({
         .messages({
 
             "string.empty":
-            "Full name is required",
+                "Full name is required",
 
             "any.required":
-            "Full name is required"
+                "Full name is required"
 
         }),
 
 
 
-    phone:Joi.string()
+    phone: Joi.string()
         .pattern(/^[0-9]{10}$/)
         .required()
         .messages({
 
-            "string.pattern.base":
-            "Phone number must be 10 digits"
+            "string.pattern.base": "Phone number must be 10 digits",  //here change 
+            "string.empty": "Phone number is required",
+            "any.required": "Phone number is required"
 
         }),
 
 
 
 
-    addressLine:Joi.string()
+    addressLine: Joi.string()
         .trim()
         .required(),
 
 
 
 
-    city:Joi.string()
+    city: Joi.string()
         .trim()
         .required(),
 
 
 
 
-    state:Joi.string()
+    state: Joi.string()
         .trim()
         .required(),
 
 
 
 
-    pincode:Joi.string()
+    pincode: Joi.string()
         .pattern(/^[0-9]{6}$/)
         .required()
         .messages({
 
             "string.pattern.base":
-            "Pincode must be 6 digits"
+                "Pincode must be 6 digits"
 
         }),
 
 
 
 
-    country:Joi.string()
+    country: Joi.string()
         .default("India"),
 
 
 
 
-    landmark:Joi.string()
+    landmark: Joi.string()
         .allow("")
         .optional(),
 
 
 
 
-    isDefault:Joi.boolean()
+    isDefault: Joi.boolean()
         .optional()
 
 
@@ -111,7 +112,7 @@ export const createAddressValidation = Joi.object({
 export const updateAddressValidation = Joi.object({
 
 
-    type:Joi.string()
+    type: Joi.string()
         .valid(
             "HOME",
             "OFFICE",
@@ -120,42 +121,42 @@ export const updateAddressValidation = Joi.object({
 
 
 
-    fullName:Joi.string()
+    fullName: Joi.string()
         .trim()
         .min(2),
 
 
 
-    phone:Joi.string()
+    phone: Joi.string()
         .pattern(/^[0-9]{10}$/),
 
 
 
-    addressLine:Joi.string()
+    addressLine: Joi.string()
         .trim(),
 
 
 
-    city:Joi.string()
+    city: Joi.string()
         .trim(),
 
 
 
-    state:Joi.string()
+    state: Joi.string()
         .trim(),
 
 
 
-    pincode:Joi.string()
+    pincode: Joi.string()
         .pattern(/^[0-9]{6}$/),
 
 
 
-    country:Joi.string(),
+    country: Joi.string(),
 
 
 
-    landmark:Joi.string()
+    landmark: Joi.string()
         .allow("")
 
 });
