@@ -55,14 +55,14 @@ import {
 
 import {
     verifyToken,
-    allowRoles
+  
 } from "../../common/middleware/auth.middleware.js";
 
 import {
     rentalDocumentUpload
 } from "../../common/middleware/upload.middleware.js";
 
-
+import { allowRoles } from "../../common/middleware/role.middleware.js";
 const router = express.Router();
 
 
