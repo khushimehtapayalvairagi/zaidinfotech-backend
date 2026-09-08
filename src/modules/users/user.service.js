@@ -1576,7 +1576,23 @@ export const getSalaryHistory =
     return employee;
   };
 
+export const changePassword = async (userId, oldPassword, newPassword) => {
+  const user = await User.findById(userId).select("+password");
+  if (!user) {
+    throw new Error("User not found");
+  }
 
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+  if (!isMatch) {
+    throw new Error("Incorrect current password");
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+
+  await user.save();
+
+  return "Password changed successfully";
+}
 // ======================================================
 // FORGOT PASSWORD
 // ======================================================

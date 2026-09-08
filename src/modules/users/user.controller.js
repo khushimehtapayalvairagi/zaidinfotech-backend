@@ -657,3 +657,39 @@ export const resendEmailVerificationOtp = async (
     });
   }
 };
+export const changepassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Old password and new password are required",
+      });
+    }
+
+    if (oldPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be different from the old password",
+      });
+    }
+
+    const message = await userService.changePassword(
+      userId,
+      oldPassword,
+      newPassword
+    );
+
+    return res.status(200).json({
+      success: true,
+      message,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

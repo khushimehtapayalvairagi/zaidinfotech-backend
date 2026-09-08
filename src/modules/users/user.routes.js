@@ -20,7 +20,8 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
-  resendEmailVerificationOtp
+  resendEmailVerificationOtp,
+  changepassword 
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -211,5 +212,6 @@ router.post(
   "/resend-verification-otp",
   resendEmailVerificationOtp
 );
+router.put("/change-password", verifyToken, changepassword);
 
 export default router;

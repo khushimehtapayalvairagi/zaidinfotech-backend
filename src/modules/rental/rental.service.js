@@ -303,6 +303,16 @@ export const rejectRentalService = async (
 // READY_FOR_ALLOCATION
 // =====================================================
 
+// =====================================================
+// DEPOSIT RECEIVED
+// =====================================================
+// DEPOSIT_PENDING
+//        ↓
+// Create Payment
+//        ↓
+// READY_FOR_ALLOCATION
+// =====================================================
+
 export const markDepositReceivedService = async (
     rentalId,
     paymentMethod = "CASH"
@@ -321,6 +331,10 @@ export const markDepositReceivedService = async (
 
     }
 
+    // =========================================
+    // CHECK RENTAL STATUS
+    // =========================================
+
     if (
         rental.status !== "DEPOSIT_PENDING"
     ) {
@@ -331,10 +345,9 @@ export const markDepositReceivedService = async (
 
     }
 
-
-    // =================================================
+    // =========================================
     // CREATE SECURITY DEPOSIT PAYMENT
-    // =================================================
+    // =========================================
 
     const payment =
         await createPayment({
@@ -376,10 +389,9 @@ export const markDepositReceivedService = async (
 
         });
 
-
-    // =================================================
+    // =========================================
     // UPDATE RENTAL
-    // =================================================
+    // =========================================
 
     const updatedRental =
         await updateRentalDB(
@@ -395,6 +407,9 @@ export const markDepositReceivedService = async (
             }
         );
 
+    // =========================================
+    // RETURN
+    // =========================================
 
     return {
 
