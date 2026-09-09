@@ -1,3 +1,12 @@
+
+
+
+
+import {
+    notifyAdminsService
+} from "../notification/notification.service.js";
+
+import Rental from "./rental.model.js";
 import RentalProduct from "./rentalProduct.model.js";
 import { createPayment } from "../payments/payment.service.js";
 
@@ -24,121 +33,456 @@ const generateRentalNumber = () => {
 };
 
 
+
+
+
 // =====================================================
-// CREATE RENTAL
+// CREATE WALK-IN RENTAL
+// RECEPTIONIST / ADMIN / STAFF
 // =====================================================
 
-export const createRentalService = async (
+export const createWalkInRentalService = async (
     data,
-    customerId
+    createdBy
 ) => {
 
-    const rentalProduct =
-        await RentalProduct.findById(
-            data.rentalProductId
-        );
+    console.log(
+        "========== CREATE WALK-IN RENTAL =========="
+    );
 
-    if (!rentalProduct) {
+    console.log(
+        "WALK-IN DATA:",
+        data
+    );
 
+    if (!data) {
         throw new Error(
-            "Rental product not found"
+            "Rental data is required"
         );
-
     }
 
-    if (
-        !rentalProduct.isAvailableForRent ||
-        rentalProduct.status !== "ACTIVE"
-    ) {
-
+    if (!data.rentalProductId) {
         throw new Error(
-            "Product is not available for rental"
+            "Rental product is required"
         );
-
     }
 
-    if (
-        rentalProduct.availableQuantity <= 0
-    ) {
-
+    if (!data.customerType) {
         throw new Error(
-            "Rental product is out of stock"
+            "Customer type is required"
         );
-
     }
 
-    const rentalMonths =
-        Number(data.rentalMonths);
+    const customerType =
+        String(data.customerType).toUpperCase();
 
     if (
-        !rentalMonths ||
-        rentalMonths <
-        rentalProduct.minimumRentalMonths
+        !["INDIVIDUAL", "COMPANY"].includes(
+            customerType
+        )
     ) {
-
-        throw new Error(
-            `Minimum rental period is ${rentalProduct.minimumRentalMonths} months`
-        );
-
-    }
-
-    if (
-        !["INDIVIDUAL", "COMPANY"]
-            .includes(data.customerType)
-    ) {
-
         throw new Error(
             "Invalid customer type"
         );
-
     }
 
-    const rental = await createRentalDB({
+    // =============================================
+    // FIND RENTAL PRODUCT
+    // =============================================
 
-        rentalNumber:
-            generateRentalNumber(),
+    const rentalProduct =
+        await RentalProduct
+            .findById(data.rentalProductId)
+            .populate("productId");
 
-        customerId,
+    if (!rentalProduct) {
+        throw new Error(
+            "Rental product not found"
+        );
+    }
 
-        productId:
-            rentalProduct.productId,
+    if (rentalProduct.status !== "ACTIVE") {
+        throw new Error(
+            "This rental product is inactive"
+        );
+    }
 
-        rentalProductId:
-            rentalProduct._id,
+    if (rentalProduct.isAvailableForRent !== true) {
+        throw new Error(
+            "This product is not available for rent"
+        );
+    }
 
-        customerType:
-            data.customerType,
+    if (
+        Number(rentalProduct.availableQuantity || 0) <= 0
+    ) {
+        throw new Error(
+            "Rental product is currently out of stock"
+        );
+    }
 
-        individualDetails:
-            data.individualDetails || {},
+    // =============================================
+    // RENTAL MONTHS
+    // =============================================
 
-        companyDetails:
-            data.companyDetails || {},
+    const rentalMonths =
+        Number(
+            data.rentalMonths ||
+            rentalProduct.minimumRentalMonths ||
+            3
+        );
 
-        monthlyRent:
-            rentalProduct.monthlyRent,
+    const minimumMonths =
+        Number(
+            rentalProduct.minimumRentalMonths || 3
+        );
 
-        gstPercentage:
-            rentalProduct.gst,
+    if (rentalMonths < minimumMonths) {
+        throw new Error(
+            `Minimum rental period is ${minimumMonths} months`
+        );
+    }
 
-        securityDeposit:
-            rentalProduct.securityDeposit,
+    // =============================================
+    // PRICING
+    // =============================================
 
-        rentalMonths,
+    const monthlyRent =
+        Number(
+            data.monthlyRent ??
+            rentalProduct.monthlyRent ??
+            0
+        );
 
-        status:
-            "PENDING",
+    if (monthlyRent <= 0) {
+        throw new Error(
+            "Monthly rent must be greater than 0"
+        );
+    }
 
-        notes:
-            data.notes || ""
+    const securityDeposit =
+        Number(
+            data.securityDeposit ??
+            rentalProduct.securityDeposit ??
+            0
+        );
 
+    if (securityDeposit < 0) {
+        throw new Error(
+            "Security deposit cannot be negative"
+        );
+    }
+
+    const gstPercentage =
+        Number(
+            data.gstPercentage ??
+            rentalProduct.gst ??
+            0
+        );
+
+    if (gstPercentage < 0) {
+        throw new Error(
+            "GST percentage cannot be negative"
+        );
+    }
+
+    // =============================================
+    // CUSTOMER DETAILS
+    // =============================================
+
+    let individualDetails = null;
+    let companyDetails = null;
+
+    if (customerType === "INDIVIDUAL") {
+
+        const details =
+            data.individualDetails || {};
+
+        const fullName =
+            String(details.fullName || "").trim();
+
+        const phone =
+            String(details.phone || "").trim();
+
+        if (!fullName) {
+            throw new Error(
+                "Customer full name is required"
+            );
+        }
+
+        if (!phone) {
+            throw new Error(
+                "Customer phone number is required"
+            );
+        }
+
+        individualDetails = {
+            fullName,
+            phone,
+            email: String(
+                details.email || ""
+            )
+                .trim()
+                .toLowerCase(),
+            address: String(
+                details.address || ""
+            ).trim()
+        };
+    }
+
+    if (customerType === "COMPANY") {
+
+        const details =
+            data.companyDetails || {};
+
+        const companyName =
+            String(
+                details.companyName || ""
+            ).trim();
+
+        const contactPerson =
+            String(
+                details.contactPerson || ""
+            ).trim();
+
+        const phone =
+            String(
+                details.phone || ""
+            ).trim();
+
+        if (!companyName) {
+            throw new Error(
+                "Company name is required"
+            );
+        }
+
+        if (!contactPerson) {
+            throw new Error(
+                "Contact person is required"
+            );
+        }
+
+        if (!phone) {
+            throw new Error(
+                "Company phone number is required"
+            );
+        }
+
+        companyDetails = {
+            companyName,
+            contactPerson,
+            phone,
+            email: String(
+                details.email || ""
+            )
+                .trim()
+                .toLowerCase(),
+            officeAddress: String(
+                details.officeAddress || ""
+            ).trim(),
+            gstNumber: String(
+                details.gstNumber || ""
+            )
+                .trim()
+                .toUpperCase()
+        };
+    }
+
+    // =============================================
+    // RENTAL NUMBER
+    // =============================================
+
+    const rentalNumber =
+        generateRentalNumber();
+
+    // =============================================
+    // DATES
+    // =============================================
+
+    const startDate =
+        new Date();
+
+    const expectedEndDate =
+        new Date(startDate);
+
+    expectedEndDate.setMonth(
+        expectedEndDate.getMonth() +
+        rentalMonths
+    );
+
+    const nextPaymentDate =
+        new Date(startDate);
+
+    nextPaymentDate.setMonth(
+        nextPaymentDate.getMonth() + 1
+    );
+
+    // =============================================
+    // CREATE WALK-IN RENTAL
+    // =============================================
+
+    const rental =
+        await Rental.create({
+
+            rentalNumber,
+
+            customerId: null,
+
+            productId:
+                rentalProduct.productId?._id ||
+                rentalProduct.productId,
+
+            rentalProductId:
+                rentalProduct._id,
+
+            rentalSource:
+                "WALK_IN",
+
+            customerType,
+
+            individualDetails,
+
+            companyDetails,
+
+            monthlyRent,
+
+            gstPercentage,
+
+            securityDeposit,
+
+            rentalMonths,
+
+            startDate,
+
+            expectedEndDate,
+
+            nextPaymentDate,
+
+            lastPaymentDate:
+                null,
+
+            status:
+                "ACTIVE",
+
+            allocatedAt:
+                new Date(),
+
+            allocatedBy:
+                createdBy,
+
+            notes:
+                String(
+                    data.notes ||
+                    data.handoverNotes ||
+                    ""
+                ).trim()
+        });
+
+    // =============================================
+    // ATOMIC STOCK UPDATE
+    // =============================================
+
+    const updatedRentalProduct =
+        await RentalProduct.findOneAndUpdate(
+            {
+                _id:
+                    rentalProduct._id,
+
+                status:
+                    "ACTIVE",
+
+                isAvailableForRent:
+                    true,
+
+                availableQuantity:
+                    {
+                        $gt: 0
+                    }
+            },
+
+            {
+                $inc: {
+                    availableQuantity: -1,
+                    rentedQuantity: 1
+                },
+
+                $set: {
+                    updatedBy:
+                        createdBy
+                }
+            },
+
+            {
+                new: true
+            }
+        );
+
+    // =============================================
+    // ROLLBACK IF STOCK FAILED
+    // =============================================
+
+    if (!updatedRentalProduct) {
+
+        await Rental.findByIdAndDelete(
+            rental._id
+        );
+
+        throw new Error(
+            "Rental stock became unavailable. Please refresh and try again."
+        );
+    }
+     // =============================================
+// LOW RENTAL STOCK NOTIFICATION
+// =============================================
+
+if (updatedRentalProduct.availableQuantity <= 5) {
+
+    await notifyAdminsService({
+
+        type: "RENTAL_STOCK_LOW",
+
+        title: "Rental Stock Low",
+
+        message:
+            `${rentalProduct.productId.name} rental stock is low. ` +
+            `Only ${updatedRentalProduct.availableQuantity} unit(s) available.`,
+
+        relatedId:
+            updatedRentalProduct._id,
+
+        relatedModel:
+            "RentalProduct"
     });
+}
+    // =============================================
+    // GET FINAL RENTAL
+    // =============================================
 
-    return rental;
+    const finalRental =
+        await Rental
+            .findById(rental._id)
+            .populate({
+                path: "productId",
+                populate: [
+                    {
+                        path: "brand"
+                    },
+                    {
+                        path: "category"
+                    }
+                ]
+            })
+            .populate(
+                "rentalProductId"
+            );
 
+    console.log(
+        "WALK-IN RENTAL CREATED:",
+        finalRental
+    );
+
+    return finalRental;
 };
-
-
 // =====================================================
 // CUSTOMER RENTALS
 // =====================================================
@@ -191,94 +535,7 @@ export const getAllRentalsService = async () => {
 };
 
 
-// =====================================================
-// APPROVE RENTAL
-// =====================================================
 
-export const approveRentalService = async (
-    rentalId,
-    receptionistId
-) => {
-
-    const rental =
-        await getRentalByIdDB(
-            rentalId
-        );
-
-    if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
-    }
-
-    if (
-        rental.status !== "PENDING" &&
-        rental.status !== "DOCUMENT_VERIFICATION"
-    ) {
-
-        throw new Error(
-            "Rental cannot be approved in current status"
-        );
-
-    }
-
-    const updatedRental =
-        await updateRentalDB(
-            rentalId,
-            {
-                status:
-                    "DEPOSIT_PENDING",
-
-                approvedBy:
-                    receptionistId,
-
-                approvedAt:
-                    new Date()
-            }
-        );
-
-    return updatedRental;
-
-};
-
-
-// =====================================================
-// REJECT RENTAL
-// =====================================================
-
-export const rejectRentalService = async (
-    rentalId,
-    reason
-) => {
-
-    const rental =
-        await getRentalByIdDB(
-            rentalId
-        );
-
-    if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
-    }
-
-    return await updateRentalDB(
-        rentalId,
-        {
-            status:
-                "REJECTED",
-
-            rejectionReason:
-                reason ||
-                "Rental rejected"
-        }
-    );
-
-};
 
 
 // =====================================================
@@ -313,114 +570,7 @@ export const rejectRentalService = async (
 // READY_FOR_ALLOCATION
 // =====================================================
 
-export const markDepositReceivedService = async (
-    rentalId,
-    paymentMethod = "CASH"
-) => {
 
-    const rental =
-        await getRentalByIdDB(
-            rentalId
-        );
-
-    if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
-    }
-
-    // =========================================
-    // CHECK RENTAL STATUS
-    // =========================================
-
-    if (
-        rental.status !== "DEPOSIT_PENDING"
-    ) {
-
-        throw new Error(
-            "Security deposit is not pending"
-        );
-
-    }
-
-    // =========================================
-    // CREATE SECURITY DEPOSIT PAYMENT
-    // =========================================
-
-    const payment =
-        await createPayment({
-
-            user:
-                rental.customerId,
-
-            paymentFor:
-                "RENTAL",
-
-            paymentType:
-                "SECURITY_DEPOSIT",
-
-            referenceId:
-                rental._id,
-
-            amount:
-                rental.securityDeposit,
-
-            paymentMethod,
-
-            paymentStatus:
-                "SUCCESS",
-
-            paymentDate:
-                new Date(),
-
-            paidAt:
-                new Date(),
-
-            gateway:
-                "",
-
-            transactionId:
-                "",
-
-            gatewayPaymentId:
-                ""
-
-        });
-
-    // =========================================
-    // UPDATE RENTAL
-    // =========================================
-
-    const updatedRental =
-        await updateRentalDB(
-            rentalId,
-            {
-
-                status:
-                    "READY_FOR_ALLOCATION",
-
-                securityDepositPaymentId:
-                    payment._id
-
-            }
-        );
-
-    // =========================================
-    // RETURN
-    // =========================================
-
-    return {
-
-        rental:
-            updatedRental,
-
-        payment
-
-    };
-
-};
 
 
 // =====================================================
@@ -613,123 +763,13 @@ export const markRentalReturnedService = async (
 };
 
 
+
+
 // =====================================================
 // ALLOCATE RENTAL PRODUCT
 // =====================================================
 
-export const allocateRentalService = async (
-    rentalId,
-    receptionistId
-) => {
+// =====================================================
+// ALLOCATE RENTAL PRODUCT
+// =====================================================
 
-    const rental =
-        await getRentalByIdDB(
-            rentalId
-        );
-
-    if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
-    }
-
-
-    // =================================================
-    // READY FOR ALLOCATION
-    // =================================================
-
-    if (
-        rental.status !==
-        "READY_FOR_ALLOCATION"
-    ) {
-
-        throw new Error(
-            "Rental is not ready for allocation"
-        );
-
-    }
-
-
-    // =================================================
-    // FIND RENTAL PRODUCT
-    // =================================================
-
-    const rentalProduct =
-        await RentalProduct.findById(
-            rental.rentalProductId
-        );
-
-    if (!rentalProduct) {
-
-        throw new Error(
-            "Rental product not found"
-        );
-
-    }
-
-
-    // =================================================
-    // AVAILABLE QUANTITY
-    // =================================================
-
-    if (
-        rentalProduct.availableQuantity <= 0
-    ) {
-
-        throw new Error(
-            "No product available for allocation"
-        );
-
-    }
-
-
-    // =================================================
-    // UPDATE INVENTORY
-    // =================================================
-
-    await RentalProduct.findByIdAndUpdate(
-        rentalProduct._id,
-        {
-            $inc: {
-
-                availableQuantity: -1,
-
-                rentedQuantity: 1
-
-            }
-        }
-    );
-
-
-    // =================================================
-    // START RENTAL
-    // =================================================
-
-    const startDate =
-        new Date();
-
-    const updatedRental =
-        await updateRentalDB(
-            rentalId,
-            {
-
-                status:
-                    "ACTIVE",
-
-                allocatedAt:
-                    startDate,
-
-                allocatedBy:
-                    receptionistId,
-
-                startDate
-
-            }
-        );
-
-
-    return updatedRental;
-
-};

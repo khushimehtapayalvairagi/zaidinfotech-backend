@@ -169,11 +169,12 @@ const notificationSchema = new mongoose.Schema(
 // ======================================
 
 "RENTAL_CREATED",
-"RENTAL_APPROVED",
-"RENTAL_REJECTED",
+
 "RENTAL_RETURN_REQUESTED",
 "RENTAL_RETURNED",
 "RENTAL_OVERDUE",
+"RENTAL_STOCK_LOW",
+"RENTAL_SETTLEMENT_COMPLETED",
         // ======================================
         // COMMON
         // ======================================
@@ -217,7 +218,7 @@ const notificationSchema = new mongoose.Schema(
     // RELATED MODEL
     // ==========================================
 
- relatedModel: {
+relatedModel: {
     type: String,
 
     enum: [
@@ -227,12 +228,14 @@ const notificationSchema = new mongoose.Schema(
         "Inventory",
         "AvailabilityRequest",
         "Rental",
+        "RentalProduct",
         null,
     ],
 
     default: null,
 },
 
+   
     // ==========================================
     // READ STATUS
     // ==========================================

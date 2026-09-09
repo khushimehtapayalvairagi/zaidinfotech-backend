@@ -1,73 +1,46 @@
 import express from "express";
 
-
-// =====================================================
-// RENTAL PRODUCT CONTROLLERS
-// =====================================================
-
 import {
     getRentalProductsController,
     getRentalProductController,
-    saveRentalProductController
+    saveRentalProductController,
 } from "./rentalProduct.controller.js";
 
-
-// =====================================================
-// RENTAL CONTROLLERS
-// =====================================================
-
 import {
-    createRentalController,
-    getMyRentalsController,
+    createWalkInRentalController,
     getRentalController,
     getAllRentalsController,
-    approveRentalController,
-    rejectRentalController,
-    markDepositReceivedController,
     markRentalReturnedController,
-    allocateRentalController
 } from "./rental.controller.js";
 
-
-// =====================================================
-// RENTAL INVENTORY CONTROLLER
-// =====================================================
-
 import {
-    getRentalInventoryController
+    getRentalInventoryController,
 } from "./rentalInventory.controller.js";
-
-
-// =====================================================
-// RENTAL DOCUMENT CONTROLLERS
-// =====================================================
 
 import {
     uploadRentalDocumentController,
     getRentalDocumentsController,
-    verifyRentalDocumentController
+    verifyRentalDocumentController,
 } from "./rentalDocument.controller.js";
-
-
-// =====================================================
-// MIDDLEWARE
-// =====================================================
 
 import {
     verifyToken,
-  
 } from "../../common/middleware/auth.middleware.js";
 
 import {
-    rentalDocumentUpload
+    rentalDocumentUpload,
 } from "../../common/middleware/upload.middleware.js";
 
-import { allowRoles } from "../../common/middleware/role.middleware.js";
+import {
+    allowRoles,
+} from "../../common/middleware/role.middleware.js";
+
+
 const router = express.Router();
 
 
 // =====================================================
-// CUSTOMER - RENTAL PRODUCTS
+// RENTAL PRODUCTS
 // =====================================================
 
 router.get(
@@ -76,10 +49,6 @@ router.get(
 );
 
 
-// =====================================================
-// GET RENTAL CONFIG BY PRODUCT
-// =====================================================
-
 router.get(
     "/product/:productId",
     verifyToken,
@@ -87,83 +56,84 @@ router.get(
 );
 
 
-// =====================================================
-// ADMIN - CREATE / UPDATE RENTAL CONFIG
-// =====================================================
-
 router.put(
     "/product/:productId",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     saveRentalProductController
 );
 
 
 // =====================================================
-// ADMIN - RENTAL INVENTORY
-// IMPORTANT: /inventory MUST COME BEFORE /:id
+// RENTAL INVENTORY
 // =====================================================
 
 router.get(
     "/inventory",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     getRentalInventoryController
 );
 
 
 // =====================================================
-// CREATE RENTAL
+// WALK-IN RENTAL
 // =====================================================
 
 router.post(
-    "/",
+    "/walk-in",
     verifyToken,
-    createRentalController
+    allowRoles(
+        "SALES"
+    ),
+    createWalkInRentalController
 );
 
 
 // =====================================================
-// CUSTOMER - UPLOAD RENTAL DOCUMENT
+// RENTAL DOCUMENT UPLOAD
 // =====================================================
 
 router.post(
     "/:rentalId/documents",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     rentalDocumentUpload.single("document"),
     uploadRentalDocumentController
 );
 
 
 // =====================================================
-// CUSTOMER / STAFF - GET RENTAL DOCUMENTS
+// GET RENTAL DOCUMENTS
 // =====================================================
 
 router.get(
     "/:rentalId/documents",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     getRentalDocumentsController
 );
 
 
 // =====================================================
-// ADMIN / STAFF - VERIFY RENTAL DOCUMENT
+// VERIFY DOCUMENT
 // =====================================================
 
 router.patch(
     "/documents/:documentId/verify",
     verifyToken,
-    allowRoles("ADMIN", "STAFF"),
+    allowRoles(
+        "SALES"
+    ),
     verifyRentalDocumentController
-);
-
-
-// =====================================================
-// CUSTOMER - MY RENTALS
-// =====================================================
-
-router.get(
-    "/my",
-    verifyToken,
-    getMyRentalsController
 );
 
 
@@ -174,83 +144,37 @@ router.get(
 router.get(
     "/",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     getAllRentalsController
 );
 
 
 // =====================================================
 // SINGLE RENTAL
-// IMPORTANT: Keep after specific routes
 // =====================================================
 
 router.get(
     "/:id",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     getRentalController
 );
 
 
 // =====================================================
-// APPROVE RENTAL
-// PENDING → DEPOSIT_PENDING
-// =====================================================
-
-router.patch(
-    "/:id/approve",
-    verifyToken,
-    approveRentalController
-);
-
-
-// =====================================================
-// REJECT RENTAL
-// =====================================================
-
-router.patch(
-    "/:id/reject",
-    verifyToken,
-    rejectRentalController
-);
-
-
-// =====================================================
-// SECURITY DEPOSIT RECEIVED
-// DEPOSIT_PENDING → READY_FOR_ALLOCATION
-// =====================================================
-
-router.patch(
-    "/:id/deposit-received",
-    verifyToken,
-    markDepositReceivedController
-);
-
-
-// =====================================================
-// ALLOCATE PHYSICAL PRODUCT
-// READY_FOR_ALLOCATION → ACTIVE
-//
-// availableQuantity - 1
-// rentedQuantity + 1
-// =====================================================
-
-router.patch(
-    "/:id/allocate",
-    verifyToken,
-    allocateRentalController
-);
-
-
-// =====================================================
-// RECEIVE PHYSICAL RETURN
-// ACTIVE → SETTLEMENT_PENDING
-//
-// availableQuantity + 1
-// rentedQuantity - 1
+// RETURN RENTAL
 // =====================================================
 
 router.patch(
     "/:id/return",
     verifyToken,
+    allowRoles(
+        "SALES"
+    ),
     markRentalReturnedController
 );
 

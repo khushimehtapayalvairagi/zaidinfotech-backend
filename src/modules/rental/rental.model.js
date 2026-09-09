@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const rentalSchema = new mongoose.Schema(
     {
+        // =====================================================
+        // RENTAL NUMBER
+        // =====================================================
+
         rentalNumber: {
             type: String,
             unique: true,
@@ -10,12 +14,25 @@ const rentalSchema = new mongoose.Schema(
             index: true
         },
 
+        // =====================================================
+        // CUSTOMER
+        // ONLINE  → customerId required
+        // WALK_IN → customerId can be null
+        // =====================================================
+
         customerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            required: function () {
+                return this.rentalSource !== "WALK_IN";
+            },
+            default: null,
             index: true
         },
+
+        // =====================================================
+        // PRODUCT
+        // =====================================================
 
         productId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -30,11 +47,30 @@ const rentalSchema = new mongoose.Schema(
             required: true
         },
 
+        // =====================================================
+        // RENTAL SOURCE
+        // =====================================================
+
+        rentalSource: {
+            type: String,
+            enum: ["ONLINE", "WALK_IN"],
+            default: "ONLINE",
+            index: true
+        },
+
+        // =====================================================
+        // CUSTOMER TYPE
+        // =====================================================
+
         customerType: {
             type: String,
             enum: ["INDIVIDUAL", "COMPANY"],
             required: true
         },
+
+        // =====================================================
+        // INDIVIDUAL DETAILS
+        // =====================================================
 
         individualDetails: {
             fullName: {
@@ -58,6 +94,10 @@ const rentalSchema = new mongoose.Schema(
                 trim: true
             }
         },
+
+        // =====================================================
+        // COMPANY DETAILS
+        // =====================================================
 
         companyDetails: {
             companyName: {
@@ -93,6 +133,10 @@ const rentalSchema = new mongoose.Schema(
             }
         },
 
+        // =====================================================
+        // RENTAL PRICING
+        // =====================================================
+
         monthlyRent: {
             type: Number,
             required: true,
@@ -110,6 +154,10 @@ const rentalSchema = new mongoose.Schema(
             required: true,
             min: 0
         },
+
+        // =====================================================
+        // RENTAL PERIOD
+        // =====================================================
 
         rentalMonths: {
             type: Number,
@@ -132,6 +180,10 @@ const rentalSchema = new mongoose.Schema(
             default: null
         },
 
+        // =====================================================
+        // PAYMENT DATES
+        // =====================================================
+
         nextPaymentDate: {
             type: Date,
             default: null
@@ -142,30 +194,31 @@ const rentalSchema = new mongoose.Schema(
             default: null
         },
 
-        status: {
-            type: String,
-            enum: [
-                "PENDING",
-                "DOCUMENT_VERIFICATION",
-                "APPROVED",
-                "DEPOSIT_PENDING",
-                "READY_FOR_ALLOCATION",
-                "ACTIVE",
-                "RETURN_REQUESTED",
-                "RETURNED",
-                "SETTLEMENT_PENDING",
-                "COMPLETED",
-                "REJECTED",
-                "CANCELLED"
-            ],
-            default: "PENDING",
-            index: true
-        },
+        // =====================================================
+        // RENTAL STATUS
+        // =====================================================
 
-        rejectionReason: {
-            type: String,
-            default: ""
-        },
+      status: {
+    type: String,
+    enum: [
+        "ACTIVE",
+        "RETURN_REQUESTED",
+        "SETTLEMENT_PENDING",
+        "COMPLETED",
+        "CANCELLED"
+    ],
+    default: "ACTIVE",
+    index: true
+},
+
+        // =====================================================
+        // REJECTION
+        // =====================================================
+
+
+        // =====================================================
+        // RETURN DETAILS
+        // =====================================================
 
         returnCondition: {
             type: String,
@@ -190,6 +243,10 @@ const rentalSchema = new mongoose.Schema(
             min: 0
         },
 
+        // =====================================================
+        // SECURITY DEPOSIT REFUND
+        // =====================================================
+
         depositRefundAmount: {
             type: Number,
             default: 0,
@@ -213,6 +270,10 @@ const rentalSchema = new mongoose.Schema(
             default: null
         },
 
+        // =====================================================
+        // ALLOCATION
+        // =====================================================
+
         allocatedAt: {
             type: Date,
             default: null
@@ -224,16 +285,12 @@ const rentalSchema = new mongoose.Schema(
             default: null
         },
 
-        approvedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            default: null
-        },
+        // =====================================================
+     
 
-        approvedAt: {
-            type: Date,
-            default: null
-        },
+        // =====================================================
+        // NOTES
+        // =====================================================
 
         notes: {
             type: String,
@@ -245,6 +302,10 @@ const rentalSchema = new mongoose.Schema(
     }
 );
 
+// =====================================================
+// INDEXES
+// =====================================================
+
 rentalSchema.index({
     customerId: 1,
     status: 1
@@ -255,6 +316,18 @@ rentalSchema.index({
     status: 1
 });
 
-const Rental = mongoose.model("Rental", rentalSchema);
+rentalSchema.index({
+    rentalSource: 1,
+    status: 1
+});
+
+// =====================================================
+// MODEL
+// =====================================================
+
+const Rental = mongoose.model(
+    "Rental",
+    rentalSchema
+);
 
 export default Rental;

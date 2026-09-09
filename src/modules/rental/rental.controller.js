@@ -1,61 +1,15 @@
 import {
-    createRentalService,
     getMyRentalsService,
     getRentalService,
     getAllRentalsService,
-    approveRentalService,
-    rejectRentalService,
-    markDepositReceivedService,
     markRentalReturnedService,
-    allocateRentalService
+    createWalkInRentalService
 } from "./rental.service.js";
 
 
 // =====================================================
-// RECEPTIONIST ALLOCATE RENTAL
-// =====================================================
-
-export const allocateRentalController = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const rental =
-            await allocateRentalService(
-                req.params.id,
-                req.user._id
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Rental product allocated successfully",
-
-            data: rental
-
-        });
-
-    } catch (error) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
-
-// =====================================================
 // CREATE RENTAL
+// CUSTOMER ONLINE RENTAL REQUEST
 // =====================================================
 
 export const createRentalController = async (
@@ -99,6 +53,7 @@ export const createRentalController = async (
 
 // =====================================================
 // MY RENTALS
+// CUSTOMER
 // =====================================================
 
 export const getMyRentalsController = async (
@@ -177,6 +132,7 @@ export const getRentalController = async (
 
 // =====================================================
 // ALL RENTALS
+// ADMIN / RECEPTIONIST
 // =====================================================
 
 export const getAllRentalsController = async (
@@ -209,123 +165,6 @@ export const getAllRentalsController = async (
 
     }
 
-};
-
-
-// =====================================================
-// APPROVE RENTAL
-// =====================================================
-
-export const approveRentalController = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const rental =
-            await approveRentalService(
-                req.params.id,
-                req.user._id
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Rental approved. Security deposit is pending.",
-
-            data: rental
-
-        });
-
-    } catch (error) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
-
-// =====================================================
-// REJECT RENTAL
-// =====================================================
-
-export const rejectRentalController = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const rental =
-            await rejectRentalService(
-                req.params.id,
-                req.body.reason
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Rental rejected",
-
-            data: rental
-
-        });
-
-    } catch (error) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
-
-// =====================================================
-// RECEPTIONIST - DEPOSIT RECEIVED
-// =====================================================
-
-export const markDepositReceivedController = async (req, res) => {
-    try {
-
-        const result =
-            await markDepositReceivedService(
-                req.params.id,
-                req.body.paymentMethod
-            );
-
-        return res.status(200).json({
-            success: true,
-            message:
-                "Security deposit received. Rental is ready for allocation.",
-            data: result
-        });
-
-    } catch (error) {
-
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
-
-    }
 };
 
 
@@ -370,3 +209,66 @@ export const markRentalReturnedController = async (
     }
 
 };
+
+
+// =====================================================
+// CREATE WALK-IN RENTAL
+// RECEPTIONIST / ADMIN / STAFF
+// =====================================================
+
+export const createWalkInRentalController =
+    async (req, res) => {
+
+        try {
+
+            console.log(
+                "========== WALK-IN RENTAL CONTROLLER =========="
+            );
+
+            console.log(
+                "USER:",
+                req.user?._id
+            );
+
+            console.log(
+                "BODY:",
+                req.body
+            );
+
+            const rental =
+                await createWalkInRentalService(
+                    req.body,
+                    req.user?._id || null
+                );
+
+            return res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Walk-in rental created successfully",
+
+                data: rental
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "CREATE WALK-IN RENTAL ERROR:",
+                error
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Failed to create walk-in rental"
+
+            });
+
+        }
+
+    };
