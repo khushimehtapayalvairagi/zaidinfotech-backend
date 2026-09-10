@@ -158,12 +158,17 @@ const rentalSchema = new mongoose.Schema(
         // =====================================================
         // RENTAL PERIOD
         // =====================================================
+rentalDurationType: {
+    type: String,
+    enum: ["DAYS", "MONTHS"],
+    required: true
+},
 
-        rentalMonths: {
-            type: Number,
-            required: true,
-            min: 3
-        },
+rentalDuration: {
+    type: Number,
+    required: true,
+    min: 1
+},
 
         startDate: {
             type: Date,
@@ -211,14 +216,7 @@ const rentalSchema = new mongoose.Schema(
     index: true
 },
 
-        // =====================================================
-        // REJECTION
-        // =====================================================
-
-
-        // =====================================================
-        // RETURN DETAILS
-        // =====================================================
+      
 
         returnCondition: {
             type: String,
@@ -238,6 +236,46 @@ const rentalSchema = new mongoose.Schema(
         },
 
         otherDeductions: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        pendingRent: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        pendingRentGST: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        totalPendingRent: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        totalDeductions: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        extraPayableAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        // =====================================================
+        // SECURITY DEPOSIT REFUND
+        // =====================================================
+
+        depositRefundAmount: {
             type: Number,
             default: 0,
             min: 0

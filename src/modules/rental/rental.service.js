@@ -124,24 +124,58 @@ export const createWalkInRentalService = async (
     // =============================================
     // RENTAL MONTHS
     // =============================================
+// =============================================
+// RENTAL DURATION
+// =============================================
 
-    const rentalMonths =
-        Number(
-            data.rentalMonths ||
-            rentalProduct.minimumRentalMonths ||
-            3
-        );
+const rentalDurationType =
+    String(data.rentalDurationType || "").toUpperCase();
 
-    const minimumMonths =
-        Number(
-            rentalProduct.minimumRentalMonths || 3
-        );
+const rentalDuration =
+    Number(data.rentalDuration || 0);
 
-    if (rentalMonths < minimumMonths) {
-        throw new Error(
-            `Minimum rental period is ${minimumMonths} months`
-        );
-    }
+if (!["DAYS", "MONTHS"].includes(rentalDurationType)) {
+    throw new Error(
+        "Rental duration type must be DAYS or MONTHS"
+    );
+}
+
+if (rentalDuration < 1) {
+    throw new Error(
+        "Rental duration must be at least 1"
+    );
+}
+
+// =============================================
+// COMPANY RENTAL RULE
+// COMPANY = MINIMUM 3 MONTHS
+// =============================================
+
+if (
+    customerType === "COMPANY" &&
+    (
+        rentalDurationType !== "MONTHS" ||
+        rentalDuration < 3
+    )
+) {
+    throw new Error(
+        "Company rental must be for a minimum of 3 months"
+    );
+}
+
+// =============================================
+// PERSONAL RENTAL RULE
+// INDIVIDUAL = FLEXIBLE
+// =============================================
+
+if (
+    customerType === "INDIVIDUAL" &&
+    rentalDuration < 1
+) {
+    throw new Error(
+        "Personal rental duration must be at least 1 day"
+    );
+}
 
     // =============================================
     // PRICING
@@ -587,43 +621,25 @@ export const getAllRentalsService = async () => {
 // Settlement Pending
 // =====================================================
 
-export const markRentalReturnedService = async (
-    rentalId,
-    data
-) => {
+export const markRentalReturnedService = async (rentalId, data) => {
 
-    const rental =
-        await getRentalByIdDB(
-            rentalId
-        );
+    const rental = await getRentalByIdDB(rentalId);
 
     if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
+        throw new Error("Rental not found");
     }
 
-
-    // =================================================
+    // =====================================================
     // ONLY ACTIVE RENTAL CAN BE RETURNED
-    // =================================================
+    // =====================================================
 
-    if (
-        rental.status !== "ACTIVE"
-    ) {
-
-        throw new Error(
-            "Only active rental can be returned"
-        );
-
+    if (rental.status !== "ACTIVE") {
+        throw new Error("Only active rental can be returned");
     }
 
-
-    // =================================================
+    // =====================================================
     // RETURN CONDITION
-    // =================================================
+    // =====================================================
 
     const allowedConditions = [
         "GOOD",
@@ -632,144 +648,212 @@ export const markRentalReturnedService = async (
         "MISSING"
     ];
 
-    if (
-        !allowedConditions.includes(
-            data.returnCondition
-        )
-    ) {
-
-        throw new Error(
-            "Invalid return condition"
-        );
-
+    if (!allowedConditions.includes(data.returnCondition)) {
+        throw new Error("Invalid return condition");
     }
 
+    // =====================================================
+    // CHARGES
+    // =====================================================
 
-    // =================================================
-    // DAMAGE CHARGES
-    // =================================================
+    const damageCharges = Number(data.damageCharges || 0);
 
-    const damageCharges =
-        Number(
-            data.damageCharges || 0
-        );
-
-    const otherDeductions =
-        Number(
-            data.otherDeductions || 0
-        );
-
+    const otherDeductions = Number(data.otherDeductions || 0);
 
     if (damageCharges < 0) {
-
-        throw new Error(
-            "Damage charges cannot be negative"
-        );
-
+        throw new Error("Damage charges cannot be negative");
     }
-
 
     if (otherDeductions < 0) {
-
-        throw new Error(
-            "Other deductions cannot be negative"
-        );
-
+        throw new Error("Other deductions cannot be negative");
     }
 
+    // =====================================================
+    // CALCULATE PENDING RENT
+    // =====================================================
 
-    // =================================================
-    // SECURITY DEPOSIT
-    // =================================================
+    const monthlyRent = Number(rental.monthlyRent || 0);
 
-    const deposit =
+    const gstPercentage = Number(rental.gstPercentage || 0);
+
+    let pendingRent = Number(data.pendingRent || 0);
+
+    if (pendingRent < 0) {
+        throw new Error("Pending rent cannot be negative");
+    }
+
+    // =====================================================
+    // GST ON PENDING RENT
+    // =====================================================
+
+    const pendingRentGST =
         Number(
-            rental.securityDeposit || 0
+            (
+                pendingRent *
+                gstPercentage /
+                100
+            ).toFixed(2)
         );
 
+    // =====================================================
+    // TOTAL PENDING RENT
+    // =====================================================
 
-    // =================================================
-    // REFUND CALCULATION
-    // =================================================
+    const totalPendingRent =
+        Number(
+            (
+                pendingRent +
+                pendingRentGST
+            ).toFixed(2)
+        );
 
-    const refundAmount =
+    // =====================================================
+    // TOTAL DEDUCTIONS
+    // =====================================================
+
+    const totalDeductions =
+        Number(
+            (
+                totalPendingRent +
+                damageCharges +
+                otherDeductions
+            ).toFixed(2)
+        );
+
+    // =====================================================
+    // SECURITY DEPOSIT
+    // =====================================================
+
+    const securityDeposit =
+        Number(rental.securityDeposit || 0);
+
+    // =====================================================
+    // CALCULATE REFUND
+    // =====================================================
+
+    const depositBalance =
+        securityDeposit - totalDeductions;
+
+    const depositRefundAmount =
         Math.max(
-            deposit -
-            damageCharges -
-            otherDeductions,
+            Number(depositBalance.toFixed(2)),
             0
         );
 
+    // =====================================================
+    // EXTRA AMOUNT CUSTOMER HAS TO PAY
+    // =====================================================
 
-    // =================================================
-    // UPDATE RENTAL
-    // =================================================
-
-    const updated =
-        await updateRentalDB(
-            rentalId,
-            {
-
-                status:
-                    "SETTLEMENT_PENDING",
-
-                actualReturnDate:
-                    new Date(),
-
-                returnCondition:
-                    data.returnCondition,
-
-                damageCharges,
-
-                otherDeductions,
-
-                depositRefundAmount:
-                    refundAmount,
-
-                depositRefundStatus:
-                    "PENDING"
-
-            }
+    const extraPayableAmount =
+        Math.max(
+            Number((-depositBalance).toFixed(2)),
+            0
         );
 
+    // =====================================================
+    // UPDATE RENTAL
+    // =====================================================
 
-    // =================================================
-    // UPDATE RENTAL INVENTORY
-    // =================================================
-    //
-    // Product returned:
-    //
-    // availableQuantity + 1
-    // rentedQuantity - 1
-    //
-    // =================================================
-
-    await RentalProduct.findByIdAndUpdate(
-        rental.rentalProductId,
+    const updated = await updateRentalDB(
+        rentalId,
         {
-            $inc: {
+            status: "SETTLEMENT_PENDING",
 
-                availableQuantity: 1,
+            actualReturnDate: new Date(),
 
-                rentedQuantity: -1
+            returnCondition: data.returnCondition,
 
-            }
+            damageCharges,
+
+            otherDeductions,
+
+            pendingRent,
+
+            pendingRentGST,
+
+            totalPendingRent,
+
+            totalDeductions,
+
+            depositRefundAmount,
+
+            extraPayableAmount,
+
+            depositRefundStatus:
+                extraPayableAmount > 0
+                    ? "PENDING"
+                    : depositRefundAmount > 0
+                        ? "PENDING"
+                        : "NOT_APPLICABLE"
         }
     );
 
+    // =====================================================
+    // RETURN LAPTOP TO INVENTORY
+    // =====================================================
+
+    const updatedRentalProduct =
+        await RentalProduct.findOneAndUpdate(
+            {
+                _id: rental.rentalProductId,
+                rentedQuantity: { $gt: 0 }
+            },
+            {
+                $inc: {
+                    availableQuantity: 1,
+                    rentedQuantity: -1
+                }
+            },
+            {
+                new: true
+            }
+        );
+
+    if (!updatedRentalProduct) {
+
+        throw new Error(
+            "Rental inventory update failed"
+        );
+    }
+
+    // =====================================================
+    // LOW STOCK NOTIFICATION
+    // =====================================================
+
+    if (
+        updatedRentalProduct.availableQuantity <= 5
+    ) {
+
+        try {
+
+            await notifyAdminsService({
+                type: "RENTAL_STOCK_LOW",
+
+                title: "Rental Stock Low",
+
+                message:
+                    `${updatedRentalProduct.productId?.name || "Rental product"} has only ` +
+                    `${updatedRentalProduct.availableQuantity} unit(s) available for rent.`,
+
+                relatedId: updatedRentalProduct._id,
+
+                relatedModel: "RentalProduct"
+            });
+
+        } catch (notificationError) {
+
+            console.error(
+                "Rental stock notification failed:",
+                notificationError.message
+            );
+        }
+    }
 
     return updated;
-
 };
 
 
 
 
-// =====================================================
-// ALLOCATE RENTAL PRODUCT
-// =====================================================
 
-// =====================================================
-// ALLOCATE RENTAL PRODUCT
-// =====================================================
 
