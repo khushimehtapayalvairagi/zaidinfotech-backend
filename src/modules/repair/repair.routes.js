@@ -17,6 +17,14 @@ import {
 // Controller
 import * as repairController from "./repair.controller.js";
 
+
+//here new routes for password and profile chnage
+
+router.get("/profile", verifyToken, repairController.getTechnicianProfile);
+router.put("/profile", verifyToken, repairController.updateTechnicianProfile);
+router.put("/change-password", verifyToken, repairController.changePassword);
+
+
 // ==========================================
 // Create Repair Request
 // ==========================================

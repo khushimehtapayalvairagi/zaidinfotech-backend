@@ -32,6 +32,8 @@ import rentalRoutes from "./modules/rental/rental.routes.js";
 import repairserviceRoutes from './modules/repair/services/service.routes.js'
 import leaveRoutes from "./modules/leave/leave.routes.js";
 import availabilityRequestRoutes from "./modules/availabilityRequest/availabilityRequest.routes.js";
+
+import receptionistRoutes from "./modules/receptionist/receptionist.routes.js";
 const app = express();
 
 app.use(cors({
@@ -94,5 +96,6 @@ app.use("/api/repair-service", repairserviceRoutes)
 app.use("/api/repairInventory", repairInventry)
 app.use("/api/availability-requests",availabilityRequestRoutes);
 app.use("/api/rentals",rentalRoutes);
+app.use("/api/receptionist", receptionistRoutes);
 
 export default app;
