@@ -1,3 +1,192 @@
+// import multer from "multer";
+// import path from "path";
+// import fs from "fs";
+
+// // =====================================================
+// // CREATE UPLOADER
+// // =====================================================
+
+// const createUploader = (folderName, options = {}) => {
+
+//     const uploadPath = path.join(
+//         process.cwd(),
+//         "uploads",
+//         folderName
+//     );
+
+//     // =================================================
+//     // CREATE FOLDER
+//     // =================================================
+
+//     if (!fs.existsSync(uploadPath)) {
+
+//         fs.mkdirSync(uploadPath, {
+//             recursive: true
+//         });
+
+//     }
+
+//     console.log("UPLOAD PATH:", uploadPath);
+
+//     // =================================================
+//     // STORAGE
+//     // =================================================
+
+//     const storage = multer.diskStorage({
+
+//         destination: (req, file, cb) => {
+
+//             cb(null, uploadPath);
+
+//         },
+
+//         filename: (req, file, cb) => {
+
+//             const ext = path
+//                 .extname(file.originalname)
+//                 .toLowerCase();
+
+//             const filename =
+//                 `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+
+//             cb(null, filename);
+
+//         }
+
+//     });
+
+//     // =================================================
+//     // FILE FILTER
+//     // =================================================
+
+//     const fileFilter = (req, file, cb) => {
+
+//         // ---------------------------------------------
+//         // IMAGE ONLY
+//         // ---------------------------------------------
+
+//         if (options.imagesOnly) {
+
+//             if (
+//                 file.mimetype &&
+//                 file.mimetype.startsWith("image/")
+//             ) {
+
+//                 cb(null, true);
+
+//             } else {
+
+//                 cb(
+//                     new Error("Only image files are allowed"),
+//                     false
+//                 );
+
+//             }
+
+//             return;
+//         }
+
+//         // ---------------------------------------------
+//         // IMAGES + PDF
+//         // ---------------------------------------------
+
+//         const allowedTypes = [
+
+//             "image/jpeg",
+//             "image/jpg",
+//             "image/png",
+//             "image/webp",
+//             "application/pdf"
+
+//         ];
+
+//         if (allowedTypes.includes(file.mimetype)) {
+
+//             cb(null, true);
+
+//         } else {
+
+//             cb(
+//                 new Error(
+//                     "Only JPG, PNG, WEBP and PDF files are allowed"
+//                 ),
+//                 false
+//             );
+
+//         }
+
+//     };
+
+//     // =================================================
+//     // MULTER
+//     // =================================================
+
+//     return multer({
+
+//         storage,
+
+//         fileFilter,
+
+//         limits: {
+
+//             files: options.maxFiles || 5,
+
+//             fileSize:
+//                 options.maxSize || 5 * 1024 * 1024
+
+//         }
+
+//     });
+
+// };
+
+
+// // =====================================================
+// // CATEGORY
+// // =====================================================
+
+// export const categoryUpload =
+//     createUploader("categories", {
+//         imagesOnly: true,
+//         maxFiles: 5
+//     });
+
+
+// // =====================================================
+// // BRAND
+// // =====================================================
+
+// export const brandUpload =
+//     createUploader("brands", {
+//         imagesOnly: true,
+//         maxFiles: 5
+//     });
+
+
+// // =====================================================
+// // PRODUCT
+// // =====================================================
+
+// export const productUpload =
+//     createUploader("products", {
+//         imagesOnly: true,
+//         maxFiles: 5
+//     });
+
+
+// // =====================================================
+// // RENTAL DOCUMENT
+// // =====================================================
+
+// export const rentalDocumentUpload =
+//     createUploader("rental-documents", {
+//         imagesOnly: false,
+//         maxFiles: 1,
+//         maxSize: 10 * 1024 * 1024
+//     });
+
+
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -8,6 +197,10 @@ import fs from "fs";
 
 const createUploader = (folderName, options = {}) => {
 
+    // =================================================
+    // UPLOAD PATH
+    // =================================================
+
     const uploadPath = path.join(
         process.cwd(),
         "uploads",
@@ -15,18 +208,22 @@ const createUploader = (folderName, options = {}) => {
     );
 
     // =================================================
-    // CREATE FOLDER
+    // CREATE DIRECTORY IF NOT EXISTS
     // =================================================
 
     if (!fs.existsSync(uploadPath)) {
 
         fs.mkdirSync(uploadPath, {
-            recursive: true
+            recursive: true,
         });
 
     }
 
-    console.log("UPLOAD PATH:", uploadPath);
+    console.log("=================================");
+    console.log("UPLOAD FOLDER :", folderName);
+    console.log("UPLOAD PATH   :", uploadPath);
+    console.log("=================================");
+
 
     // =================================================
     // STORAGE
@@ -34,11 +231,19 @@ const createUploader = (folderName, options = {}) => {
 
     const storage = multer.diskStorage({
 
+        // -------------------------------------------------
+        // DESTINATION
+        // -------------------------------------------------
+
         destination: (req, file, cb) => {
 
             cb(null, uploadPath);
 
         },
+
+        // -------------------------------------------------
+        // FILE NAME
+        // -------------------------------------------------
 
         filename: (req, file, cb) => {
 
@@ -46,49 +251,60 @@ const createUploader = (folderName, options = {}) => {
                 .extname(file.originalname)
                 .toLowerCase();
 
-            const filename =
-                `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+            const uniqueName =
+                `${Date.now()}-${Math.round(
+                    Math.random() * 1e9
+                )}${ext}`;
 
-            cb(null, filename);
+            cb(null, uniqueName);
 
-        }
+        },
 
     });
 
-    // =================================================
+
+    // =====================================================
     // FILE FILTER
-    // =================================================
+    // =====================================================
 
     const fileFilter = (req, file, cb) => {
 
-        // ---------------------------------------------
-        // IMAGE ONLY
-        // ---------------------------------------------
+        console.log("=================================");
+        console.log("MULTER FILE RECEIVED");
+        console.log("Field Name    :", file.fieldname);
+        console.log("Original Name :", file.originalname);
+        console.log("Mimetype      :", file.mimetype);
+        console.log("=================================");
 
-        if (options.imagesOnly) {
+
+        // =================================================
+        // IMAGES ONLY
+        // =================================================
+
+        if (options.imagesOnly === true) {
 
             if (
                 file.mimetype &&
                 file.mimetype.startsWith("image/")
             ) {
 
-                cb(null, true);
-
-            } else {
-
-                cb(
-                    new Error("Only image files are allowed"),
-                    false
-                );
+                return cb(null, true);
 
             }
 
-            return;
+            return cb(
+                new Error(
+                    "Only image files are allowed"
+                ),
+                false
+            );
+
         }
 
-        // ---------------------------------------------
+
+        // =================================================
         // IMAGES + PDF
-        // ---------------------------------------------
+        // =================================================
 
         const allowedTypes = [
 
@@ -96,30 +312,36 @@ const createUploader = (folderName, options = {}) => {
             "image/jpg",
             "image/png",
             "image/webp",
-            "application/pdf"
+
+            "application/pdf",
 
         ];
 
+
         if (allowedTypes.includes(file.mimetype)) {
 
-            cb(null, true);
-
-        } else {
-
-            cb(
-                new Error(
-                    "Only JPG, PNG, WEBP and PDF files are allowed"
-                ),
-                false
-            );
+            return cb(null, true);
 
         }
 
+
+        // =================================================
+        // INVALID FILE
+        // =================================================
+
+        return cb(
+            new Error(
+                "Only JPG, JPEG, PNG, WEBP and PDF files are allowed"
+            ),
+            false
+        );
+
     };
 
-    // =================================================
-    // MULTER
-    // =================================================
+
+    // =====================================================
+    // MULTER INSTANCE
+    // =====================================================
 
     return multer({
 
@@ -129,12 +351,17 @@ const createUploader = (folderName, options = {}) => {
 
         limits: {
 
-            files: options.maxFiles || 5,
+            // Maximum number of files
+            files:
+                options.maxFiles ||
+                5,
 
+            // Maximum individual file size
             fileSize:
-                options.maxSize || 5 * 1024 * 1024
+                options.maxSize ||
+                5 * 1024 * 1024,
 
-        }
+        },
 
     });
 
@@ -142,45 +369,97 @@ const createUploader = (folderName, options = {}) => {
 
 
 // =====================================================
-// CATEGORY
+// CATEGORY UPLOAD
 // =====================================================
 
-export const categoryUpload =
-    createUploader("categories", {
+export const categoryUpload = createUploader(
+    "categories",
+    {
         imagesOnly: true,
-        maxFiles: 5
-    });
+
+        maxFiles: 5,
+
+        maxSize:
+            10 * 1024 * 1024,
+    }
+);
 
 
 // =====================================================
-// BRAND
+// BRAND UPLOAD
 // =====================================================
 
-export const brandUpload =
-    createUploader("brands", {
+export const brandUpload = createUploader(
+    "brands",
+    {
         imagesOnly: true,
-        maxFiles: 5
-    });
+
+        maxFiles: 5,
+
+        maxSize:
+            10 * 1024 * 1024,
+    }
+);
 
 
 // =====================================================
-// PRODUCT
+// PRODUCT UPLOAD
 // =====================================================
 
-export const productUpload =
-    createUploader("products", {
+export const productUpload = createUploader(
+    "products",
+    {
         imagesOnly: true,
-        maxFiles: 5
-    });
+
+        maxFiles: 5,
+
+        maxSize:
+            10 * 1024 * 1024,
+    }
+);
 
 
 // =====================================================
-// RENTAL DOCUMENT
+// RENTAL DOCUMENT UPLOAD
 // =====================================================
 
-export const rentalDocumentUpload =
-    createUploader("rental-documents", {
+/*
+    Allowed:
+
+        JPG
+        JPEG
+        PNG
+        WEBP
+        PDF
+
+    Maximum:
+
+        10 MB
+
+    Files:
+
+        1
+
+    Frontend field name MUST be:
+
+        document
+*/
+
+export const rentalDocumentUpload = createUploader(
+    "rental-documents",
+    {
         imagesOnly: false,
+
         maxFiles: 1,
-        maxSize: 10 * 1024 * 1024
-    });
+
+        maxSize:
+            10 * 1024 * 1024,
+    }
+);
+
+
+// =====================================================
+// OPTIONAL: EXPORT CREATOR
+// =====================================================
+
+export { createUploader };

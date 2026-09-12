@@ -8,6 +8,7 @@ import {
   getSalarySummaryController,
   exportSalaryExcel,
   updateBankDetailsController,
+  calculateEmployeeSalaryController,
 } from "./salary.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -18,12 +19,6 @@ const router = express.Router();
 
 
 // ======================================================
-// IMPORTANT:
-// STATIC ROUTES MUST COME BEFORE /:employeeId
-// ======================================================
-
-
-// ======================================================
 // GET ALL EMPLOYEES SALARY
 // GET /api/salary/all-summary
 // ======================================================
@@ -31,7 +26,11 @@ const router = express.Router();
 router.get(
   "/all-summary",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR,
+    ROLES.SALES
+  ),
   getAllEmployeesSalaryController
 );
 
@@ -44,7 +43,11 @@ router.get(
 router.get(
   "/export",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR,
+    ROLES.SALES
+  ),
   exportSalaryExcel
 );
 
@@ -57,51 +60,86 @@ router.get(
 router.get(
   "/summary/:employeeId",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR,
+    ROLES.SALES
+  ),
   getSalarySummaryController
 );
 
 
 // ======================================================
-// CONFIGURE SALARY
+// CONFIGURE EMPLOYEE SALARY
 // POST /api/salary/config/:employeeId
 // ======================================================
+// HR sets salary structure
+// ADMIN can also manage
 
 router.post(
   "/config/:employeeId",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR
+  ),
   createSalaryController
 );
 
 
 // ======================================================
-// PAY / RECORD SALARY
+// CALCULATE MONTHLY SALARY
+// POST /api/salary/calculate/:employeeId
+// ======================================================
+// Calculates salary and creates/updates PENDING record
+
+router.post(
+  "/calculate/:employeeId",
+  verifyToken,
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR,
+    ROLES.SALES
+  ),
+  calculateEmployeeSalaryController
+);
+
+
+// ======================================================
+// PAY SALARY
 // PUT /api/salary/pay/:employeeId
 // ======================================================
+// Actual payment is done by ACCOUNTANT
+// ADMIN can also pay
 
 router.put(
   "/pay/:employeeId",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.SALES
+  ),
   updateSalaryController
 );
+
+
 // ======================================================
 // UPDATE BANK DETAILS
 // PUT /api/salary/bank/:employeeId
 // ======================================================
+// HR maintains employee bank details
+// ADMIN can manage
 
 router.put(
-
   "/bank/:employeeId",
-
   verifyToken,
-
-  allowRoles(ROLES.ADMIN),
-
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR
+  ),
   updateBankDetailsController
-
 );
+
 
 // ======================================================
 // GET SINGLE EMPLOYEE SALARY
@@ -111,10 +149,14 @@ router.put(
 router.get(
   "/:employeeId",
   verifyToken,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(
+    ROLES.ADMIN,
+    ROLES.HR,
+  
+    ROLES.SALES
+  ),
   getSalaryController
 );
-
 
 
 export default router;

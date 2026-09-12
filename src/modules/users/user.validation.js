@@ -37,7 +37,8 @@ export const registerSchema = z.object({
     "SALES",
     "TECHNICIAN",
     "INVENTORY",
-    "ACCOUNTANT",
+     "IT_SUPPORT",
+    "HR_EXECUTIVE",
     "CUSTOMER",
     "OTHER"
 ]).optional(),
@@ -82,7 +83,8 @@ export const createUserSchema = z.object({
     "SALES",
     "TECHNICIAN",
     "INVENTORY",
-    "ACCOUNTANT",
+    "IT_SUPPORT",
+    "HR_EXECUTIVE",
      "CUSTOMER",
   ]).optional(),
   bankDetails: z.object({
@@ -114,7 +116,8 @@ export const createUserSchema = z.object({
     "FRONT_DESK",
     "REPAIR",
     "INVENTORY",
-    "ACCOUNTS",
+    "IT_SUPPORT",
+    "HR_EXECUTIVE",
     "OTHER"
   ]),
 
@@ -173,13 +176,17 @@ export const createUserSchema = z.object({
   // ==============================
 
   const employeeRoles = [
-    "SUPER_ADMIN",
-    "ADMIN",
-    "SALES",
-    "TECHNICIAN",
-    "INVENTORY",
-    "ACCOUNTANT",
-    "OTHER"
+     
+        "SUPER_ADMIN",
+        "ADMIN",
+        "SALES",
+        "TECHNICIAN",
+        "INVENTORY",
+        "CUSTOMER",
+        "IT_SUPPORT",
+        "HR_EXECUTIVE",
+       
+   
   ];
 
   if (

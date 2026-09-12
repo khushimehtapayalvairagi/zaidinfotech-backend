@@ -9,6 +9,9 @@ import {
 } from "./salary.repository.js";
 
 import ExcelJS from "exceljs";
+import Attendance from "../attendance/attendance.model.js";
+import Leave from "../leave/leave.model.js";
+
 
 // =====================================================
 // UPDATE BANK DETAILS
@@ -23,21 +26,13 @@ const updateBankDetails = async (
     await findEmployeeById(employeeId);
 
   if (!employee) {
-
-    throw new Error(
-      "Employee not found"
-    );
-
+    throw new Error("Employee not found");
   }
 
-  if (
-    employee.role === "CUSTOMER"
-  ) {
-
+  if (employee.role === "CUSTOMER") {
     throw new Error(
       "Customer cannot have salary bank details"
     );
-
   }
 
   const {
@@ -48,7 +43,6 @@ const updateBankDetails = async (
     accountType
   } = payload;
 
-
   if (
     !accountHolderName ||
     !accountNumber ||
@@ -56,13 +50,10 @@ const updateBankDetails = async (
     !bankName ||
     !accountType
   ) {
-
     throw new Error(
       "All bank details are required"
     );
-
   }
-
 
   const cleanBankDetails = {
 
@@ -87,13 +78,14 @@ const updateBankDetails = async (
 
   };
 
-
   return await updateEmployeeBankDetails(
     employeeId,
     cleanBankDetails
   );
 
 };
+
+
 // =====================================================
 // EXPORT SALARY EXCEL
 // =====================================================
@@ -103,16 +95,13 @@ export const exportSalaryExcelService = async () => {
   const employees =
     await findAllEmployeesSalaryData();
 
-
   const workbook =
     new ExcelJS.Workbook();
-
 
   const worksheet =
     workbook.addWorksheet(
       "Employee Salary"
     );
-
 
   worksheet.columns = [
 
@@ -190,7 +179,6 @@ export const exportSalaryExcelService = async () => {
 
   ];
 
-
   employees.forEach((employee) => {
 
     worksheet.addRow({
@@ -244,7 +232,6 @@ export const exportSalaryExcelService = async () => {
 
   });
 
-
   return workbook;
 
 };
@@ -265,32 +252,22 @@ const createSalary = async (
     joiningDate
   } = payload;
 
-
   const employee =
     await findEmployeeById(
       employeeId
     );
 
-
   if (!employee) {
-
     throw new Error(
       "Employee not found"
     );
-
   }
 
-
-  if (
-    employee.role === "CUSTOMER"
-  ) {
-
+  if (employee.role === "CUSTOMER") {
     throw new Error(
       "Salary cannot be assigned to customer"
     );
-
   }
-
 
   const salaryDetails = {
 
@@ -309,7 +286,6 @@ const createSalary = async (
       new Date()
 
   };
-
 
   return await updateSalaryDetails(
     employeeId,
@@ -332,15 +308,11 @@ const getSalary = async (
       employeeId
     );
 
-
   if (!employee) {
-
     throw new Error(
       "Employee not found"
     );
-
   }
-
 
   const totalPaid =
     (employee.salaryHistory || [])
@@ -354,7 +326,6 @@ const getSalary = async (
           (entry.amount || 0),
         0
       );
-
 
   return {
 
@@ -396,7 +367,7 @@ const getSalary = async (
 
 
 // =====================================================
-// UPDATE / ADD SALARY PAYMENT
+// UPDATE SALARY / PAY SALARY
 // =====================================================
 
 const updateSalary = async (
@@ -411,56 +382,106 @@ const updateSalary = async (
     paymentDate,
     paymentMode,
     status,
-    remark
+    remark,
+    paidBy
   } = payload;
-
 
   const employee =
     await findEmployeeById(
       employeeId
     );
 
-
   if (!employee) {
-
     throw new Error(
       "Employee not found"
     );
-
   }
 
-
-  if (
-    employee.role === "CUSTOMER"
-  ) {
-
+  if (employee.role === "CUSTOMER") {
     throw new Error(
       "Customer cannot receive salary"
     );
-
   }
 
+  // =================================================
+  // RECORD ID IS REQUIRED FOR ACTUAL PAYMENT
+  // =================================================
+
+  if (!recordId) {
+    throw new Error(
+      "Salary record ID is required for payment"
+    );
+  }
+
+  // =================================================
+  // FIND SALARY RECORD
+  // =================================================
+
+  const record =
+    employee.salaryHistory.id(
+      recordId
+    );
+
+  if (!record) {
+    throw new Error(
+      "Salary record not found"
+    );
+  }
+
+  // =================================================
+  // ALREADY PAID CHECK
+  // =================================================
+
+  if (record.status === "PAID") {
+    throw new Error(
+      "Salary is already paid"
+    );
+  }
+
+  // =================================================
+  // PAYMENT MODE REQUIRED
+  // =================================================
+
+  if (!paymentMode) {
+    throw new Error(
+      "Payment mode is required"
+    );
+  }
+
+  // =================================================
+  // VALID PAYMENT MODES
+  // =================================================
+
+  const allowedPaymentModes = [
+    "CASH",
+    "BANK",
+    "UPI"
+  ];
+
+  if (
+    !allowedPaymentModes.includes(
+      paymentMode
+    )
+  ) {
+    throw new Error(
+      "Invalid payment mode"
+    );
+  }
 
   // =================================================
   // BANK PAYMENT VALIDATION
   // =================================================
 
-  if (
-    paymentMode === "BANK"
-  ) {
+  if (paymentMode === "BANK") {
 
     const bank =
       employee.bankDetails;
 
-
     if (!bank) {
-
       throw new Error(
         "Employee bank details are not available"
       );
-
     }
-
 
     if (
       !bank.accountHolderName ||
@@ -468,135 +489,42 @@ const updateSalary = async (
       !bank.ifscCode ||
       !bank.bankName
     ) {
-
       throw new Error(
         "Complete bank details are required for bank salary payment"
       );
-
     }
 
   }
 
-
   // =================================================
-  // UPDATE EXISTING RECORD
+  // PAYMENT
   // =================================================
 
-  if (recordId) {
+  record.status = "PAID";
 
-    const record =
-      employee.salaryHistory.id(
-        recordId
-      );
+  record.paymentDate =
+    paymentDate ||
+    new Date();
 
+  record.paymentMode =
+    paymentMode;
 
-    if (!record) {
-
-      throw new Error(
-        "Salary record not found"
-      );
-
-    }
-
-
-    if (
-      month !== undefined
-    ) {
-      record.month =
-        month;
-    }
-
-
-    if (
-      amount !== undefined
-    ) {
-      record.amount =
-        Number(amount);
-    }
-
-
-    if (
-      paymentDate !== undefined
-    ) {
-      record.paymentDate =
-        paymentDate;
-    }
-
-
-    if (
-      paymentMode !== undefined
-    ) {
-      record.paymentMode =
-        paymentMode;
-    }
-
-
-    if (
-      status !== undefined
-    ) {
-      record.status =
-        status;
-    }
-
-
-    if (
-      remark !== undefined
-    ) {
-      record.remark =
-        remark;
-    }
-
-
-    return await saveEmployee(
-      employee
-    );
-
+  if (remark !== undefined) {
+    record.remark =
+      remark;
   }
 
+  if (paidBy) {
+    record.paidBy =
+      paidBy;
+  }
 
   // =================================================
-  // NEW SALARY PAYMENT
+  // SAVE
   // =================================================
 
-  const newHistoryItem = {
-
-    month:
-      month ||
-      new Date().toLocaleString(
-        "default",
-        {
-          month: "long",
-          year: "numeric"
-        }
-      ),
-
-    amount:
-      amount !== undefined
-        ? Number(amount)
-        : employee.salaryDetails?.amount || 0,
-
-    paymentDate:
-      paymentDate ||
-      new Date(),
-
-    paymentMode:
-      paymentMode ||
-      "CASH",
-
-    status:
-      status ||
-      "PAID",
-
-    remark:
-      remark ||
-      ""
-
-  };
-
-
-  return await pushSalaryHistory(
-    employeeId,
-    newHistoryItem
+  return await saveEmployee(
+    employee
   );
 
 };
@@ -612,18 +540,25 @@ const getAllEmployeesSalarySummary =
     const employees =
       await findAllEmployeesSalaryData();
 
-
     const summaryList =
       employees.map((emp) => {
 
-        const paidRecords =
-          (emp.salaryHistory || [])
-            .filter(
-              (record) =>
-                record.status ===
-                "PAID"
-            );
+        const salaryRecords =
+          emp.salaryHistory || [];
 
+        const paidRecords =
+          salaryRecords.filter(
+            (record) =>
+              record.status ===
+              "PAID"
+          );
+
+        const pendingRecords =
+          salaryRecords.filter(
+            (record) =>
+              record.status ===
+              "PENDING"
+          );
 
         const totalPaidAmount =
           paidRecords.reduce(
@@ -633,16 +568,21 @@ const getAllEmployeesSalarySummary =
             0
           );
 
+        const totalPendingAmount =
+          pendingRecords.reduce(
+            (acc, record) =>
+              acc +
+              (record.amount || 0),
+            0
+          );
 
         const paidMonthsCount =
           paidRecords.length;
-
 
         const lastPayment =
           paidRecords[
             paidRecords.length - 1
           ];
-
 
         const lastPaidDate =
           lastPayment?.paymentDate
@@ -650,7 +590,6 @@ const getAllEmployeesSalarySummary =
                 lastPayment.paymentDate
               ).toLocaleDateString()
             : "-";
-
 
         const paymentModes =
           [
@@ -661,7 +600,6 @@ const getAllEmployeesSalarySummary =
               )
             )
           ].join(", ") || "-";
-
 
         return {
 
@@ -698,11 +636,17 @@ const getAllEmployeesSalarySummary =
               ?.amount || 0,
 
           bankDetails:
-            emp.bankDetails || null,
+            emp.bankDetails ||
+            null,
 
           totalPaidAmount,
 
+          totalPendingAmount,
+
           paidMonthsCount,
+
+          pendingMonthsCount:
+            pendingRecords.length,
 
           paidMonthsLabel:
             `${paidMonthsCount} Month${
@@ -716,13 +660,11 @@ const getAllEmployeesSalarySummary =
           paymentModes,
 
           salaryHistory:
-            emp.salaryHistory ||
-            []
+            salaryRecords
 
         };
 
       });
-
 
     return summaryList;
 
@@ -742,15 +684,11 @@ const getSalarySummary = async (
       employeeId
     );
 
-
   if (!employee) {
-
     throw new Error(
       "Employee not found"
     );
-
   }
-
 
   const paidRecords =
     (employee.salaryHistory || [])
@@ -760,7 +698,6 @@ const getSalarySummary = async (
           "PAID"
       );
 
-
   const totalPaidSalary =
     paidRecords.reduce(
       (sum, record) =>
@@ -769,10 +706,8 @@ const getSalarySummary = async (
       0
     );
 
-
   const totalMonthsPaid =
     paidRecords.length;
-
 
   const paymentBreakdown =
     paidRecords.map(
@@ -804,7 +739,6 @@ const getSalarySummary = async (
 
       })
     );
-
 
   return {
 
@@ -878,6 +812,456 @@ const getSalarySummary = async (
 };
 
 
+// =====================================================
+// CALCULATE EMPLOYEE SALARY
+// =====================================================
+
+const calculateEmployeeSalary = async (
+  employeeId,
+  month,
+  year
+) => {
+
+  const employee =
+    await findEmployeeById(
+      employeeId
+    );
+
+  if (!employee) {
+    throw new Error(
+      "Employee not found"
+    );
+  }
+
+  if (employee.role === "CUSTOMER") {
+    throw new Error(
+      "Customer cannot have salary"
+    );
+  }
+
+  const baseSalary =
+    Number(
+      employee.salaryDetails?.amount || 0
+    );
+
+  if (baseSalary <= 0) {
+    throw new Error(
+      "Employee salary is not configured"
+    );
+  }
+
+  // =================================================
+  // VALIDATE MONTH / YEAR
+  // =================================================
+
+  month =
+    Number(month);
+
+  year =
+    Number(year);
+
+  if (
+    month < 1 ||
+    month > 12
+  ) {
+    throw new Error(
+      "Invalid month"
+    );
+  }
+
+  if (
+    year < 2000 ||
+    year > 2100
+  ) {
+    throw new Error(
+      "Invalid year"
+    );
+  }
+
+  // =================================================
+  // MONTH DATE RANGE
+  // =================================================
+
+  const startDate =
+    new Date(
+      year,
+      month - 1,
+      1,
+      0,
+      0,
+      0,
+      0
+    );
+
+  const endDate =
+    new Date(
+      year,
+      month,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+  const totalCalendarDays =
+    endDate.getDate();
+
+  // =================================================
+  // ATTENDANCE
+  // =================================================
+
+  const attendance =
+    await Attendance.find({
+
+      user: employeeId,
+
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+
+    });
+
+  let presentDays = 0;
+
+  let absentDays = 0;
+
+  let overtimeHours = 0;
+
+  attendance.forEach(
+    (record) => {
+
+      if (
+        record.status === "PRESENT" ||
+        record.status === "LATE"
+      ) {
+        presentDays++;
+      }
+
+      if (
+        record.status === "HALF_DAY"
+      ) {
+        presentDays += 0.5;
+      }
+
+      if (
+        record.status === "ABSENT"
+      ) {
+        absentDays++;
+      }
+
+      overtimeHours +=
+        Number(
+          record.overtime || 0
+        );
+
+    }
+  );
+
+  // =================================================
+  // LEAVE
+  // =================================================
+
+  const leaves =
+    await Leave.find({
+
+      user: employeeId,
+
+      status: "APPROVED",
+
+      fromDate: {
+        $lte: endDate
+      },
+
+      toDate: {
+        $gte: startDate
+      }
+
+    });
+
+  let paidLeaveDays = 0;
+
+  let unpaidLeaveDays = 0;
+
+  leaves.forEach(
+    (leave) => {
+
+      if (
+        leave.leaveType ===
+        "UNPAID"
+      ) {
+
+        unpaidLeaveDays +=
+          Number(
+            leave.totalDays || 0
+          );
+
+      } else {
+
+        paidLeaveDays +=
+          Number(
+            leave.totalDays || 0
+          );
+
+      }
+
+    }
+  );
+
+  // =================================================
+  // SALARY CALCULATION
+  // =================================================
+
+  const dailySalary =
+    baseSalary /
+    totalCalendarDays;
+
+  // ABSENT = UNPAID
+  const totalUnpaidDays =
+    unpaidLeaveDays +
+    absentDays;
+
+  const deductionAmount =
+    dailySalary *
+    totalUnpaidDays;
+
+  // =================================================
+  // OVERTIME
+  // =================================================
+
+  const hourlySalary =
+    baseSalary /
+    26 /
+    8;
+
+  const overtimeAmount =
+    hourlySalary *
+    overtimeHours;
+
+  // =================================================
+  // NET SALARY
+  // =================================================
+
+  const netSalary =
+    Math.max(
+      0,
+      baseSalary +
+      overtimeAmount -
+      deductionAmount
+    );
+
+  // =================================================
+  // MONTH LABEL
+  // =================================================
+
+  const monthLabel =
+    `${year}-${String(month).padStart(
+      2,
+      "0"
+    )}`;
+
+  // =================================================
+  // CHECK EXISTING SALARY RECORD
+  // =================================================
+
+  const existingRecord =
+    (employee.salaryHistory || [])
+      .find(
+        (record) =>
+          record.month ===
+            monthLabel
+      );
+
+  // =================================================
+  // IF ALREADY PAID
+  // =================================================
+
+  if (
+    existingRecord &&
+    existingRecord.status ===
+      "PAID"
+  ) {
+
+    throw new Error(
+      `Salary for ${monthLabel} is already paid`
+    );
+
+  }
+
+  // =================================================
+  // CREATE / UPDATE PENDING RECORD
+  // =================================================
+
+  if (existingRecord) {
+
+    existingRecord.amount =
+      netSalary;
+
+    existingRecord.status =
+      "PENDING";
+
+    existingRecord.paymentDate =
+      null;
+
+    existingRecord.paymentMode =
+      null;
+
+    existingRecord.remark =
+      "Salary recalculated";
+
+    const savedEmployee =
+      await saveEmployee(
+        employee
+      );
+
+    return {
+
+      employeeId:
+        employee._id,
+
+      employeeCode:
+        employee.employeeId,
+
+      employeeName:
+        `${employee.firstName || ""} ${
+          employee.lastName || ""
+        }`.trim(),
+
+      month:
+        monthLabel,
+
+      workingDays:
+        totalCalendarDays,
+
+      presentDays,
+
+      paidLeaveDays,
+
+      unpaidLeaveDays,
+
+      absentDays,
+
+      overtimeHours,
+
+      baseSalary,
+
+      overtimeAmount,
+
+      deductionAmount,
+
+      netSalary,
+
+      status:
+        "PENDING",
+
+      salaryRecordId:
+        existingRecord._id,
+
+      employee:
+        savedEmployee
+
+    };
+
+  }
+
+  // =================================================
+  // NEW PENDING SALARY RECORD
+  // =================================================
+
+  const newHistoryItem = {
+
+    month:
+      monthLabel,
+
+    amount:
+      netSalary,
+
+    paymentDate:
+      null,
+
+    paymentMode:
+      null,
+
+    status:
+      "PENDING",
+
+    remark:
+      "Salary calculated and pending payment"
+
+  };
+
+  const savedEmployee =
+    await pushSalaryHistory(
+      employeeId,
+      newHistoryItem
+    );
+
+  // Get newly created record ID
+  const createdRecord =
+    savedEmployee.salaryHistory[
+      savedEmployee.salaryHistory.length - 1
+    ];
+
+  // =================================================
+  // RETURN CALCULATION + RECORD
+  // =================================================
+
+  return {
+
+    employeeId:
+      employee._id,
+
+    employeeCode:
+      employee.employeeId,
+
+    employeeName:
+      `${employee.firstName || ""} ${
+        employee.lastName || ""
+      }`.trim(),
+
+    month:
+      monthLabel,
+
+    workingDays:
+      totalCalendarDays,
+
+    presentDays,
+
+    paidLeaveDays,
+
+    unpaidLeaveDays,
+
+    absentDays,
+
+    overtimeHours,
+
+    baseSalary,
+
+    overtimeAmount,
+
+    deductionAmount,
+
+    netSalary,
+
+    status:
+      "PENDING",
+
+    salaryRecordId:
+      createdRecord?._id,
+
+    employee:
+      savedEmployee
+
+  };
+
+};
+
+
+// =====================================================
+// EXPORT
+// =====================================================
+
 export const salaryService = {
 
   createSalary,
@@ -890,6 +1274,8 @@ export const salaryService = {
 
   getSalarySummary,
 
-  updateBankDetails
+  updateBankDetails,
+
+  calculateEmployeeSalary
 
 };

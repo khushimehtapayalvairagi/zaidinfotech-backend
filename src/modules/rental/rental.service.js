@@ -18,6 +18,7 @@ import {
     updateRentalDB
 } from "./rental.repository.js";
 
+import RentalDocument from "./rentalDocument.model.js";
 
 // =====================================================
 // GENERATE RENTAL NUMBER
@@ -571,54 +572,6 @@ export const getAllRentalsService = async () => {
 
 
 
-
-// =====================================================
-// DEPOSIT RECEIVED
-// =====================================================
-// Security deposit physically received by receptionist
-//
-// DEPOSIT_PENDING
-//        ↓
-// READY_FOR_ALLOCATION
-// =====================================================
-
-// =====================================================
-// DEPOSIT RECEIVED
-// =====================================================
-// Security deposit physically received
-//
-// DEPOSIT_PENDING
-//        ↓
-// Create Payment
-//        ↓
-// READY_FOR_ALLOCATION
-// =====================================================
-
-// =====================================================
-// DEPOSIT RECEIVED
-// =====================================================
-// DEPOSIT_PENDING
-//        ↓
-// Create Payment
-//        ↓
-// READY_FOR_ALLOCATION
-// =====================================================
-
-
-
-
-// =====================================================
-// RECEIVE RENTAL RETURN
-// =====================================================
-// Offline rental flow:
-//
-// Customer physically returns product
-//              ↓
-// Receptionist receives product
-//              ↓
-// Condition check
-//              ↓
-// Settlement Pending
 // =====================================================
 
 export const markRentalReturnedService = async (rentalId, data) => {
@@ -854,6 +807,235 @@ export const markRentalReturnedService = async (rentalId, data) => {
 
 
 
+export const uploadRentalDocumentService = async (
+    rentalId,
+    userId,
+    data,
+    file
+) => {
 
+    // --------------------------------------------------------
+    // Validate rental ID
+    // --------------------------------------------------------
+
+    if (!rentalId) {
+        throw new Error("Rental ID is required");
+    }
+
+    // --------------------------------------------------------
+    // Validate user
+    // --------------------------------------------------------
+
+    if (!userId) {
+        throw new Error("User ID is required");
+    }
+
+    // --------------------------------------------------------
+    // Validate file
+    // --------------------------------------------------------
+
+    if (!file) {
+        throw new Error("Document file is required");
+    }
+
+    // --------------------------------------------------------
+    // Find rental
+    // --------------------------------------------------------
+
+    const rental = await Rental.findById(rentalId);
+
+    if (!rental) {
+        throw new Error("Rental not found");
+    }
+
+    // --------------------------------------------------------
+    // Document type
+    // --------------------------------------------------------
+
+    const documentType = String(
+        data?.documentType || ""
+    )
+        .trim()
+        .toUpperCase();
+
+    if (!documentType) {
+        throw new Error("Document type is required");
+    }
+
+    // --------------------------------------------------------
+    // Allowed document types
+    // Same as RentalDocument model
+    // --------------------------------------------------------
+
+    const allowedDocumentTypes = [
+        "PASSPORT_PHOTO",
+        "PAN_CARD",
+        "AADHAAR_CARD",
+        "HOUSE_RENTAL_AGREEMENT",
+        "COLLEGE_ID",
+        "OFFICE_ID",
+        "GST_REGISTRATION",
+        "AUTHORIZATION_LETTER"
+    ];
+
+    if (!allowedDocumentTypes.includes(documentType)) {
+        throw new Error(
+            `Invalid document type: ${documentType}`
+        );
+    }
+
+    // --------------------------------------------------------
+    // File URL
+    // --------------------------------------------------------
+
+    const fileUrl =
+        `/uploads/rental-documents/${file.filename}`;
+
+    // --------------------------------------------------------
+    // Create document
+    // --------------------------------------------------------
+
+    const document = await RentalDocument.create({
+        rentalId: rental._id,
+
+        // For walk-in rental this is the logged-in
+        // receptionist/sales/staff user who uploaded it.
+        customerId: userId,
+
+        documentType,
+
+        fileUrl,
+
+        fileName:
+            file.originalname || file.filename,
+
+        verificationStatus: "PENDING",
+
+        verifiedBy: null,
+
+        verifiedAt: null,
+
+        rejectionReason: ""
+    });
+
+    return document;
+};
+
+
+// ============================================================
+// GET RENTAL DOCUMENTS
+// ============================================================
+
+export const getRentalDocumentsService = async (
+    rentalId
+) => {
+
+    if (!rentalId) {
+        throw new Error("Rental ID is required");
+    }
+
+    const rental =
+        await Rental.findById(rentalId);
+
+    if (!rental) {
+        throw new Error("Rental not found");
+    }
+
+    const documents =
+        await RentalDocument.find({
+            rentalId
+        })
+        .populate(
+            "verifiedBy",
+            "firstName lastName email role"
+        )
+        .sort({
+            createdAt: -1
+        });
+
+    return documents;
+};
+
+
+// ============================================================
+// VERIFY RENTAL DOCUMENT
+// ============================================================
+
+export const verifyRentalDocumentService = async (
+    documentId,
+    userId,
+    data
+) => {
+
+    if (!documentId) {
+        throw new Error(
+            "Document ID is required"
+        );
+    }
+
+    if (!userId) {
+        throw new Error(
+            "Verifier user ID is required"
+        );
+    }
+
+    const document =
+        await RentalDocument.findById(
+            documentId
+        );
+
+    if (!document) {
+        throw new Error(
+            "Rental document not found"
+        );
+    }
+
+    const verificationStatus =
+        String(
+            data?.verificationStatus || ""
+        )
+            .trim()
+            .toUpperCase();
+
+    if (
+        !["APPROVED", "REJECTED"]
+            .includes(verificationStatus)
+    ) {
+        throw new Error(
+            "Verification status must be APPROVED or REJECTED"
+        );
+    }
+
+    if (
+        verificationStatus === "REJECTED" &&
+        !String(
+            data?.rejectionReason || ""
+        ).trim()
+    ) {
+        throw new Error(
+            "Rejection reason is required"
+        );
+    }
+
+    document.verificationStatus =
+        verificationStatus;
+
+    document.verifiedBy =
+        userId;
+
+    document.verifiedAt =
+        new Date();
+
+    document.rejectionReason =
+        verificationStatus === "REJECTED"
+            ? String(
+                data.rejectionReason
+            ).trim()
+            : "";
+
+    await document.save();
+
+    return document;
+};
 
 

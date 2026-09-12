@@ -170,30 +170,16 @@ role: {
         "SALES",
         "TECHNICIAN",
         "INVENTORY",
-        "ACCOUNTANT",
         "CUSTOMER",
-        "OTHER"
+        "IT_SUPPORT",
+        "HR_EXECUTIVE",
+       
     ],
     required: function () {
         return this.hasSystemAccess;
     }
 },
-// role: {
-//     type: String,
-//     enum: [
-//         "SUPER_ADMIN",
-//         "ADMIN",
-//         "RECEPTIONIST",
-//         "TECHNICIAN",
-//         "INVENTORY",
-//         "ACCOUNTANT",
-//         "CUSTOMER"
-        
-//     ],
-//     required: function () {
-//         return this.hasSystemAccess;
-//     }
-// },
+
 
     department: {
       type: String,
@@ -201,8 +187,10 @@ role: {
         "ADMINISTRATION",
         "FRONT_DESK",
         "REPAIR",
-        "INVENTORY",
-        "ACCOUNTS",
+        "IT_SUPPORT",
+        "HR",
+        "PROCUREMENT",
+        "OFFICE_ASSISTANT",
         "CUSTOMER",
          "OTHER"            // <-- ADD THIS
       ],
@@ -241,11 +229,8 @@ salaryDetails: {
 
 },
 
-
 salaryHistory: [
-
     {
-
         month: {
             type: String,
             required: true
@@ -253,11 +238,13 @@ salaryHistory: [
 
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         paymentDate: {
-            type: Date
+            type: Date,
+            default: null
         },
 
         paymentMode: {
@@ -266,26 +253,85 @@ salaryHistory: [
                 "CASH",
                 "BANK",
                 "UPI"
-            ]
+            ],
+            default: null
         },
 
         status: {
             type: String,
             enum: [
+                "PENDING",
                 "PAID",
-                "PENDING"
+                "CANCELLED"
             ],
             default: "PENDING"
+        },
+
+        // Attendance based information
+        workingDays: {
+            type: Number,
+            default: 0
+        },
+
+        presentDays: {
+            type: Number,
+            default: 0
+        },
+
+        paidLeaveDays: {
+            type: Number,
+            default: 0
+        },
+
+        unpaidLeaveDays: {
+            type: Number,
+            default: 0
+        },
+
+        absentDays: {
+            type: Number,
+            default: 0
+        },
+
+        overtimeHours: {
+            type: Number,
+            default: 0
+        },
+
+        // Salary calculation
+        baseSalary: {
+            type: Number,
+            default: 0
+        },
+
+        overtimeAmount: {
+            type: Number,
+            default: 0
+        },
+
+        deductionAmount: {
+            type: Number,
+            default: 0
+        },
+
+        netSalary: {
+            type: Number,
+            default: 0
+        },
+
+        // Accountant
+        paidBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null
         },
 
         remark: {
             type: String,
             default: ""
         }
-
     }
-
-],
+]
 
   
     // ==================================================

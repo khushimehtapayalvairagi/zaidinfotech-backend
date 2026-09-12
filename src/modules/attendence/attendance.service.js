@@ -1,20 +1,5 @@
 import Attendance from "./attendance.model.js";
 import User from "../users/user.model.js";
-// export const markManualAttendance = async (data) => {
-//     const checkInTime = data.checkIn || new Date();
-
-//     const record = await Attendance.create({
-//         user: data.user,
-//         employeeId: data.employeeId,
-//         date: data.date,
-//         status: data.status,
-//         attendanceMode: data.attendanceMode || "MANUAL",
-//         checkIn: checkInTime,
-//         remark: data.remark || ""
-//     });
-
-//     return record;
-// };
 
 export const markManualAttendance = async (data) => {
 
