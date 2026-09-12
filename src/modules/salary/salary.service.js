@@ -9,7 +9,7 @@ import {
 } from "./salary.repository.js";
 
 import ExcelJS from "exceljs";
-import Attendance from "../attendance/attendance.model.js";
+import Attendance from "../attendence/attendance.model.js";
 import Leave from "../leave/leave.model.js";
 
 

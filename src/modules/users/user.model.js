@@ -229,6 +229,7 @@ salaryDetails: {
 
 },
 
+
 salaryHistory: [
     {
         month: {
@@ -331,7 +332,7 @@ salaryHistory: [
             default: ""
         }
     }
-]
+],
 
   
     // ==================================================
