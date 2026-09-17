@@ -11,6 +11,8 @@ import {
     getRentalController,
     getAllRentalsController,
     markRentalReturnedController,
+    searchRentalsForReturnController,
+    completeRentalSettlementController
 } from "./rental.controller.js";
 
 import {
@@ -150,6 +152,22 @@ router.get(
     getAllRentalsController
 );
 
+// =====================================================
+// SEARCH RENTAL FOR RETURN
+// =====================================================
+
+router.get(
+    "/return/search",
+    verifyToken,
+    allowRoles(
+        "SALES",
+        "RECEPTIONIST",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "STAFF"
+    ),
+    searchRentalsForReturnController
+);
 
 // =====================================================
 // SINGLE RENTAL
@@ -176,6 +194,22 @@ router.patch(
         "SALES"
     ),
     markRentalReturnedController
+);
+// =====================================================
+// COMPLETE RENTAL SETTLEMENT
+// =====================================================
+
+router.patch(
+    "/:id/settle",
+    verifyToken,
+    allowRoles(
+        "SALES",
+        "RECEPTIONIST",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "STAFF"
+    ),
+    completeRentalSettlementController
 );
 
 

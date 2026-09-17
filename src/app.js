@@ -4,9 +4,7 @@ import path from "path";
 import userRoutes from "./modules/users/user.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import addressRoutes from "./modules/addresses/address.routes.js";
-
 import categoryRoutes from "./modules/categories/category.routes.js";
-
 import brandRoutes from "./modules/brands/brand.routes.js";
 import productRoutes from "./modules/products/product.routes.js";
 import  cartRoutes  from "./modules/cart/cart.routes.js"
@@ -28,7 +26,7 @@ import newRepair from './modules/repair/repair.routes.js'
 import repairInventry from "./modules/repair/repairparts/repairParts.routes.js"
 import rentalRoutes from "./modules/rental/rental.routes.js";
 import purchaseRoutes from "./modules/Accountant/purchase.routes.js";
-
+import financialReportsRoutes from "./modules/Accountant/financialReports.routes.js";
 import repairserviceRoutes from './modules/repair/services/service.routes.js'
 import leaveRoutes from "./modules/leave/leave.routes.js";
 import availabilityRequestRoutes from "./modules/availabilityRequest/availabilityRequest.routes.js";
@@ -99,4 +97,5 @@ app.use("/api/rentals",rentalRoutes);
 app.use("/api/receptionist", receptionistRoutes);
 app.use("/api/expenses",expenseRoutes);
 app.use("/api/purchase",purchaseRoutes);
+app.use("/api/financial-reports",financialReportsRoutes);
 export default app;

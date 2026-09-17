@@ -3,7 +3,9 @@ import {
     getRentalService,
     getAllRentalsService,
     markRentalReturnedService,
-    createWalkInRentalService
+    createWalkInRentalService,
+    searchRentalsForReturnService,
+    completeRentalSettlementService
 } from "./rental.service.js";
 
 
@@ -272,4 +274,97 @@ export const createWalkInRentalController =
 
         }
 
+    };
+
+    // =====================================================
+// SEARCH RENTAL FOR RETURN
+// RENTAL NUMBER / CUSTOMER PHONE
+// =====================================================
+
+export const searchRentalsForReturnController =
+    async (req, res) => {
+
+        try {
+
+            const {
+                search
+            } = req.query;
+
+            const rentals =
+                await searchRentalsForReturnService(
+                    search
+                );
+
+            return res.status(200).json({
+
+                success: true,
+
+                data: rentals
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "SEARCH RENTAL FOR RETURN ERROR:",
+                error
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Failed to search rentals"
+
+            });
+
+        }
+    };
+    // =====================================================
+// COMPLETE RENTAL SETTLEMENT
+// =====================================================
+
+export const completeRentalSettlementController =
+    async (req, res) => {
+
+        try {
+
+            const rental =
+                await completeRentalSettlementService(
+                    req.params.id,
+                    req.body,
+                    req.user?._id
+                );
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Rental settlement completed successfully",
+
+                data: rental
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "COMPLETE RENTAL SETTLEMENT ERROR:",
+                error
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Failed to complete rental settlement"
+
+            });
+
+        }
     };

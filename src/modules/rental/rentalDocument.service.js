@@ -1,9 +1,159 @@
+// import RentalDocument from "./rentalDocument.model.js";
+// import Rental from "./rental.model.js";
+
+
+// // =====================================================
+// // UPLOAD DOCUMENT
+// // =====================================================
+
+// export const uploadRentalDocumentService = async (
+//     rentalId,
+//     customerId,
+//     data,
+//     file
+// ) => {
+
+//     const rental =
+//         await Rental.findOne({
+//             _id: rentalId,
+//             customerId
+//         });
+
+//     if (!rental) {
+
+//         throw new Error(
+//             "Rental not found"
+//         );
+
+//     }
+
+
+//     if (!file) {
+
+//         throw new Error(
+//             "Document file is required"
+//         );
+
+//     }
+
+
+//     const document =
+//         await RentalDocument.create({
+
+//             rentalId,
+
+//             customerId,
+
+//             documentType:
+//                 data.documentType,
+
+//             fileUrl:
+//                 `/uploads/rental-documents/${file.filename}`,
+
+//             fileName:
+//                 file.originalname
+
+//         });
+
+
+//     await Rental.findByIdAndUpdate(
+//         rentalId,
+//         {
+//             status:
+//                 "DOCUMENT_VERIFICATION"
+//         }
+//     );
+
+
+//     return document;
+
+// };
+
+
+// // =====================================================
+// // GET RENTAL DOCUMENTS
+// // =====================================================
+
+// export const getRentalDocumentsService = async (
+//     rentalId
+// ) => {
+
+//     return await RentalDocument.find({
+//         rentalId
+//     })
+//         .populate(
+//             "verifiedBy",
+//             "name email"
+//         )
+//         .sort({
+//             createdAt: -1
+//         });
+
+// };
+
+
+// // =====================================================
+// // VERIFY DOCUMENT
+// // =====================================================
+
+// export const verifyRentalDocumentService = async (
+//     documentId,
+//     adminId,
+//     status,
+//     rejectionReason = ""
+// ) => {
+
+//     const document =
+//         await RentalDocument.findById(
+//             documentId
+//         );
+
+//     if (!document) {
+
+//         throw new Error(
+//             "Document not found"
+//         );
+
+//     }
+
+
+//     if (
+//         !["APPROVED", "REJECTED"]
+//             .includes(status)
+//     ) {
+
+//         throw new Error(
+//             "Invalid verification status"
+//         );
+
+//     }
+
+
+//     document.verificationStatus =
+//         status;
+
+//     document.rejectionReason =
+//         rejectionReason;
+
+//     document.verifiedBy =
+//         adminId;
+
+//     document.verifiedAt =
+//         new Date();
+
+
+//     await document.save();
+
+
+//     return document;
+
+// };
+
 import RentalDocument from "./rentalDocument.model.js";
 import Rental from "./rental.model.js";
 
-
 // =====================================================
-// UPLOAD DOCUMENT
+// UPLOAD RENTAL DOCUMENT
 // =====================================================
 
 export const uploadRentalDocumentService = async (
@@ -12,63 +162,98 @@ export const uploadRentalDocumentService = async (
     data,
     file
 ) => {
+    // ---------------------------------------------
+    // Validate rental ID
+    // ---------------------------------------------
+    if (!rentalId) {
+        throw new Error("Rental ID is required");
+    }
 
-    const rental =
-        await Rental.findOne({
-            _id: rentalId,
-            customerId
-        });
+    // ---------------------------------------------
+    // Validate file
+    // ---------------------------------------------
+    if (!file) {
+        throw new Error("Document file is required");
+    }
+
+    // ---------------------------------------------
+    // Find rental ONLY by rentalId
+    //
+    // IMPORTANT:
+    // Walk-In rental has customerId = null.
+    // Therefore don't match rental.customerId
+    // with logged-in staff user ID.
+    // ---------------------------------------------
+    const rental = await Rental.findById(rentalId);
 
     if (!rental) {
-
-        throw new Error(
-            "Rental not found"
-        );
-
+        throw new Error("Rental not found");
     }
 
+    // ---------------------------------------------
+    // Validate document type
+    // ---------------------------------------------
+    const allowedDocumentTypes = [
+        "PASSPORT_PHOTO",
+        "PAN_CARD",
+        "AADHAAR_CARD",
+        "HOUSE_RENTAL_AGREEMENT",
+        "COLLEGE_ID",
+        "OFFICE_ID",
+        "GST_REGISTRATION",
+        "AUTHORIZATION_LETTER"
+    ];
 
-    if (!file) {
+    const documentType = String(
+        data?.documentType || ""
+    )
+        .trim()
+        .toUpperCase();
 
-        throw new Error(
-            "Document file is required"
-        );
-
+    if (!documentType) {
+        throw new Error("Document type is required");
     }
 
+    if (!allowedDocumentTypes.includes(documentType)) {
+        throw new Error(
+            `Invalid document type: ${documentType}`
+        );
+    }
 
-    const document =
-        await RentalDocument.create({
+    // ---------------------------------------------
+    // Create document
+    //
+    // For ONLINE:
+    // customerId = rental.customerId
+    //
+    // For WALK_IN:
+    // rental.customerId = null
+    // ---------------------------------------------
+    const document = await RentalDocument.create({
+        rentalId: rental._id,
 
-            rentalId,
+        customerId: rental.customerId || null,
 
-            customerId,
+        documentType,
 
-            documentType:
-                data.documentType,
+        fileUrl: `/uploads/rental-documents/${file.filename}`,
 
-            fileUrl:
-                `/uploads/rental-documents/${file.filename}`,
+        fileName: file.originalname || ""
+    });
 
-            fileName:
-                file.originalname
-
-        });
-
-
-    await Rental.findByIdAndUpdate(
-        rentalId,
-        {
-            status:
-                "DOCUMENT_VERIFICATION"
-        }
-    );
-
+    // ---------------------------------------------
+    // IMPORTANT:
+    //
+    // DO NOT set:
+    // status: "DOCUMENT_VERIFICATION"
+    //
+    // Rental model doesn't allow this status.
+    // Document itself already has:
+    // verificationStatus: "PENDING"
+    // ---------------------------------------------
 
     return document;
-
 };
-
 
 // =====================================================
 // GET RENTAL DOCUMENTS
@@ -77,6 +262,9 @@ export const uploadRentalDocumentService = async (
 export const getRentalDocumentsService = async (
     rentalId
 ) => {
+    if (!rentalId) {
+        throw new Error("Rental ID is required");
+    }
 
     return await RentalDocument.find({
         rentalId
@@ -88,12 +276,10 @@ export const getRentalDocumentsService = async (
         .sort({
             createdAt: -1
         });
-
 };
 
-
 // =====================================================
-// VERIFY DOCUMENT
+// VERIFY RENTAL DOCUMENT
 // =====================================================
 
 export const verifyRentalDocumentService = async (
@@ -102,49 +288,55 @@ export const verifyRentalDocumentService = async (
     status,
     rejectionReason = ""
 ) => {
-
-    const document =
-        await RentalDocument.findById(
-            documentId
-        );
-
-    if (!document) {
-
-        throw new Error(
-            "Document not found"
-        );
-
+    if (!documentId) {
+        throw new Error("Document ID is required");
     }
 
+    const document =
+        await RentalDocument.findById(documentId);
 
+    if (!document) {
+        throw new Error("Document not found");
+    }
+
+    const verificationStatus = String(
+        status || ""
+    )
+        .trim()
+        .toUpperCase();
+
+    // ---------------------------------------------
+    // Validate status
+    // ---------------------------------------------
     if (
-        !["APPROVED", "REJECTED"]
-            .includes(status)
+        ![
+            "APPROVED",
+            "REJECTED"
+        ].includes(verificationStatus)
     ) {
-
         throw new Error(
             "Invalid verification status"
         );
-
     }
 
-
+    // ---------------------------------------------
+    // Update document
+    // ---------------------------------------------
     document.verificationStatus =
-        status;
+        verificationStatus;
 
     document.rejectionReason =
-        rejectionReason;
+        verificationStatus === "REJECTED"
+            ? String(rejectionReason || "")
+            : "";
 
     document.verifiedBy =
-        adminId;
+        adminId || null;
 
     document.verifiedAt =
         new Date();
 
-
     await document.save();
 
-
     return document;
-
 };

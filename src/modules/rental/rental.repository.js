@@ -99,3 +99,62 @@ export const findActiveRentalByProductDB = async (
     });
 
 };
+
+// =====================================================
+// SEARCH ACTIVE RENTAL FOR RETURN
+// BY RENTAL NUMBER OR CUSTOMER PHONE
+// =====================================================
+
+export const searchActiveRentalsForReturnDB = async (
+    search
+) => {
+
+    const value =
+        String(search || "").trim();
+
+    if (!value) {
+        return [];
+    }
+
+    const escapedValue =
+        value.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+        );
+
+    return await Rental.find({
+        status: "ACTIVE",
+
+        $or: [
+            {
+                rentalNumber: {
+                    $regex: escapedValue,
+                    $options: "i"
+                }
+            },
+
+            {
+                "individualDetails.phone": {
+                    $regex: escapedValue,
+                    $options: "i"
+                }
+            },
+
+            {
+                "companyDetails.phone": {
+                    $regex: escapedValue,
+                    $options: "i"
+                }
+            }
+        ]
+    })
+        .populate(
+            "customerId",
+            "name email phone"
+        )
+        .populate("productId")
+        .populate("rentalProductId")
+        .sort({
+            createdAt: -1
+        });
+};
