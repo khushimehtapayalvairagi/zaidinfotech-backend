@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 import {
@@ -75,55 +74,103 @@ const productSchema =
                 required: true
 
             },
-           subcategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    default: null
-},  
-//          productType: {
-//     type: String,
-//     enum: ["NEW", "REFURBISHED"],
-//     default: "NEW"
-// },
 
-productType: {
-    type: String,
 
-    enum: [
-        "NEW",
-        "REFURBISHED",
-        "RENTAL"
-    ],
+            subcategory: {
 
-    default: "NEW"
-},
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-      refurbishedDetails: {
-    grade: {
-        type: String,
-        enum: ["A+", "A", "B", "C"],
-        default: null
-    },
+                ref: "Category",
 
-    batteryHealth: {
-        type: Number,
-        min: 0,
-        max: 100,
-        default: null
-    },
+                default: null
 
-    warrantyMonths: {
-        type: Number,
-        min: 0,
-        default: null
-    },
+            },
 
-    testingStatus: {
-        type: String,
-        enum: ["TESTED", "NOT_TESTED"],
-        default: null
-    }
-},
+
+            // =================================================
+            // PRODUCT TYPE
+            // =================================================
+            // NEW / REFURBISHED = product condition
+            // RENTAL is NOT a productType.
+            // Rental is handled separately below.
+            // =================================================
+
+            productType: {
+
+                type: String,
+
+                enum: [
+
+                    "NEW",
+
+                    "REFURBISHED"
+
+                ],
+
+                default: "NEW"
+
+            },
+
+
+            // =================================================
+            // REFURBISHED DETAILS
+            // =================================================
+
+            refurbishedDetails: {
+
+                grade: {
+
+                    type: String,
+
+                    enum: [
+                        "A+",
+                        "A",
+                        "B",
+                        "C"
+                    ],
+
+                    default: null
+
+                },
+
+                batteryHealth: {
+
+                    type: Number,
+
+                    min: 0,
+
+                    max: 100,
+
+                    default: null
+
+                },
+
+                warrantyMonths: {
+
+                    type: Number,
+
+                    min: 0,
+
+                    default: null
+
+                },
+
+                testingStatus: {
+
+                    type: String,
+
+                    enum: [
+                        "TESTED",
+                        "NOT_TESTED"
+                    ],
+
+                    default: null
+
+                }
+
+            },
+
 
             // =================================================
             // BRAND
@@ -195,6 +242,14 @@ productType: {
             // =================================================
             // PRICING
             // =================================================
+            //
+            // purchasePrice  = company purchase/cost price
+            //
+            // retailPrice    = PERSONAL customer price
+            //
+            // wholesalePrice = BUSINESS customer price
+            //
+            // =================================================
 
             pricing: {
 
@@ -206,13 +261,24 @@ productType: {
 
                 },
 
-                sellingPrice: {
+
+                retailPrice: {
 
                     type: Number,
 
                     required: true
 
                 },
+
+
+                wholesalePrice: {
+
+                    type: Number,
+
+                    default: null
+
+                },
+
 
                 mrp: {
 
@@ -222,6 +288,7 @@ productType: {
 
                 },
 
+
                 discount: {
 
                     type: Number,
@@ -229,6 +296,7 @@ productType: {
                     default: 0
 
                 },
+
 
                 gst: {
 
@@ -252,14 +320,39 @@ productType: {
                 default: {}
 
             },
-          rental: {
-    isAvailableForRent: {
-        type: Boolean,
-        default: false
-    },
 
- 
-},
+
+            // =================================================
+            // RENTAL
+            // =================================================
+            //
+            // Rental is independent of productType.
+            //
+            // Example:
+            //
+            // productType = NEW
+            // isAvailableForRent = true
+            //
+            // Same product can be:
+            //
+            // PERSONAL  -> retailPrice
+            // BUSINESS  -> wholesalePrice
+            // RENTAL    -> rental.monthlyRent
+            //
+            // =================================================
+
+            rental: {
+
+                isAvailableForRent: {
+
+                    type: Boolean,
+
+                    default: false
+
+                }
+
+            },
+
 
             // =================================================
             // SEO

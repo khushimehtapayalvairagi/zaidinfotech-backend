@@ -1,35 +1,40 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
+
   firstName: z
-    .string(),
-    
+    .string()
+    .min(2, "First name is required"),
 
   lastName: z
-    .string(),
-   
+    .string()
+    .min(2, "Last name is required"),
+
   email: z
     .string()
     .email("Invalid email address"),
 
   phone: z
     .string()
-    .regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+    .regex(
+      /^[6-9]\d{9}$/,
+      "Invalid phone number"
+    ),
 
   password: z
-    .string(),
-   
+    .string()
+    .min(6, "Password must be at least 6 characters"),
 
-  // role: z.enum([
-  //   "SUPER_ADMIN",
-  //   "ADMIN",
-  //   "RECEPTIONIST",
-  //   "TECHNICIAN",
-  //   "INVENTORY",
-  //   "ACCOUNTANT",
-  //   "CUSTOMER",
+  // ==========================================
+  // CUSTOMER TYPE
+  // ==========================================
 
-  // ]).optional(),
+  customerType: z
+    .enum([
+      "PERSONAL",
+      "BUSINESS"
+    ])
+    .default("PERSONAL"),
 
   role: z.enum([
     "SUPER_ADMIN",
@@ -37,27 +42,25 @@ export const registerSchema = z.object({
     "SALES",
     "TECHNICIAN",
     "INVENTORY",
-     "IT_SUPPORT",
+    "IT_SUPPORT",
     "HR_EXECUTIVE",
     "CUSTOMER",
     "OTHER"
-]).optional(),
-
+  ]).optional(),
 
   salaryDetails: z.object({
 
     salaryType: z.enum([
-        "MONTHLY",
-        "DAILY"
+      "MONTHLY",
+      "DAILY"
     ]).optional(),
-
 
     amount: z.number().optional(),
 
-
     joiningDate: z.string().optional()
 
-}).optional()
+  }).optional()
+
 });
 
 

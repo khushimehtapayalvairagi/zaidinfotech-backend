@@ -1,163 +1,214 @@
-
 import express from "express";
 
 import {
 
-    createShipment,
+  createShipment,
 
-    getShipmentById,
+  dispatchOrder,
+   testBlueDart,
 
-    getMyShipments,
+  getShipmentById,
 
-    getAllShipments,
+  getMyShipments,
 
-    updateTrackingDetails,
+  getAllShipments,
 
-    updateShipmentStatus,
+  updateTrackingDetails,
 
-    deleteShipment,
-    getShipmentTracking
+  updateShipmentStatus,
 
+  deleteShipment,
+
+  getShipmentTracking
 
 } from "./shipment.controller.js";
 
+
 import {
 
-    createShipmentValidation,
+  createShipmentValidation,
 
-    updateTrackingValidation,
+  dispatchOrderValidation,
 
-    updateShipmentStatusValidation
+  updateTrackingValidation,
+
+  updateShipmentStatusValidation
 
 } from "./shipment.validation.js";
 
-import { validate } from "../../common/middleware/validate.middleware.js";
+
+import {
+  validate
+} from "../../common/middleware/validate.middleware.js";
 
 
-import { verifyToken } from "../../common/middleware/auth.middleware.js";
-
-const router = express.Router();
-
-router.get(
-    "/:id/tracking",
-    getShipmentTracking
-);
+import {
+  verifyToken
+} from "../../common/middleware/auth.middleware.js";
 
 
-// =======================================
-// CREATE SHIPMENT
-// =======================================
+const router =
+  express.Router();
+
+
+// ======================================================
+// DISPATCH ORDER THROUGH BLUE DART
+// ======================================================
 
 router.post(
 
-    "/",
+  "/dispatch",
 
-    verifyToken,
+  verifyToken,
 
-    validate(createShipmentValidation),
+  validate(
+    dispatchOrderValidation
+  ),
 
-    createShipment
+  dispatchOrder
 
 );
 
-
-
 // =======================================
+// TEST BLUE DART CONNECTION
+// =======================================
+
+router.get(
+  "/blue-dart/test-connection",
+  verifyToken,
+  testBlueDart
+);
+
+// ======================================================
 // GET MY SHIPMENTS
-// =======================================
+// ======================================================
 
 router.get(
 
-    "/my",
+  "/my",
 
-    validate,
+  verifyToken,
 
-    getMyShipments
+  getMyShipments
 
 );
 
 
+// ======================================================
+// CREATE GENERIC SHIPMENT
+// ======================================================
 
-// =======================================
+router.post(
+
+  "/",
+
+  verifyToken,
+
+  validate(
+    createShipmentValidation
+  ),
+
+  createShipment
+
+);
+
+
+// ======================================================
 // GET ALL SHIPMENTS
-// =======================================
+// ======================================================
 
 router.get(
 
-    "/",
+  "/",
 
-    verifyToken,
+  verifyToken,
 
-    getAllShipments
+  getAllShipments
 
 );
 
 
+// ======================================================
+// GET SHIPMENT TRACKING
+// ======================================================
 
-// =======================================
+router.get(
+
+  "/:id/tracking",
+
+  verifyToken,
+
+  getShipmentTracking
+
+);
+
+
+// ======================================================
 // GET SHIPMENT BY ID
-// =======================================
+// ======================================================
 
 router.get(
 
-    "/:id",
+  "/:id",
 
-    verifyToken,
+  verifyToken,
 
-    getShipmentById
+  getShipmentById
 
 );
 
 
-
-// =======================================
+// ======================================================
 // UPDATE TRACKING DETAILS
-// =======================================
+// ======================================================
 
 router.put(
 
-    "/tracking/:id",
+  "/tracking/:id",
 
-    verifyToken,
+  verifyToken,
 
-    validate(updateTrackingValidation),
+  validate(
+    updateTrackingValidation
+  ),
 
-    updateTrackingDetails
+  updateTrackingDetails
 
 );
 
 
-
-// =======================================
+// ======================================================
 // UPDATE SHIPMENT STATUS
-// =======================================
+// ======================================================
 
 router.patch(
 
-    "/status/:id",
+  "/status/:id",
 
-    verifyToken,
+  verifyToken,
 
-    validate(updateShipmentStatusValidation),
+  validate(
+    updateShipmentStatusValidation
+  ),
 
-    updateShipmentStatus
+  updateShipmentStatus
 
 );
 
 
-
-// =======================================
+// ======================================================
 // DELETE SHIPMENT
-// =======================================
+// ======================================================
 
 router.delete(
 
-    "/:id",
+  "/:id",
 
-    verifyToken,
+  verifyToken,
 
-    deleteShipment
+  deleteShipment
 
 );
+
 
 export default router;

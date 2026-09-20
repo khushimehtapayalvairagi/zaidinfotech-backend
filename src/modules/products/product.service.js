@@ -11,20 +11,114 @@ import {
     findProductsByReceptionist
 } from "./product.repository.js";
 
+
 import Category from "../categories/category.model.js";
 
+
 import Brand from "../brands/brand.model.js";
+
+
 import RentalProduct from "../rental/rentalProduct.model.js";
+
 
 import Inventory from "../inventory/inventory.model.js";
 
+
 import generateSlug from "../../common/utils/generateSlug.js";
 
+
 import generateSKU from "../../common/utils/generateSKU.js";
-import {calculateDiscountedPrice,matchOfferToProduct} from "../../common/utils/offerCalculator.js";
+
+
+import {
+    calculateDiscountedPrice,
+    matchOfferToProduct
+} from "../../common/utils/offerCalculator.js";
+
+
 import {
     getActiveOffersDB
 } from "../offer/offer.repository.js";
+
+
+// =====================================================
+// CUSTOMER PRICE HELPER
+// =====================================================
+//
+// PERSONAL  -> retailPrice
+// BUSINESS  -> wholesalePrice
+//
+// =====================================================
+const getCustomerPrice = (
+    product,
+    customerType = "PERSONAL"
+) => {
+
+    if (customerType === "BUSINESS") {
+
+        return (
+            product.pricing?.wholesalePrice
+            ??
+            product.pricing?.retailPrice
+            ??
+            0
+        );
+
+    }
+
+    return (
+        product.pricing?.retailPrice
+        ?? 0
+    );
+
+};
+
+
+// =====================================================
+// SAFE CUSTOMER PRICING
+// =====================================================
+//
+// IMPORTANT:
+// PERSONAL customer ko wholesalePrice
+// response mein nahi bhejna.
+//
+// BUSINESS customer ko wholesalePrice
+// sellingPrice ke naam se milega.
+//
+// =====================================================
+
+const getSafePricing = (
+    product,
+    customerType
+) => {
+
+    const customerPrice =
+        getCustomerPrice(
+            product,
+            customerType
+        );
+
+    return {
+
+        mrp:
+            product.pricing?.mrp
+            ?? 0,
+
+        discount:
+            product.pricing?.discount
+            ?? 0,
+
+        gst:
+            product.pricing?.gst
+            ?? 0,
+
+        sellingPrice:
+            customerPrice
+
+    };
+
+};
+
 
 // =====================================================
 // PRODUCTS ADDED BY RECEPTIONIST
@@ -38,6 +132,7 @@ export const fetchProductsAddedByReceptionist = async (
         await findProductsByReceptionist(
             receptionistId
         );
+
 
     return products;
 
@@ -60,10 +155,12 @@ export const createProductService = async (
             "========== CREATE PRODUCT SERVICE =========="
         );
 
+
         console.log(
             "Incoming Product Data:",
             data
         );
+
 
         console.log(
             "Files:",
@@ -123,7 +220,7 @@ export const createProductService = async (
             );
 
 
-           if (!category) {
+        if (!category) {
 
             throw new Error(
                 "Category not found"
@@ -145,12 +242,14 @@ export const createProductService = async (
 
         let subcategory = null;
 
+
         if (data.subcategory) {
 
             subcategory =
                 await Category.findById(
                     data.subcategory
                 );
+
 
             if (!subcategory) {
 
@@ -167,7 +266,7 @@ export const createProductService = async (
                 subcategory.name
             );
 
-}
+        }
 
 
         // =================================================
@@ -192,38 +291,51 @@ export const createProductService = async (
         // =================================================
         // PRICING
         // =================================================
-        //
-        // At this point data.pricing is already an object
-        // because parseProductMultipartData converted it
-        // before Joi validation.
-        //
-        // =================================================
 
         const pricing = {
 
             purchasePrice:
                 Number(
-                    data.pricing?.purchasePrice ?? 0
+                    data.pricing?.purchasePrice
+                    ?? 0
                 ),
 
-            sellingPrice:
+
+            retailPrice:
                 Number(
-                    data.pricing?.sellingPrice ?? 0
+                    data.pricing?.retailPrice
+                    ?? 0
                 ),
+
+
+            wholesalePrice:
+                data.pricing?.wholesalePrice !== null &&
+                data.pricing?.wholesalePrice !== undefined &&
+                data.pricing?.wholesalePrice !== ""
+                    ? Number(
+                        data.pricing.wholesalePrice
+                    )
+                    : null,
+
 
             mrp:
                 Number(
-                    data.pricing?.mrp ?? 0
+                    data.pricing?.mrp
+                    ?? 0
                 ),
+
 
             discount:
                 Number(
-                    data.pricing?.discount ?? 0
+                    data.pricing?.discount
+                    ?? 0
                 ),
+
 
             gst:
                 Number(
-                    data.pricing?.gst ?? 0
+                    data.pricing?.gst
+                    ?? 0
                 )
 
         };
@@ -296,69 +408,103 @@ export const createProductService = async (
             name:
                 data.name,
 
+
             category:
                 data.category,
 
-            subcategory: 
-            data.subcategory || null,
+
+            subcategory:
+                data.subcategory
+                || null,
 
 
-          productType: 
-           data.productType || "NEW",
+            productType:
+                data.productType
+                || "NEW",
+
 
             brand:
                 data.brand,
 
+
             shortDescription:
-                data.shortDescription || "",
+                data.shortDescription
+                || "",
+
 
             description:
-                data.description || "",
+                data.description
+                || "",
+
 
             pricing,
 
+
             slug,
+
 
             sku,
 
+
             images,
-              rental: {
-        isAvailableForRent:
-            data.rental?.isAvailableForRent === true
-    },
+
+
+            rental: {
+
+                isAvailableForRent:
+                    data.rental?.isAvailableForRent
+                    === true
+
+            },
+
 
             createdBy:
                 userId
 
         };
-             
-// =================================================
-// REFURBISHED DETAILS
-// =================================================
 
-if (data.productType === "REFURBISHED") {
 
-    productData.refurbishedDetails = {
+        // =================================================
+        // REFURBISHED DETAILS
+        // =================================================
 
-        grade:
-            data.refurbishedDetails?.grade || null,
+        if (
+            data.productType
+            === "REFURBISHED"
+        ) {
 
-        batteryHealth:
-            Number(
-                data.refurbishedDetails?.batteryHealth ?? 0
-            ),
+            productData.refurbishedDetails = {
 
-        warrantyMonths:
-            Number(
-                data.refurbishedDetails?.warrantyMonths ?? 0
-            ),
+                grade:
+                    data.refurbishedDetails?.grade
+                    || null,
 
-        testingStatus:
-            data.refurbishedDetails?.testingStatus || null
 
-    };
+                batteryHealth:
+                    Number(
+                        data.refurbishedDetails
+                            ?.batteryHealth
+                        ?? 0
+                    ),
 
-}
+
+                warrantyMonths:
+                    Number(
+                        data.refurbishedDetails
+                            ?.warrantyMonths
+                        ?? 0
+                    ),
+
+
+                testingStatus:
+                    data.refurbishedDetails
+                        ?.testingStatus
+                    || null
+
+            };
+
+        }
+
 
         // =================================================
         // BARCODE
@@ -436,169 +582,138 @@ if (data.productType === "REFURBISHED") {
             );
 
 
-            // =====================================================
-// CREATE RENTAL PRODUCT - ONLY ONCE
-// =====================================================
+        // =====================================================
+        // CREATE RENTAL PRODUCT
+        // =====================================================
+        //
+        // Rental is controlled only by:
+        //
+        // data.rental.isAvailableForRent
+        //
+        // NOT by productType.
+        //
+        // =====================================================
 
-if (
-    data.productType === "RENTAL" ||
-    data.rental?.isAvailableForRent === true
-) {
+        if (
+            data.rental?.isAvailableForRent
+            === true
+        ) {
 
-    const rentalAvailableQuantity =
-        Number(data.rental?.availableQuantity ?? 0);
-
-    const rentalData = {
-
-        productId: product._id,
-
-        isAvailableForRent: true,
-
-        monthlyRent:
-            Number(data.rental?.monthlyRent ?? 0),
-
-        securityDeposit:
-            Number(data.rental?.securityDeposit ?? 0),
-
-        minimumRentalMonths:
-            Math.max(
+            const rentalAvailableQuantity =
                 Number(
-                    data.rental?.minimumRentalMonths ?? 3
-                ),
-                3
-            ),
+                    data.rental
+                        ?.availableQuantity
+                    ?? 0
+                );
 
-        gst:
-            Number(data.rental?.gst ?? 0),
 
-        // First time:
-        // total = available
-        totalQuantity:
-            rentalAvailableQuantity,
+            const rentalData = {
 
-        availableQuantity:
-            rentalAvailableQuantity,
+                productId:
+                    product._id,
 
-        rentedQuantity:
-            0,
 
-        basicSoftwareInstalled:
-            data.rental?.basicSoftwareInstalled ?? true,
+                isAvailableForRent:
+                    true,
 
-        includedItems:
-            data.rental?.includedItems?.length
-                ? data.rental.includedItems
-                : [
-                    "LAPTOP",
-                    "CHARGING_ADAPTER",
-                    "BACKPACK"
-                ],
 
-        status:
-            "ACTIVE",
+                monthlyRent:
+                    Number(
+                        data.rental
+                            ?.monthlyRent
+                        ?? 0
+                    ),
 
-        notes:
-            data.rental?.notes ?? "",
 
-        createdBy:
-            userId
+                securityDeposit:
+                    Number(
+                        data.rental
+                            ?.securityDeposit
+                        ?? 0
+                    ),
 
-    };
 
-    await RentalProduct.create(
-        rentalData
-    );
+                minimumRentalMonths:
+                    Math.max(
 
-}
-            
- // =====================================================
-// CREATE RENTAL PRODUCT
-// =====================================================
+                        Number(
+                            data.rental
+                                ?.minimumRentalMonths
+                            ?? 3
+                        ),
 
-// if (data.rental?.isAvailableForRent === true) {
+                        3
 
-//     await RentalProduct.create({
+                    ),
 
-//         productId:
-//             product._id,
 
-//         isAvailableForRent:
-//             true,
+                gst:
+                    Number(
+                        data.rental
+                            ?.gst
+                        ?? 0
+                    ),
 
-//         monthlyRent:
-//             Number(data.rental.monthlyRent ?? 0),
 
-//         securityDeposit:
-//             Number(data.rental.securityDeposit ?? 0),
+                totalQuantity:
+                    rentalAvailableQuantity,
 
-//         minimumRentalMonths:
-//             Number(data.rental.minimumRentalMonths ?? 1),
 
-//         gst:
-//             Number(data.rental.gst ?? 0),
+                availableQuantity:
+                    rentalAvailableQuantity,
 
-//         availableQuantity:
-//             Number(data.rental.availableQuantity ?? 0),
 
-//         basicSoftwareInstalled:
-//             data.rental.basicSoftwareInstalled ?? false,
+                rentedQuantity:
+                    0,
 
-//         includedItems:
-//             data.rental.includedItems ?? [],
 
-//         notes:
-//             data.rental.notes ?? "",
+                basicSoftwareInstalled:
+                    data.rental
+                        ?.basicSoftwareInstalled
+                    ?? true,
 
-//         createdBy:
-//             userId
 
-//     });
+                includedItems:
+                    data.rental
+                        ?.includedItems
+                        ?.length
 
-// }
-           
+                        ? data.rental
+                            .includedItems
 
-// =================================================
-// CREATE RENTAL PRODUCT
-// =================================================
-// if (data.rental?.isAvailableForRent) {
+                        : [
 
-//     await RentalProduct.create({
-//         productId: product._id,
+                            "LAPTOP",
 
-//         isAvailableForRent: true,
+                            "CHARGING_ADAPTER",
 
-//         monthlyRent:
-//             Number(data.rental.monthlyRent || 0),
+                            "BACKPACK"
 
-//         securityDeposit:
-//             Number(data.rental.securityDeposit || 0),
+                        ],
 
-//         minimumRentalMonths:
-//             Number(data.rental.minimumRentalMonths || 3),
 
-//         gst:
-//             Number(data.rental.gst || 0),
+                status:
+                    "ACTIVE",
 
-//         availableQuantity:
-//             Number(data.rental.availableQuantity || 0),
 
-//         basicSoftwareInstalled:
-//             data.rental.basicSoftwareInstalled ?? true,
+                notes:
+                    data.rental
+                        ?.notes
+                    ?? "",
 
-//         includedItems:
-//             data.rental.includedItems || [
-//                 "LAPTOP",
-//                 "CHARGING_ADAPTER",
-//                 "BACKPACK"
-//             ],
 
-//         notes:
-//             data.rental.notes || "",
+                createdBy:
+                    userId
 
-//         createdBy:
-//             userId
-//     });
-// }
+            };
+
+
+            await RentalProduct.create(
+                rentalData
+            );
+
+        }
+
 
         // =================================================
         // AUTO CREATE INVENTORY
@@ -609,20 +724,26 @@ if (
             product:
                 product._id,
 
+
             currentStock:
                 0,
+
 
             reservedStock:
                 0,
 
+
             minimumStock:
                 0,
+
 
             maximumStock:
                 0,
 
+
             warehouseLocation:
                 "",
+
 
             createdBy:
                 userId
@@ -636,12 +757,14 @@ if (
 
         return product;
 
+
     } catch (error) {
 
         console.error(
             "CREATE PRODUCT SERVICE ERROR:",
             error
         );
+
 
         throw error;
 
@@ -651,7 +774,7 @@ if (
 
 
 // =====================================================
-// GET PRODUCTS
+// GET PRODUCTS - ADMIN
 // =====================================================
 
 export const getProductsService = async () => {
@@ -665,37 +788,16 @@ export const getProductsService = async () => {
 // GET SINGLE PRODUCT
 // =====================================================
 
-// export const getProductService = async(id) => {
-
-//     const product = await getProductByIdDB(id);
-
-//     if(!product){
-//         throw new Error("Product not found");
-//     }
-
-//     // Offer check
-//     const offer = await getBestOfferForProduct(product);
-
-//     const finalPricing = applyOfferOnPrice(
-//         product.pricing.sellingPrice,
-//         offer
-//     );
-
-//     return {
-//         ...product.toObject(),
-//         offer: offer || null,
-//         finalPrice: finalPricing
-//     };
-// };
-
-// =====================================================
-// GET SINGLE PRODUCT
-// =====================================================
-
-export const getProductService = async (id) => {
+export const getProductService = async (
+    id,
+    customerType = "PERSONAL"
+) => {
 
     const product =
-        await getProductByIdDB(id);
+        await getProductByIdDB(
+            id
+        );
+
 
     if (!product) {
 
@@ -715,7 +817,7 @@ export const getProductService = async (id) => {
 
 
     // =================================================
-    // MATCH OFFER WITH PRODUCT
+    // MATCH OFFER
     // =================================================
 
     const offer =
@@ -726,35 +828,86 @@ export const getProductService = async (id) => {
 
 
     // =================================================
-    // CALCULATE FINAL PRICE
+    // CUSTOMER PRICE
     // =================================================
 
-    const finalPrice =
-        calculateDiscountedPrice(
-            product.pricing.sellingPrice,
-            offer
+    const customerPrice =
+        getCustomerPrice(
+            product,
+            customerType
         );
 
 
     // =================================================
-    // RETURN PRODUCT
+    // FINAL PRICE
+    // =================================================
+
+    const finalPrice =
+        customerPrice !== null
+
+            ? calculateDiscountedPrice(
+                customerPrice,
+                offer
+            )
+
+            : null;
+
+
+    // =================================================
+    // PRODUCT DATA
+    // =================================================
+
+    const productData =
+        product.toObject();
+
+
+    // =================================================
+    // SAFE PRICING
+    // =================================================
+
+    const safePricing =
+        getSafePricing(
+            productData,
+            customerType
+        );
+
+
+    // =================================================
+    // RETURN
     // =================================================
 
     return {
 
-        ...product.toObject(),
+        ...productData,
+
+
+        pricing:
+            safePricing,
+
+
+        customerType,
+
+
+        customerPrice,
+
 
         offer:
-            offer || null,
+            offer
+            || null,
+
 
         finalPrice
 
     };
 
 };
+
+
 // =====================================================
 // UPDATE PRODUCT
 // =====================================================
+
+
 
 export const updateProductService = async (
     id,
@@ -766,10 +919,19 @@ export const updateProductService = async (
     // =================================================
 
     const hasFlatPricing =
+
         data.purchasePrice !== undefined ||
+
+        data.retailPrice !== undefined ||
+
+        data.wholesalePrice !== undefined ||
+
         data.sellingPrice !== undefined ||
+
         data.mrp !== undefined ||
+
         data.discount !== undefined ||
+
         data.gst !== undefined;
 
 
@@ -778,34 +940,59 @@ export const updateProductService = async (
         data.pricing = {
 
             purchasePrice:
-                Number(
-                    data.purchasePrice || 0
-                ),
+                data.purchasePrice !== undefined
+                    ? Number(data.purchasePrice)
+                    : 0,
 
-            sellingPrice:
-                Number(
-                    data.sellingPrice || 0
-                ),
+
+            // PERSONAL CUSTOMER PRICE
+            retailPrice:
+                data.retailPrice !== undefined
+                    ? Number(data.retailPrice)
+                    : (
+                        data.sellingPrice !== undefined
+                            ? Number(data.sellingPrice)
+                            : 0
+                    ),
+
+
+            // BUSINESS CUSTOMER PRICE
+            wholesalePrice:
+                data.wholesalePrice !== undefined &&
+                data.wholesalePrice !== null &&
+                data.wholesalePrice !== ""
+
+                    ? Number(data.wholesalePrice)
+
+                    : null,
+
 
             mrp:
-                Number(
-                    data.mrp || 0
-                ),
+                data.mrp !== undefined
+                    ? Number(data.mrp)
+                    : 0,
+
 
             discount:
-                Number(
-                    data.discount || 0
-                ),
+                data.discount !== undefined
+                    ? Number(data.discount)
+                    : 0,
+
 
             gst:
-                Number(
-                    data.gst || 0
-                )
+                data.gst !== undefined
+                    ? Number(data.gst)
+                    : 0
 
         };
 
 
+        // Remove flat fields
         delete data.purchasePrice;
+
+        delete data.retailPrice;
+
+        delete data.wholesalePrice;
 
         delete data.sellingPrice;
 
@@ -833,7 +1020,7 @@ export const updateProductService = async (
 
 
     // =================================================
-    // UPDATE
+    // UPDATE PRODUCT
     // =================================================
 
     const product =
@@ -900,13 +1087,13 @@ export const searchProductService = async (
 };
 
 
-
-
 // =====================================================
 // CUSTOMER SHOP PRODUCTS
 // =====================================================
 
-export const getShopProductsService = async () => {
+export const getShopProductsService = async (
+    customerType = "PERSONAL"
+) => {
 
     try {
 
@@ -914,9 +1101,17 @@ export const getShopProductsService = async () => {
             "======================================"
         );
 
+
         console.log(
             "GET SHOP PRODUCTS SERVICE"
         );
+
+
+        console.log(
+            "CUSTOMER TYPE:",
+            customerType
+        );
+
 
         console.log(
             "======================================"
@@ -956,64 +1151,100 @@ export const getShopProductsService = async () => {
         // =================================================
 
         const productsWithOffers =
-            products.map((product) => {
+            products.map(
+                (product) => {
 
-                // -------------------------------------------------
-                // Product is normally a mongoose document here.
-                // Keep fallback so this function remains safe even
-                // if repository ever returns plain objects.
-                // -------------------------------------------------
+                    // -----------------------------------------
+                    // MONGOOSE DOCUMENT -> OBJECT
+                    // -----------------------------------------
 
-                const productData =
-                    typeof product.toObject === "function"
-                        ? product.toObject()
-                        : product;
+                    const productData =
+                        typeof product.toObject
+                        === "function"
 
+                            ? product.toObject()
 
-                // -------------------------------------------------
-                // Find matching offer
-                // -------------------------------------------------
-
-                const offer =
-                    matchOfferToProduct(
-                        productData,
-                        activeOffers
-                    );
+                            : product;
 
 
-                // -------------------------------------------------
-                // Calculate final customer price
-                // -------------------------------------------------
+                    // -----------------------------------------
+                    // FIND OFFER
+                    // -----------------------------------------
 
-                const sellingPrice =
-                    Number(
-                        productData.pricing?.sellingPrice || 0
-                    );
-
-
-                const finalPrice =
-                    calculateDiscountedPrice(
-                        sellingPrice,
-                        offer
-                    );
+                    const offer =
+                        matchOfferToProduct(
+                            productData,
+                            activeOffers
+                        );
 
 
-                // -------------------------------------------------
-                // Return product
-                // -------------------------------------------------
+                    // -----------------------------------------
+                    // CUSTOMER PRICE
+                    // -----------------------------------------
 
-                return {
+                    const customerPrice =
+                        getCustomerPrice(
+                            productData,
+                            customerType
+                        );
 
-                    ...productData,
 
-                    offer:
-                        offer || null,
+                    // -----------------------------------------
+                    // FINAL PRICE
+                    // -----------------------------------------
 
-                    finalPrice
+                    const finalPrice =
+                        customerPrice !== null
 
-                };
+                            ? calculateDiscountedPrice(
+                                customerPrice,
+                                offer
+                            )
 
-            });
+                            : null;
+
+
+                    // -----------------------------------------
+                    // SAFE PRICING
+                    // -----------------------------------------
+
+                    const safePricing =
+                        getSafePricing(
+                            productData,
+                            customerType
+                        );
+
+
+                    // -----------------------------------------
+                    // RETURN PRODUCT
+                    // -----------------------------------------
+
+                    return {
+
+                        ...productData,
+
+
+                        pricing:
+                            safePricing,
+
+
+                        customerType,
+
+
+                        customerPrice,
+
+
+                        offer:
+                            offer
+                            || null,
+
+
+                        finalPrice
+
+                    };
+
+                }
+            );
 
 
         console.log(
@@ -1031,6 +1262,7 @@ export const getShopProductsService = async () => {
             "GET SHOP PRODUCTS SERVICE ERROR:",
             error
         );
+
 
         throw error;
 

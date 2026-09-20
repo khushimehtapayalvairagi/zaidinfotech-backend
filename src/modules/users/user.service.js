@@ -963,8 +963,29 @@ export const registerUser = async (
   // ====================================================
   // CUSTOMER DATA
   // ====================================================
+// ====================================================
+// CUSTOMER TYPE
+// ====================================================
 
-  const data = {
+const customerType =
+    userData.customerType || "PERSONAL";
+
+if (
+    !["PERSONAL", "BUSINESS"].includes(
+        customerType
+    )
+) {
+    throw new Error(
+        "Invalid customer type"
+    );
+}
+
+
+// ====================================================
+// CUSTOMER DATA
+// ====================================================
+
+const data = {
 
     ...userData,
 
@@ -972,31 +993,29 @@ export const registerUser = async (
 
     phone,
 
-    password:
-      hashedPassword,
+    password: hashedPassword,
 
-    role:
-      "CUSTOMER",
+    // Customer always
+    role: "CUSTOMER",
 
-    department:
-      "CUSTOMER",
+    department: "CUSTOMER",
 
-    hasSystemAccess:
-      true,
+    // PERSONAL / BUSINESS
+    customerType,
 
-    isVerified:
-      false,
+    hasSystemAccess: true,
+
+    isVerified: false,
 
     emailVerificationOtp:
-      generateOtp(),
+        generateOtp(),
 
     emailVerificationExpires:
-      new Date(
-        Date.now() +
-        10 * 60 * 1000
-      ),
-  };
-
+        new Date(
+            Date.now() +
+            10 * 60 * 1000
+        ),
+};
 
   // ====================================================
   // CREATE CUSTOMER

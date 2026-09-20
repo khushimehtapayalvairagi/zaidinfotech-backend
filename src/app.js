@@ -32,6 +32,7 @@ import leaveRoutes from "./modules/leave/leave.routes.js";
 import availabilityRequestRoutes from "./modules/availabilityRequest/availabilityRequest.routes.js";
 import expenseRoutes from "./modules/Accountant/expense.routes.js";
 import receptionistRoutes from "./modules/receptionist/receptionist.routes.js";
+import refundRoutes from "./modules/refund/refund.routes.js";
 const app = express();
 
 app.use(cors({
@@ -98,4 +99,5 @@ app.use("/api/receptionist", receptionistRoutes);
 app.use("/api/expenses",expenseRoutes);
 app.use("/api/purchase",purchaseRoutes);
 app.use("/api/financial-reports",financialReportsRoutes);
+app.use("/api/refunds",refundRoutes);
 export default app;

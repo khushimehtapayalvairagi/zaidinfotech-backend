@@ -1,0 +1,6 @@
+export const BLUEDART_PRODUCT = {
+    APEX: "APEX",
+    SURFACE: "SURFACE",
+    ECOM_AIR: "ECOM_AIR",
+    ECOM_LITE_SURFACE: "ECOM_LITE_SURFACE"
+};

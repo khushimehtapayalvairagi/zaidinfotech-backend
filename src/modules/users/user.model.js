@@ -5,7 +5,83 @@ const userSchema = new mongoose.Schema(
     // ==================================================
     // Basic Information
     // ==================================================
+customerType: {
+    type: String,
+    enum: ["PERSONAL", "BUSINESS"],
+    default: "PERSONAL",
+},
 
+businessDetails: {
+    companyName: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    businessType: {
+        type: String,
+        enum: [
+            "PROPRIETORSHIP",
+            "PARTNERSHIP",
+            "PRIVATE_LIMITED",
+            "PUBLIC_LIMITED",
+            "LLP",
+            "OTHER"
+        ],
+        default: null,
+    },
+
+    gstNumber: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: "",
+    },
+
+    panNumber: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: "",
+    },
+
+    companyEmail: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        default: "",
+    },
+
+    companyPhone: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    companyAddress: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    city: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    state: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    pincode: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+},
     firstName: {
       type: String,
       required: true,
@@ -170,9 +246,9 @@ role: {
         "SALES",
         "TECHNICIAN",
         "INVENTORY",
-        "CUSTOMER",
         "IT_SUPPORT",
         "HR_EXECUTIVE",
+        "CUSTOMER"
        
     ],
     required: function () {

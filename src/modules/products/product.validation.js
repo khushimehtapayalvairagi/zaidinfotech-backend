@@ -79,32 +79,69 @@ export const createProductValidation = Joi.object({
     // =================================================
     // PRICING
     // =================================================
+pricing: Joi.object({
 
-    pricing: Joi.object({
+    purchasePrice: Joi.number()
+        .min(0)
+        .required(),
 
-        purchasePrice: Joi.number()
-            .min(0)
-            .required(),
+    retailPrice: Joi.number()
+        .min(0)
+        .required(),
 
-        sellingPrice: Joi.number()
-            .min(0)
-            .required(),
+    wholesalePrice: Joi.number()
+        .min(0)
+        .allow(null)
+        .optional(),
 
-        mrp: Joi.number()
-            .min(0)
-            .required(),
+    mrp: Joi.number()
+        .min(0)
+        .required(),
 
-        discount: Joi.number()
-            .min(0)
-            .max(100)
-            .default(0),
+    discount: Joi.number()
+        .min(0)
+        .max(100)
+        .default(0),
 
-        gst: Joi.number()
-            .min(0)
-            .max(100)
-            .default(0)
+    gst: Joi.number()
+        .min(0)
+        .max(100)
+        .default(0)
 
-    }).required(),
+}).required(),
+  pricing: Joi.object({
+
+    // COMPANY PURCHASE PRICE
+    purchasePrice: Joi.number()
+        .min(0)
+        .required(),
+
+    // PERSONAL CUSTOMER PRICE
+    sellingPrice: Joi.number()
+        .min(0)
+        .required(),
+
+    // BUSINESS CUSTOMER PRICE
+    wholesalePrice: Joi.number()
+        .min(0)
+        .allow(null)
+        .optional(),
+
+    mrp: Joi.number()
+        .min(0)
+        .required(),
+
+    discount: Joi.number()
+        .min(0)
+        .max(100)
+        .default(0),
+
+    gst: Joi.number()
+        .min(0)
+        .max(100)
+        .default(0)
+
+}).required(),
 
 
     // =================================================
