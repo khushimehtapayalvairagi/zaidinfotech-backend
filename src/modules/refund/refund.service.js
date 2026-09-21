@@ -442,39 +442,7 @@ export const processRefundService = async (
         // RETURN PRODUCT STOCK
         // =============================================
 
-        for (
-            const item
-            of refund.items
-        ) {
-
-            if (
-                item.condition ===
-                "GOOD"
-            ) {
-
-                await Inventory.findOneAndUpdate(
-
-                    {
-                        product:
-                            item.product
-                    },
-
-                    {
-                        $inc: {
-                            currentStock:
-                                item.quantity
-                        }
-                    },
-
-                    {
-                        session
-                    }
-
-                );
-
-            }
-
-        }
+   
 
 
         // =============================================

@@ -200,7 +200,39 @@ const refundSchema = new mongoose.Schema(
             type: String,
             default: ""
         },
+           returnRequest: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Return",
+    required: true,
+    index: true
+},
 
+          bankDetails: {
+    accountHolderName: {
+        type: String,
+        default: ""
+    },
+
+    accountNumber: {
+        type: String,
+        default: ""
+    },
+
+    ifscCode: {
+        type: String,
+        default: ""
+    },
+
+    bankName: {
+        type: String,
+        default: ""
+    }
+},
+
+upiId: {
+    type: String,
+    default: ""
+},
 
         // =====================================================
         // GATEWAY INFORMATION
@@ -221,6 +253,8 @@ const refundSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+
 
 
 refundSchema.index({
