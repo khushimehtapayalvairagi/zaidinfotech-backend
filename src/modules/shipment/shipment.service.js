@@ -4,11 +4,15 @@ import {
     SHIPMENT_STATUS
 } from "../../common/constants/shipmentStatus.js";
 
+
 import ShipmentTracking from "./shipmentTracking.model.js";
 import Order from "../orders/order.model.js";
 import {
   generateBlueDartWaybill
 } from "./blueDart.service.js";
+import {
+  getBlueDartTracking
+} from "../blueDart/blueDartTracking.service.js";
 
 
 import {
@@ -679,6 +683,88 @@ export const dispatchOrder = async ({
         blueDartResponse.destinationLocation
 
     }
+
+  };
+
+};
+
+// =======================================
+// GET LIVE BLUE DART SHIPMENT TRACKING
+// =======================================
+
+export const getLiveShipmentTracking = async (
+  shipmentId
+) => {
+
+  // =========================================
+  // FIND SHIPMENT
+  // =========================================
+
+  const shipment =
+    await shipmentRepository.getShipmentById(
+      shipmentId
+    );
+
+
+  if (!shipment) {
+
+    throw new Error(
+      "Shipment not found."
+    );
+
+  }
+
+
+  // =========================================
+  // CHECK COURIER
+  // =========================================
+
+  if (
+    shipment.courierPartner !== "BLUE_DART"
+  ) {
+
+    throw new Error(
+      "This shipment is not a Blue Dart shipment."
+    );
+
+  }
+
+
+  // =========================================
+  // CHECK AWB
+  // =========================================
+
+  if (
+    !shipment.trackingNumber
+  ) {
+
+    throw new Error(
+      "Blue Dart AWB number is not available."
+    );
+
+  }
+
+
+  // =========================================
+  // CALL BLUE DART TRACKING API
+  // =========================================
+
+  const blueDartResponse =
+    await getBlueDartTracking(
+      shipment.trackingNumber
+    );
+
+
+  // =========================================
+  // RETURN
+  // =========================================
+
+  return {
+
+    shipment,
+
+    blueDart:
+      blueDartResponse
 
   };
 

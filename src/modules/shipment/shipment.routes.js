@@ -70,6 +70,12 @@ router.post(
 
 );
 
+
+router.get(
+  "/:id/tracking",
+  verifyToken,
+  getShipmentTracking
+);
 // =======================================
 // TEST BLUE DART CONNECTION
 // =======================================

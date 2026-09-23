@@ -39,25 +39,26 @@ export const generateBlueDartToken = async () => {
             "🔐 Generating Blue Dart JWT token..."
         );
 
-        const response = await axios.post(
-            tokenUrl,
-            {},
-            {
-                headers: {
-                    ClientID:
-                        blueDartConfig.clientId,
+const response = await axios.get(
+    tokenUrl,
+    {
+        headers: {
+            ClientID: blueDartConfig.clientId,
+            clientSecret: blueDartConfig.clientSecret,
+            Accept: "application/json",
+        },
+        timeout: 30000,
+        validateStatus: () => true,
+    }
+);
 
-                    clientSecret:
-                        blueDartConfig.clientSecret,
-
-                    "Content-Type":
-                        "application/json",
-                },
-
-                timeout: 30000,
-            }
-        );
-
+console.log("======================================");
+console.log("BLUE DART TOKEN DEBUG");
+console.log("URL:", tokenUrl);
+console.log("STATUS:", response.status);
+console.log("STATUS TEXT:", response.statusText);
+console.log("DATA:", response.data);
+console.log("======================================");
         const token =
             response?.data?.JWTToken ||
             response?.data?.jwtToken ||

@@ -2,7 +2,6 @@ import * as shipmentService
   from "./shipment.service.js";
 
 import {
-    generateBlueDartWaybill,
     testBlueDartConnection
 } from "./blueDart.service.js";
 // ======================================================
@@ -320,24 +319,19 @@ export const getAllShipments = async (
 // ======================================================
 // GET SHIPMENT TRACKING
 // ======================================================
-
-export const getShipmentTracking = async (
-  req,
-  res
-) => {
+export const getShipmentTracking = async (req, res) => {
 
   try {
 
-    const {
-      id
-    } = req.params;
+    const { id } = req.params;
 
-
-    const shipment =
-      await shipmentService.getShipmentById(
+    const result =
+      await shipmentService.getLiveShipmentTracking(
         id
       );
 
+    const shipment =
+      result.shipment;
 
     return res.status(200).json({
 
@@ -375,12 +369,19 @@ export const getShipmentTracking = async (
         updatedAt:
           shipment.updatedAt
 
-      }
+      },
+
+      blueDart:
+        result.blueDart
 
     });
 
-  }
-  catch (error) {
+  } catch (error) {
+
+    console.error(
+      "❌ Get Shipment Tracking Error:",
+      error
+    );
 
     return res.status(400).json({
 
