@@ -12,7 +12,8 @@ import {
     getAllRentalsController,
     markRentalReturnedController,
     searchRentalsForReturnController,
-    completeRentalSettlementController
+    completeRentalSettlementController,
+    markRentalDepositReceivedController
 } from "./rental.controller.js";
 
 import {
@@ -169,6 +170,28 @@ router.get(
     searchRentalsForReturnController
 );
 
+
+// =====================================================
+// SECURITY DEPOSIT RECEIVED
+// =====================================================
+
+router.patch(
+
+    "/:id/deposit-received",
+
+    verifyToken,
+
+    allowRoles(
+        "SALES",
+        "RECEPTIONIST",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "STAFF"
+    ),
+
+    markRentalDepositReceivedController
+
+);
 // =====================================================
 // SINGLE RENTAL
 // =====================================================

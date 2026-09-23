@@ -81,7 +81,8 @@ router.post(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR
+    ROLES.HR,
+    ROLES.ACCOUNTANT
   ),
   createSalaryController
 );

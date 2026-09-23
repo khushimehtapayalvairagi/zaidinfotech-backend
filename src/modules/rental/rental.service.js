@@ -1,10 +1,20 @@
+import Payment from "../payments/payment.model.js";
+
 import {
     notifyAdminsService
 } from "../notification/notification.service.js";
 
 import Rental from "./rental.model.js";
 import RentalProduct from "./rentalProduct.model.js";
-import { createPayment } from "../payments/payment.service.js";
+
+import {
+    createPayment
+} from "../payments/payment.service.js";
+
+import {
+    PAYMENT_STATUS
+} from "../../common/constants/paymentStatus.js";
+
 
 import {
     createRentalDB,
@@ -549,6 +559,506 @@ if (updatedRentalProduct.availableQuantity <= 5) {
 // =====================================================
 // CUSTOMER RENTALS
 // =====================================================
+
+// =====================================================
+// MARK SECURITY DEPOSIT RECEIVED
+// WALK-IN RENTAL
+// =====================================================
+//
+// ACTIVE rental rahega.
+// Stock/inventory change nahi hoga.
+//
+// Flow:
+//
+// WALK-IN RENTAL CREATED
+//        ↓
+// SECURITY DEPOSIT PENDING
+//        ↓
+// DEPOSIT RECEIVED
+//        ↓
+// PAYMENT SUCCESS
+//
+// Existing rental status / inventory / return flow
+// is function se change nahi hoga.
+// =====================================================
+
+export const markRentalDepositReceivedService = async (
+    rentalId,
+    data,
+    userId
+) => {
+
+    console.log(
+        "========== MARK RENTAL DEPOSIT RECEIVED =========="
+    );
+
+    console.log(
+        "RENTAL ID:",
+        rentalId
+    );
+
+    console.log(
+        "DEPOSIT DATA:",
+        data
+    );
+
+    // =================================================
+    // GET RENTAL
+    // =================================================
+
+    const rental =
+        await getRentalByIdDB(
+            rentalId
+        );
+
+    if (!rental) {
+
+        throw new Error(
+            "Rental not found"
+        );
+    }
+
+    // =================================================
+    // ONLY WALK-IN RENTAL
+    // =================================================
+
+    if (
+        String(
+            rental.rentalSource || ""
+        ).toUpperCase() !== "WALK_IN"
+    ) {
+
+        throw new Error(
+            "Security deposit receipt is available only for walk-in rentals"
+        );
+    }
+
+    // =================================================
+    // USER
+    // =================================================
+
+    const receivedBy =
+        userId || null;
+
+    if (!receivedBy) {
+
+        throw new Error(
+            "Authenticated user is required to receive security deposit"
+        );
+    }
+
+    // =================================================
+    // PAYMENT METHOD
+    // =================================================
+
+    let paymentMethod =
+        String(
+            data?.paymentMethod ||
+            data?.depositPaymentMethod ||
+            ""
+        )
+            .trim()
+            .toUpperCase();
+
+    // Common frontend aliases
+    if (paymentMethod === "BANK") {
+        paymentMethod = "BANK_TRANSFER";
+    }
+
+    if (paymentMethod === "BANK TRANSFER") {
+        paymentMethod = "BANK_TRANSFER";
+    }
+
+    if (paymentMethod === "WALK_IN") {
+        paymentMethod = "CASH";
+    }
+
+    const allowedPaymentMethods = [
+        "CASH",
+        "UPI",
+        "CARD",
+        "BANK_TRANSFER",
+        "ONLINE"
+    ];
+
+    if (
+        !allowedPaymentMethods.includes(
+            paymentMethod
+        )
+    ) {
+
+        throw new Error(
+            "Valid deposit payment method is required"
+        );
+    }
+
+    // =================================================
+    // DEPOSIT AMOUNT
+    // =================================================
+
+    const securityDeposit =
+        Number(
+            rental.securityDeposit || 0
+        );
+
+    const requestedAmount =
+        data?.amount ??
+        data?.depositAmount ??
+        securityDeposit;
+
+    const depositAmount =
+        Number(
+            requestedAmount
+        );
+
+    if (
+        !Number.isFinite(
+            depositAmount
+        )
+    ) {
+
+        throw new Error(
+            "Invalid security deposit amount"
+        );
+    }
+
+    if (
+        depositAmount < 0
+    ) {
+
+        throw new Error(
+            "Security deposit amount cannot be negative"
+        );
+    }
+
+    // =================================================
+    // IMPORTANT
+    // =================================================
+    //
+    // Deposit amount must match rental security deposit.
+    //
+    // This prevents accidental partial deposit marking.
+    //
+    // =================================================
+
+    if (
+        Number(
+            depositAmount.toFixed(2)
+        ) !==
+        Number(
+            securityDeposit.toFixed(2)
+        )
+    ) {
+
+        throw new Error(
+            `Deposit amount must be ₹${securityDeposit.toFixed(2)}`
+        );
+    }
+
+    // =================================================
+    // DUPLICATE CHECK
+    // =================================================
+
+    if (
+        rental.securityDepositPaymentId
+    ) {
+
+        throw new Error(
+            "Security deposit has already been received"
+        );
+    }
+
+    // =================================================
+    // SECONDARY DUPLICATE CHECK
+    // =================================================
+    //
+    // In case payment was created previously but
+    // rental field was not linked.
+    //
+    // =================================================
+
+    const existingDeposit =
+        await Payment.findOne({
+
+            paymentFor:
+                "RENTAL",
+
+            referenceId:
+                rental._id,
+
+            paymentType:
+                "SECURITY_DEPOSIT",
+
+            paymentStatus:
+                PAYMENT_STATUS.SUCCESS,
+
+            isDeleted:
+                false
+
+        });
+
+    if (
+        existingDeposit
+    ) {
+
+        // Link existing payment to rental
+        const updatedExisting =
+            await updateRentalDB(
+                rentalId,
+                {
+                    securityDepositPaymentId:
+                        existingDeposit._id,
+
+                    depositReceived:
+                        true,
+
+                    depositReceivedAt:
+                        existingDeposit.paidAt ||
+                        new Date(),
+
+                    depositReceivedBy:
+                        receivedBy,
+
+                    depositPaymentMethod:
+                        existingDeposit.paymentMethod
+                }
+            );
+
+        return await getRentalByIdDB(
+            updatedExisting._id
+        );
+    }
+
+    // =================================================
+    // ZERO DEPOSIT
+    // =================================================
+    //
+    // If security deposit is 0, no payment record
+    // is necessary.
+    //
+    // =================================================
+
+    if (
+        depositAmount === 0
+    ) {
+
+        const updated =
+            await updateRentalDB(
+                rentalId,
+                {
+                    depositReceived:
+                        true,
+
+                    depositReceivedAt:
+                        new Date(),
+
+                    depositReceivedBy:
+                        receivedBy,
+
+                    depositPaymentMethod:
+                        paymentMethod,
+
+                    securityDepositPaymentId:
+                        null
+                }
+            );
+
+        if (!updated) {
+
+            throw new Error(
+                "Failed to mark deposit as received"
+            );
+        }
+
+        return await getRentalByIdDB(
+            rentalId
+        );
+    }
+
+    // =================================================
+    // CREATE PAYMENT
+    // =================================================
+
+    let payment = null;
+
+    try {
+
+        payment =
+            await createPayment({
+
+                user:
+                    receivedBy,
+
+                paymentFor:
+                    "RENTAL",
+
+                saleSource:
+                    "WALK_IN",
+
+                paymentType:
+                    "SECURITY_DEPOSIT",
+
+                referenceId:
+                    rental._id,
+
+                amount:
+                    depositAmount,
+
+                currency:
+                    "INR",
+
+                paymentMethod:
+                    paymentMethod,
+
+                paymentStatus:
+                    PAYMENT_STATUS.SUCCESS,
+
+                gateway:
+                    "OFFLINE",
+
+                transactionId:
+                    String(
+                        data?.transactionId ||
+                        data?.referenceNumber ||
+                        ""
+                    ).trim(),
+
+                gatewayPaymentId:
+                    "",
+
+                gatewayResponse:
+                    {},
+
+                paymentDate:
+                    new Date(),
+
+                paidAt:
+                    new Date()
+            });
+
+    } catch (paymentError) {
+
+        console.error(
+            "SECURITY DEPOSIT PAYMENT CREATE ERROR:",
+            paymentError
+        );
+
+        throw new Error(
+            paymentError?.message ||
+            "Failed to create security deposit payment"
+        );
+    }
+
+    // =================================================
+    // UPDATE RENTAL
+    // =================================================
+
+    try {
+
+        const updated =
+            await updateRentalDB(
+                rentalId,
+                {
+
+                    securityDepositPaymentId:
+                        payment._id,
+
+                    depositReceived:
+                        true,
+
+                    depositReceivedAt:
+                        new Date(),
+
+                    depositReceivedBy:
+                        receivedBy,
+
+                    depositPaymentMethod:
+                        paymentMethod,
+
+                    depositTransactionId:
+                        String(
+                            data?.transactionId ||
+                            data?.referenceNumber ||
+                            ""
+                        ).trim()
+
+                }
+            );
+
+        if (!updated) {
+
+            throw new Error(
+                "Failed to update rental with deposit payment"
+            );
+        }
+
+        // =================================================
+        // FINAL RENTAL
+        // =================================================
+
+        const finalRental =
+            await getRentalByIdDB(
+                rentalId
+            );
+
+        console.log(
+            "SECURITY DEPOSIT RECEIVED SUCCESSFULLY"
+        );
+
+        console.log(
+            "PAYMENT ID:",
+            payment._id
+        );
+
+        console.log(
+            "RENTAL ID:",
+            rentalId
+        );
+
+        return finalRental;
+
+    } catch (rentalUpdateError) {
+
+        console.error(
+            "RENTAL DEPOSIT UPDATE ERROR:",
+            rentalUpdateError
+        );
+
+        // =================================================
+        // ROLLBACK PAYMENT
+        // =================================================
+        //
+        // Payment bana but rental update fail hua,
+        // to orphan payment nahi chhodenge.
+        //
+        // =================================================
+
+        if (
+            payment?._id
+        ) {
+
+            try {
+
+                await Payment.findByIdAndDelete(
+                    payment._id
+                );
+
+            } catch (deleteError) {
+
+                console.error(
+                    "DEPOSIT PAYMENT ROLLBACK ERROR:",
+                    deleteError
+                );
+            }
+        }
+
+        throw new Error(
+            rentalUpdateError?.message ||
+            "Failed to record security deposit"
+        );
+    }
+};
+
 
 export const getMyRentalsService = async (
     customerId

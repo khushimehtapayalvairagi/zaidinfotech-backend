@@ -34,6 +34,7 @@ import expenseRoutes from "./modules/Accountant/expense.routes.js";
 import receptionistRoutes from "./modules/receptionist/receptionist.routes.js";
 import refundRoutes from "./modules/refund/refund.routes.js";
 import returnRoutes from "./modules/return/return.routes.js";
+import blueDartRoutes  from "./modules/blueDart/blueDart.routes.js";
 const app = express();
 
 app.use(cors({
@@ -102,4 +103,5 @@ app.use("/api/purchase",purchaseRoutes);
 app.use("/api/financial-reports",financialReportsRoutes);
 app.use("/api/refunds",refundRoutes);
 app.use("/api/returns",returnRoutes);
+app.use("/api/blue-dart",blueDartRoutes);
 export default app;

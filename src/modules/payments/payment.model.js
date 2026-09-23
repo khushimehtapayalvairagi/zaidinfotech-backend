@@ -1,7 +1,3 @@
-
-
-
-
 import mongoose from "mongoose";
 
 import { PAYMENT_STATUS } from "../../common/constants/paymentStatus.js";
@@ -25,6 +21,17 @@ const paymentSchema = new mongoose.Schema(
             enum: Object.values(PAYMENT_FOR),
             required: true
         },
+
+        // =====================================================
+// SALE SOURCE
+// ONLINE / WALK_IN
+// =====================================================
+saleSource: {
+    type: String,
+    enum: ["ONLINE", "WALK_IN"],
+    default: "ONLINE",
+    index: true
+},
           // Payment Type
 paymentType: {
     type: String,

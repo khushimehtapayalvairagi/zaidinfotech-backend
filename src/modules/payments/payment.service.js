@@ -1,4 +1,3 @@
-
 import * as paymentRepository from "./payment.repository.js";
 
 import {
@@ -12,6 +11,9 @@ import {
 
 import Order
     from "../orders/order.model.js";
+
+import Repair from "../repair/repair.model.js";
+import Rental from "../rental/rental.model.js";
 
 // =======================================
 // CREATE RAZORPAY ORDER
@@ -195,6 +197,22 @@ export const verifyRazorpayPaymentService = async ({
 // CREATE PAYMENT
 // =======================================
 
+// export const createPayment = async (
+//     paymentData
+// ) => {
+
+//     paymentData.receiptNumber =
+//         await generateReceiptNumber();
+
+//     if (!paymentData.currency) {
+//         paymentData.currency = "INR";
+//     }
+
+//     return await paymentRepository.createPayment(
+//         paymentData
+//     );
+// };
+
 export const createPayment = async (
     paymentData
 ) => {
@@ -210,7 +228,6 @@ export const createPayment = async (
         paymentData
     );
 };
-
 
 // =======================================
 // GENERATE RECEIPT NUMBER
@@ -403,4 +420,110 @@ export const refundPayment = async (
 export const getPaymentCount = async () => {
 
     return await paymentRepository.getPaymentCount();
+};
+
+
+
+// =====================================================
+// DETERMINE SALE SOURCE
+// =====================================================
+
+const determineSaleSource = async (
+    paymentFor,
+    referenceId
+) => {
+
+    // -------------------------------------------------
+    // ORDER
+    // -------------------------------------------------
+
+    if (paymentFor === "ORDER") {
+
+        const order =
+            await Order.findById(referenceId)
+                .select("orderSource source");
+
+        if (!order) {
+            throw new Error("Order not found");
+        }
+
+        // Different possible existing field names
+        const source =
+            order.orderSource ||
+            order.source;
+
+        if (
+            String(source || "").toUpperCase() === "WALK_IN" ||
+            String(source || "").toUpperCase() === "WALKIN"
+        ) {
+            return "WALK_IN";
+        }
+
+        return "ONLINE";
+    }
+
+
+    // -------------------------------------------------
+    // REPAIR
+    // -------------------------------------------------
+
+    if (paymentFor === "REPAIR") {
+
+        const repair =
+            await Repair.findById(referenceId)
+                .select("repairSource source");
+
+        if (!repair) {
+            throw new Error("Repair not found");
+        }
+
+        const source =
+            repair.repairSource ||
+            repair.source;
+
+        if (
+            String(source || "").toUpperCase() === "WALK_IN" ||
+            String(source || "").toUpperCase() === "WALKIN"
+        ) {
+            return "WALK_IN";
+        }
+
+        return "ONLINE";
+    }
+
+
+    // -------------------------------------------------
+    // RENTAL
+    // -------------------------------------------------
+
+    if (paymentFor === "RENTAL") {
+
+        const rental =
+            await Rental.findById(referenceId)
+                .select("rentalSource source");
+
+        if (!rental) {
+            throw new Error("Rental not found");
+        }
+
+        const source =
+            rental.rentalSource ||
+            rental.source;
+
+        if (
+            String(source || "").toUpperCase() === "WALK_IN" ||
+            String(source || "").toUpperCase() === "WALKIN"
+        ) {
+            return "WALK_IN";
+        }
+
+        return "ONLINE";
+    }
+
+
+    // -------------------------------------------------
+    // DEFAULT
+    // -------------------------------------------------
+
+    return "ONLINE";
 };

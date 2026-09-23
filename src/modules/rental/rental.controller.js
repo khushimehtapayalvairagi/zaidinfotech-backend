@@ -5,7 +5,8 @@ import {
     markRentalReturnedService,
     createWalkInRentalService,
     searchRentalsForReturnService,
-    completeRentalSettlementService
+    completeRentalSettlementService,
+    markRentalDepositReceivedService
 } from "./rental.service.js";
 
 
@@ -366,5 +367,70 @@ export const completeRentalSettlementController =
 
             });
 
+        }
+    };
+    // =====================================================
+// SECURITY DEPOSIT RECEIVED
+// WALK-IN RENTAL
+// =====================================================
+
+export const markRentalDepositReceivedController =
+    async (req, res) => {
+
+        try {
+
+            console.log(
+                "========== RENTAL DEPOSIT RECEIVED =========="
+            );
+
+            console.log(
+                "RENTAL ID:",
+                req.params.id
+            );
+
+            console.log(
+                "USER:",
+                req.user?._id
+            );
+
+            console.log(
+                "BODY:",
+                req.body
+            );
+
+            const rental =
+                await markRentalDepositReceivedService(
+                    req.params.id,
+                    req.body || {},
+                    req.user?._id
+                );
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Security deposit received successfully",
+
+                data: rental
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "RENTAL DEPOSIT RECEIVED ERROR:",
+                error
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error?.message ||
+                    "Failed to receive security deposit"
+
+            });
         }
     };
