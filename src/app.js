@@ -35,6 +35,9 @@ import receptionistRoutes from "./modules/receptionist/receptionist.routes.js";
 import refundRoutes from "./modules/refund/refund.routes.js";
 import returnRoutes from "./modules/return/return.routes.js";
 import blueDartRoutes  from "./modules/blueDart/blueDart.routes.js";
+import ItSupportSettingsRoutes from './modules/itSupport/itsupport.routes.js'
+import vendorRoutes from "./modules/Procurementt/vendor.routes.js";
+import purchaseOrderRoutes from "./modules/Procurementt/purchaseOrder.routes.js";
 const app = express();
 
 app.use(cors({
@@ -50,6 +53,17 @@ app.use(express.urlencoded({ extended: true }));
 // Static Upload Folder
 // ==============================
 
+// IMPORTANT: BIOMETRIC RAW BODY
+// =====================================================
+
+app.use(
+    express.text({
+        type: [
+            "text/plain",
+            "application/octet-stream"
+        ]
+    })
+);
 app.use(
   "/uploads",
   express.static(
@@ -104,4 +118,10 @@ app.use("/api/financial-reports",financialReportsRoutes);
 app.use("/api/refunds",refundRoutes);
 app.use("/api/returns",returnRoutes);
 app.use("/api/blue-dart",blueDartRoutes);
+
+app.use('/api/itsupport', ItSupportSettingsRoutes)
+app.use("/api/procurement/vendors", vendorRoutes);
+app.use("/api/procurement/purchase-orders", purchaseOrderRoutes);
+
+
 export default app;

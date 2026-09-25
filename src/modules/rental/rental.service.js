@@ -340,24 +340,6 @@ if (
     // DATES
     // =============================================
 
-    // const startDate =
-    //     new Date();
-
-    // const expectedEndDate =
-    //     new Date(startDate);
-
-    // expectedEndDate.setMonth(
-    //     expectedEndDate.getMonth() +
-    //     rentalMonths
-    // );
-
-    // const nextPaymentDate =
-    //     new Date(startDate);
-
-    // nextPaymentDate.setMonth(
-    //     nextPaymentDate.getMonth() + 1
-    // );
-
 const startDate = new Date();
 
 const expectedEndDate = new Date(startDate);
@@ -385,6 +367,86 @@ if (rentalDurationType === "MONTHS") {
         nextPaymentDate.getDate() + 1
     );
 }
+
+    // =============================================
+    // DEPOSIT INFO (from the Walk-In Rental form)
+    // =============================================
+    //
+    // The receptionist may have already collected the
+    // security deposit (fully or partially) at the time
+    // of creating this walk-in rental. Save that on the
+    // Rental itself so it shows correctly in
+    // WalkInRentalOrders.jsx without needing a separate
+    // "Mark Deposit Received" step.
+    //
+    // This is independent from securityDepositPaymentId /
+    // depositReceived, which belong to the separate
+    // markRentalDepositReceivedService flow below.
+    // =============================================
+
+    const depositAmountPaid =
+        Math.max(
+            Number(data.depositAmountPaid || 0),
+            0
+        );
+
+    let depositPaymentStatus =
+        String(
+            data.depositPaymentStatus || ""
+        ).toUpperCase();
+
+    if (
+        !["UNPAID", "PARTIAL", "PAID"].includes(
+            depositPaymentStatus
+        )
+    ) {
+
+        if (securityDeposit <= 0) {
+            depositPaymentStatus = "PAID";
+        } else if (depositAmountPaid >= securityDeposit) {
+            depositPaymentStatus = "PAID";
+        } else if (depositAmountPaid > 0) {
+            depositPaymentStatus = "PARTIAL";
+        } else {
+            depositPaymentStatus = "UNPAID";
+        }
+    }
+
+    let depositPaymentMethod =
+        String(
+            data.depositPaymentMethod || "NONE"
+        )
+            .trim()
+            .toUpperCase();
+
+    const allowedDepositPaymentMethods = [
+        "CASH",
+        "UPI",
+        "CARD",
+        "BANK_TRANSFER",
+        "ONLINE",
+        "NONE"
+    ];
+
+    if (
+        !allowedDepositPaymentMethods.includes(
+            depositPaymentMethod
+        )
+    ) {
+        depositPaymentMethod = "NONE";
+    }
+
+    const depositPaymentReference =
+        String(
+            data.depositPaymentReference || ""
+        ).trim();
+
+    const depositPaidAt =
+        depositAmountPaid > 0
+            ? (data.depositPaidAt
+                ? new Date(data.depositPaidAt)
+                : new Date())
+            : null;
 
     // =============================================
     // CREATE WALK-IN RENTAL
@@ -419,8 +481,6 @@ if (rentalDurationType === "MONTHS") {
 
             securityDeposit,
 
-            // rentalMonths,
-
             rentalDurationType,
 
             rentalDuration,
@@ -448,7 +508,24 @@ if (rentalDurationType === "MONTHS") {
                     data.notes ||
                     data.handoverNotes ||
                     ""
-                ).trim()
+                ).trim(),
+
+            // =========================================
+            // DEPOSIT — PAID AT CREATION TIME
+            // =========================================
+
+            depositPaymentStatus,
+
+            depositPaid:
+                depositPaymentStatus === "PAID",
+
+            depositAmountPaid,
+
+            depositPaymentMethod,
+
+            depositPaymentReference,
+
+            depositPaidAt
         });
 
     // =============================================
@@ -980,7 +1057,21 @@ export const markRentalDepositReceivedService = async (
                             data?.transactionId ||
                             data?.referenceNumber ||
                             ""
-                        ).trim()
+                        ).trim(),
+
+                    // Keep the "paid at creation" fields in sync
+                    // with this later-confirmed deposit too.
+                    depositPaymentStatus:
+                        "PAID",
+
+                    depositPaid:
+                        true,
+
+                    depositAmountPaid:
+                        depositAmount,
+
+                    depositPaidAt:
+                        new Date()
 
                 }
             );

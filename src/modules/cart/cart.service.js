@@ -621,40 +621,30 @@ const getAvailableStock = async (productId) => {
 // ======================================================
 // HELPER: GET PRODUCT PRICE
 // ======================================================
+const getProductPrice = (productData, customerType) => {
+    const pricing = productData?.pricing || {};
 
-const getProductPrice = (productData) => {
+    const retailPrice = Number(pricing.retailPrice);
+    const wholesalePrice = Number(pricing.wholesalePrice);
+
+    const isBusiness =
+        String(customerType || "").toUpperCase() === "BUSINESS";
 
     const sellingPrice =
-        Number(
-            productData?.pricing?.sellingPrice
-        );
+        isBusiness && Number.isFinite(wholesalePrice) && wholesalePrice > 0
+            ? wholesalePrice
+            : retailPrice;
 
-    const mrp =
-        Number(
-            productData?.pricing?.mrp ??
-            sellingPrice
-        );
+    const mrp = Number(pricing.mrp ?? sellingPrice);
 
-    if (
-        !Number.isFinite(sellingPrice) ||
-        sellingPrice < 0
-    ) {
-
-        throw new Error(
-            "Product selling price is invalid"
-        );
+    if (!Number.isFinite(sellingPrice) || sellingPrice < 0) {
+        throw new Error("Product selling price is invalid");
     }
-
-    const discountAmount =
-        Math.max(
-            mrp - sellingPrice,
-            0
-        );
 
     return {
         sellingPrice,
         mrp,
-        discountAmount
+        discountAmount: Math.max(mrp - sellingPrice, 0)
     };
 };
 
@@ -665,7 +655,8 @@ const getProductPrice = (productData) => {
 
 export const addToCartService = async (
     userId,
-    data
+    data,
+      customerType
 ) => {
 
     console.log(
@@ -758,7 +749,8 @@ export const addToCartService = async (
         mrp,
         discountAmount
     } = getProductPrice(
-        productData
+        productData,
+         customerType
     );
     const {
     finalPrice,
@@ -1102,7 +1094,8 @@ export const updateCartQuantityService = async (
         mrp,
         discountAmount
     } = getProductPrice(
-        productData
+        productData,
+        
     );
 
   const {
@@ -1265,12 +1258,3 @@ export const clearCartService = async (
 
     return savedCart;
 };
-
-
-
-
-
-
-
-
-

@@ -353,6 +353,10 @@ message:error.message
 
 
 
+
+
+
+
 // ===============================
 // Add Salary History
 // ===============================
@@ -657,9 +661,12 @@ export const resendEmailVerificationOtp = async (
     });
   }
 };
+
+
 export const changepassword = async (req, res) => {
   try {
-    const userId = req.user.id;
+    // const userId = req.user.id;
+    const userId = req.user?.id || req.user?._id;   
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {

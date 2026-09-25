@@ -1,352 +1,86 @@
-// import Inventory from "./inventory.model.js";
+import Invoice from "../invoices/invoice.model.js";
 
-// // =======================================
-// // CREATE INVENTORY
-// // =======================================
+// ==========================================
+// CREATE
+// ==========================================
 
-// // export const createInventory = async (data) => {
-// //   return await Inventory.create(data);
-// // };
-
-// export const createInventory = async (data) => {
-//   const inventory = await Inventory.create(data);
-
-//   await inventory.populate({
-//     path: "product",
-//     select: "name sku",
-//   });
-
-//   await sendStockNotification(inventory);
-
-//   return inventory;
-// };
-
-// // =======================================
-// // GET ALL INVENTORY
-// // =======================================
-
-// export const getAllInventory = async () => {
-
-//     return await Inventory.find()
-
-//         .populate({
-//             path: "product",
-//             populate: [
-//                 {
-//                     path: "brand",
-//                     select: "name"
-//                 },
-//                 {
-//                     path: "category",
-//                     select: "name"
-//                 }
-//             ]
-//         })
-
-//         .sort({
-//             createdAt: -1
-//         });
-
-// };
-
-// // =======================================
-// // GET INVENTORY BY ID
-// // =======================================
-
-// export const getInventoryById = async (id) => {
-//   return await Inventory.findOne({
-//     _id: id,
-//     isDeleted: false,
-//   })
-
-//     .populate(
-//       "product",
-//       "name sku images pricing brand category"
-//     )
-
-//     .populate(
-//       "lastUpdatedBy",
-//       "name firstName lastName email role"
-//     );
-// };
-
-// // =======================================
-// // GET INVENTORY BY PRODUCT ID
-// // =======================================
-
-// export const getInventoryByProductId = async (
-//   productId
-// ) => {
-//   return await Inventory.findOne({
-//     product: productId,
-//     isDeleted: false,
-//   });
-// };
-
-// // =======================================
-// // UPDATE INVENTORY
-// // =======================================
-
-// // export const updateInventory = async (
-// //   id,
-// //   data
-// // ) => {
-// //   return await Inventory.findByIdAndUpdate(
-// //     id,
-// //     data,
-// //     {
-// //       new: true,
-// //     }
-// //   );
-// // };
-
-// export const updateInventory = async (
-//   id,
-//   data
-// ) => {
-
-//   const oldInventory =
-//     await Inventory.findById(id);
-
-//   if (!oldInventory) {
-//     throw new Error(
-//       "Inventory not found"
-//     );
-//   }
-
-//   const oldStock =
-//     Number(oldInventory.currentStock || 0);
-
-//   const inventory =
-//     await Inventory.findByIdAndUpdate(
-//       id,
-//       data,
-//       {
-//         new: true,
-//       }
-//     );
-
-//   if (!inventory) {
-//     throw new Error(
-//       "Inventory update failed"
-//     );
-//   }
-
-//   await inventory.populate({
-//     path: "product",
-//     select: "name sku",
-//   });
-
-//   const newStock =
-//     Number(inventory.currentStock || 0);
-
-//   // =====================================
-//   // ONLY WHEN STOCK CHANGES
-//   // =====================================
-
-//   if (oldStock !== newStock) {
-
-//     await sendStockNotification(
-//       inventory
-//     );
-
-//   }
-
-//   return inventory;
-// };
-
-
-// // =======================================
-// // DELETE INVENTORY
-// // =======================================
-
-// export const deleteInventory = async (id) => {
-//   return await Inventory.findByIdAndUpdate(
-//     id,
-//     {
-//       isDeleted: true,
-//     },
-//     {
-//       new: true,
-//     }
-//   );
-// };
-import Inventory from "./inventory.model.js";
-
-
-// =======================================
-// CREATE INVENTORY
-// =======================================
-
-export const createInventory = async (data) => {
-
-    const inventory =
-        await Inventory.create(data);
-
-
-    await inventory.populate({
-        path: "product",
-        select: "name sku",
-    });
-
-
-    return inventory;
-
+export const createInvoice = async (invoiceData) => {
+  return await Invoice.create(invoiceData);
 };
 
+// ==========================================
+// FIND BY ID
+// ==========================================
 
-// =======================================
-// GET ALL INVENTORY
-// =======================================
-
-export const getAllInventory = async () => {
-
-    return await Inventory.find({
-        isDeleted: false
-    })
-
-        .populate({
-            path: "product",
-
-            populate: [
-
-                {
-                    path: "brand",
-                    select: "name"
-                },
-
-                {
-                    path: "category",
-                    select: "name"
-                }
-
-            ]
-        })
-
-        .populate({
-            path: "lastUpdatedBy",
-            select:
-                "name firstName lastName email role"
-        })
-
-        .sort({
-            createdAt: -1
-        });
-
+export const findInvoiceById = async (invoiceId) => {
+  return await Invoice.findOne({
+    _id: invoiceId,
+    isDeleted: false,
+  })
+    .populate("user")
+    .populate("order")
+    .populate("payment")
+    .populate("soldBy")
+    .populate("items.product");
 };
 
+// ==========================================
+// FIND BY ORDER
+// ==========================================
 
-// =======================================
-// GET INVENTORY BY ID
-// =======================================
-
-export const getInventoryById = async (id) => {
-
-    return await Inventory.findOne({
-
-        _id: id,
-
-        isDeleted: false
-
-    })
-
-        .populate(
-            "product",
-            "name sku images pricing brand category"
-        )
-
-        .populate(
-            "lastUpdatedBy",
-            "name firstName lastName email role"
-        );
-
+export const findInvoiceByOrderId = async (orderId) => {
+  return await Invoice.findOne({
+    order: orderId,
+    isDeleted: false,
+  })
+    .populate("user")
+    .populate("order")
+    .populate("payment")
+    .populate("soldBy")
+    .populate("items.product");
 };
 
+// ==========================================
+// ALL INVOICES
+// ==========================================
 
-// =======================================
+export const findAllInvoices = async () => {
+  return await Invoice.find({
+    isDeleted: false,
+  })
+    .populate("user")
+    .populate("order")
+    .populate("payment")
+    .populate("soldBy")
+    .populate("items.product")
+    .sort({ createdAt: -1 });
+};
+
+// ==========================================
+// INVOICES OF ONE USER
+// Only limited user fields are returned
+// ==========================================
+
+export const findInvoicesByUser = async (userId) => {
+  return await Invoice.find({
+    user: userId,
+    isDeleted: false,
+  })
+    .populate(
+      "user",
+      "firstName lastName email phone customerType businessDetails"
+    )
+    .populate("payment")
+    .sort({ createdAt: -1 });
+};
+
+// ======================================================
 // GET INVENTORY BY PRODUCT ID
-// =======================================
+// ======================================================
 
-export const getInventoryByProductId = async (
-    productId
-) => {
-
+export const getInventoryByProductId = async (productId) => {
     return await Inventory.findOne({
-
         product: productId,
-
         isDeleted: false
-
     });
-
-};
-
-
-// =======================================
-// UPDATE INVENTORY
-// =======================================
-
-export const updateInventory = async (
-    id,
-    data
-) => {
-
-    const inventory =
-        await Inventory.findByIdAndUpdate(
-
-            id,
-
-            data,
-
-            {
-                new: true,
-                runValidators: true
-            }
-
-        );
-
-
-    if (!inventory) {
-
-        throw new Error(
-            "Inventory update failed"
-        );
-
-    }
-
-
-    await inventory.populate({
-
-        path: "product",
-
-        select: "name sku"
-
-    });
-
-
-    return inventory;
-
-};
-
-
-// =======================================
-// DELETE INVENTORY
-// =======================================
-
-export const deleteInventory = async (id) => {
-
-    return await Inventory.findByIdAndUpdate(
-
-        id,
-
-        {
-            isDeleted: true
-        },
-
-        {
-            new: true
-        }
-
-    );
-
 };

@@ -51,21 +51,65 @@ export const manualAttendanceValidation = Joi.object({
      checkOut: Joi.date().allow(null).optional(),    
 });
 
+// export const biometricAttendanceValidation = Joi.object({
+//     user: Joi.string().required(),
+
+//     employeeId: Joi.string().required(),
+
+//     date: Joi.date().required(),
+
+//     attendanceMode: Joi.string()
+//         .valid("BIOMETRIC")
+//         .required(),
+
+//     punchType: Joi.string()
+//         .valid("CHECK_IN", "CHECK_OUT")
+//         .required()
+// });
+
 export const biometricAttendanceValidation = Joi.object({
-    user: Joi.string().required(),
 
-    employeeId: Joi.string().required(),
+    user: Joi.string()
+        .optional(),
 
-    date: Joi.date().required(),
+    employeeId: Joi.string()
+        .required(),
+
+    biometricId: Joi.string()
+        .allow("")
+        .optional(),
+
+    date: Joi.date()
+        .optional(),
+
+    punchTime: Joi.date()
+        .optional(),
 
     attendanceMode: Joi.string()
         .valid("BIOMETRIC")
-        .required(),
+        .optional()
+        .default("BIOMETRIC"),
 
     punchType: Joi.string()
-        .valid("CHECK_IN", "CHECK_OUT")
-        .required()
+        .valid(
+            "CHECK_IN",
+            "CHECK_OUT"
+        )
+        .optional(),
+
+    deviceSerialNumber: Joi.string()
+        .allow("")
+        .optional(),
+
+    verifyMode: Joi.alternatives()
+        .try(
+            Joi.string(),
+            Joi.number()
+        )
+        .optional()
+
 });
+
 
 export const checkoutValidation = Joi.object({
     user: Joi.string().required(),

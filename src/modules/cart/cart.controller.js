@@ -460,14 +460,12 @@ export const addToCart = async (
         );
 
 
-        const cart =
-            await addToCartService(
-
-                req.user.id,
-
-                req.body
-
-            );
+       const cart =
+    await addToCartService(
+        req.user.id,
+        req.body,
+        req.user.customerType
+    );
 
 
         return successResponse(

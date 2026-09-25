@@ -1,4 +1,3 @@
-
 import User from "../users/user.model.js";
 
 import * as orderRepository from "./order.repository.js";
@@ -37,8 +36,7 @@ import {
 // ======================================================
 // HELPER: BUILD SECURE ORDER ITEMS
 // ======================================================
-
-const buildSecureOrderItems = async (rawItems) => {
+const buildSecureOrderItems = async (rawItems, customerType) => {
 
   if (
     !rawItems ||
@@ -71,16 +69,23 @@ const buildSecureOrderItems = async (rawItems) => {
 
     // -----------------------------------------------
     // SECURE PRICE FROM DATABASE
+    // BUSINESS -> wholesale, everyone else -> retail
+    // Old products fall back to sellingPrice
     // -----------------------------------------------
 
-    const originalPrice =
-      Number(
-        productData.pricing?.sellingPrice || 0
-      );
+    const pricing = productData.pricing || {};
+    const isBusiness = customerType === "BUSINESS";
 
-    if (originalPrice < 0) {
+    const originalPrice = Number(
+      (isBusiness ? pricing.wholesalePrice : pricing.retailPrice) ||
+        pricing.retailPrice ||
+        pricing.sellingPrice ||
+        0
+    );
+
+    if (originalPrice <= 0) {
       throw new Error(
-        `Invalid price for product: ${productData.name}`
+        `Price not set for product: ${productData.name}`
       );
     }
 
@@ -245,7 +250,8 @@ orderData.orderType =
     totalAmount
   } =
     await buildSecureOrderItems(
-      orderData.orderItems
+      orderData.orderItems,
+        customer.customerType
     );
 
 

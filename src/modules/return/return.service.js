@@ -925,188 +925,160 @@ export const completeReturnService =
         userId
     ) => {
 
-        const session =
-            await mongoose.startSession();
-
-
-        try {
-
-            session.startTransaction();
-
-
-            const returnRequest =
-                await Return.findOne({
-                    _id: returnId,
-                    isDeleted: false
-                }).session(session);
-
-
-            if (!returnRequest) {
-
-                throw new Error(
-                    "Return request not found"
-                );
-
-            }
-
-
-            if (
-                returnRequest.status !==
-                "INSPECTED"
-            ) {
-
-                throw new Error(
-                    "Return must be inspected before completion"
-                );
-
-            }
-
-
-            // ==================================================
-            // PROCESS EACH PRODUCT
-            // ==================================================
-
-            for (
-                const item
-                of returnRequest.items
-            ) {
-
-                // ==============================================
-                // GOOD PRODUCT
-                // ==============================================
-
-                if (
-                    item.condition ===
-                    "GOOD"
-                ) {
-
-                    const inventory =
-                        await Inventory.findOne({
-                            product:
-                                item.product,
-                            isDeleted: false
-                        }).session(session);
-
-
-                    if (!inventory) {
-
-                        throw new Error(
-                            `Inventory not found for ${item.title}`
-                        );
-
-                    }
-
-
-                    inventory.currentStock +=
-                        item.quantity;
-
-
-                    inventory.lastUpdatedBy =
-                        userId;
-
-
-                    // ==========================================
-                    // UPDATE INVENTORY STATUS
-                    // ==========================================
-
-                    const availableStock =
-                        Math.max(
-                            Number(
-                                inventory.currentStock || 0
-                            ) -
-                            Number(
-                                inventory.reservedStock || 0
-                            ),
-                            0
-                        );
-
-
-                    if (
-                        availableStock <= 0
-                    ) {
-
-                        inventory.status =
-                            "OUT_OF_STOCK";
-
-                    } else if (
-                        availableStock <=
-                        inventory.minimumStock
-                    ) {
-
-                        inventory.status =
-                            "LOW_STOCK";
-
-                    } else {
-
-                        inventory.status =
-                            "IN_STOCK";
-
-                    }
-
-
-                    item.restocked = true;
-
-
-                    await inventory.save({
-                        session
-                    });
-
-                }
-
-
-                // ==============================================
-                // DAMAGED / DEFECTIVE
-                // ==============================================
-
-                else {
-
-                    item.restocked = false;
-
-                }
-
-            }
-
-
-            // ==================================================
-            // COMPLETE RETURN
-            // ==================================================
-
-            returnRequest.status =
-                "COMPLETED";
-
-
-            returnRequest.completedBy =
-                userId;
-
-
-            returnRequest.completedAt =
-                new Date();
-
-
-            await returnRequest.save({
-                session
+        const returnRequest =
+            await Return.findOne({
+                _id: returnId,
+                isDeleted: false
             });
 
 
-            await session.commitTransaction();
+        if (!returnRequest) {
 
-
-            return returnRequest;
-
-        } catch (error) {
-
-            await session.abortTransaction();
-
-            throw error;
-
-        } finally {
-
-            await session.endSession();
+            throw new Error(
+                "Return request not found"
+            );
 
         }
 
-    };
 
+        if (
+            returnRequest.status !==
+            "INSPECTED"
+        ) {
+
+            throw new Error(
+                "Return must be inspected before completion"
+            );
+
+        }
+
+
+        // ==================================================
+        // PROCESS EACH PRODUCT
+        // ==================================================
+
+        for (
+            const item
+            of returnRequest.items
+        ) {
+
+            // ==============================================
+            // GOOD PRODUCT
+            // ==============================================
+
+            if (
+                item.condition ===
+                "GOOD"
+            ) {
+
+                const inventory =
+                    await Inventory.findOne({
+                        product:
+                            item.product,
+                        isDeleted: false
+                    });
+
+
+                if (!inventory) {
+
+                   throw new Error(
+    `Inventory not found for ${item.title}`
+);
+
+                }
+
+
+                inventory.currentStock =
+    Number(inventory.currentStock || 0) +
+    Number(item.quantity || 0);
+
+
+                inventory.lastUpdatedBy =
+                    userId;
+
+
+                // ==========================================
+                // UPDATE INVENTORY STATUS
+                // ==========================================
+
+                const availableStock =
+                    Math.max(
+                        Number(
+                            inventory.currentStock || 0
+                        ) -
+                        Number(
+                            inventory.reservedStock || 0
+                        ),
+                        0
+                    );
+
+
+                if (
+                    availableStock <= 0
+                ) {
+
+                    inventory.status =
+                        "OUT_OF_STOCK";
+
+                } else if (
+                    availableStock <=
+                    inventory.minimumStock
+                ) {
+
+                    inventory.status =
+                        "LOW_STOCK";
+
+                } else {
+
+                    inventory.status =
+                        "IN_STOCK";
+
+                }
+
+
+                item.restocked = true;
+
+
+                await inventory.save();
+
+            }
+
+
+            // ==============================================
+            // DAMAGED / DEFECTIVE
+            // ==============================================
+
+            else {
+
+                item.restocked = false;
+
+            }
+
+        }
+
+
+        // ==================================================
+        // COMPLETE RETURN
+        // ==================================================
+
+        returnRequest.status =
+            "COMPLETED";
+
+
+        returnRequest.completedBy =
+            userId;
+
+
+        returnRequest.completedAt =
+            new Date();
+
+
+        await returnRequest.save();
+
+
+        return returnRequest;
+
+    };
 
 // ======================================================
 // CANCEL RETURN
@@ -1162,3 +1134,5 @@ export const cancelReturnService =
         );
 
     };
+
+    
