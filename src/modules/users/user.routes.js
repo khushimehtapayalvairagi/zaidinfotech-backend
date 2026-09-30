@@ -101,7 +101,7 @@ router.get(
 router.post(
   "/",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
   createUser
 );
 
