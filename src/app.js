@@ -38,6 +38,7 @@ import blueDartRoutes  from "./modules/blueDart/blueDart.routes.js";
 import ItSupportSettingsRoutes from './modules/itSupport/itsupport.routes.js'
 import vendorRoutes from "./modules/Procurementt/vendor.routes.js";
 import purchaseOrderRoutes from "./modules/Procurementt/purchaseOrder.routes.js";
+import legalRoutes from "./modules/legal/legal.routes.js";
 const app = express();
 
 app.use(cors({
@@ -123,5 +124,5 @@ app.use('/api/itsupport', ItSupportSettingsRoutes)
 app.use("/api/procurement/vendors", vendorRoutes);
 app.use("/api/procurement/purchase-orders", purchaseOrderRoutes);
 
-
+app.use("/api/legal", legalRoutes);
 export default app;

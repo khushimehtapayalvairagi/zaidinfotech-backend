@@ -1,5 +1,3 @@
-
-
 import express from "express";
 
 
@@ -46,8 +44,11 @@ router.post(
     "/",
     verifyToken,
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+    "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
     validate(createCouponValidation),
     createCoupon
@@ -62,8 +63,11 @@ router.get(
     "/",
     verifyToken,
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+         "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
     getCoupons
 );
@@ -89,8 +93,11 @@ router.get(
     "/:id",
     verifyToken,
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+        "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
     getCouponById
 );
@@ -104,8 +111,11 @@ router.put(
     "/:id",
     verifyToken,
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+          "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
     validate(updateCouponValidation),
     updateCoupon
@@ -120,8 +130,11 @@ router.delete(
     "/:id",
     verifyToken,
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+         "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
     deleteCoupon
 );

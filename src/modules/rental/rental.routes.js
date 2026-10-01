@@ -148,7 +148,11 @@ router.get(
     "/",
     verifyToken,
     allowRoles(
-        "SALES"
+        "SALES",
+        "RECEPTIONIST",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "STAFF"
     ),
     getAllRentalsController
 );

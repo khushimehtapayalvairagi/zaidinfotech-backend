@@ -48,8 +48,11 @@ router.post(
 // ======================================================
 
 const availabilityRequestRoles = [
-    "ADMIN",
-    "SUPER_ADMIN"
+   "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
 ];
 
 

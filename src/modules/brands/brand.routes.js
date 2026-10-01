@@ -25,7 +25,11 @@ const router = express.Router();
 router.post(
     "/",
     verifyToken,
-    allowRoles("ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
     brandUpload.single("logo"),
     createBrand
 );
@@ -46,14 +50,22 @@ router.get(
 router.put(
   "/:id",
   verifyToken,
-  allowRoles("ADMIN"),
+  allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
   updateBrand
 );
 
 router.delete(
   "/:id",
   verifyToken,
-  allowRoles("ADMIN"),
+  allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
   deleteBrand
 );
 

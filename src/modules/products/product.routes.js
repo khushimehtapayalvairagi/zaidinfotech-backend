@@ -83,7 +83,11 @@ router.post(
 
     verifyToken,
 
-    allowRoles("ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
 
     productUpload.array(
         "images",
@@ -111,9 +115,11 @@ router.get(
     verifyToken,
 
     allowRoles(
-        "ADMIN",
-        "RECEPTIONIST",
-        "SALES",
+          "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT",
         "INVENTORY_MANAGER"
     ),
 
@@ -148,9 +154,11 @@ router.get(
     verifyToken,
 
     allowRoles(
-        "ADMIN",
-        "RECEPTIONIST",
-        "SALES",
+          "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT",
         "INVENTORY_MANAGER"
     ),
 
@@ -187,7 +195,11 @@ router.put(
 
     verifyToken,
 
-    allowRoles("ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
 
     validate(
         updateProductValidation
@@ -208,7 +220,11 @@ router.delete(
 
     verifyToken,
 
-    allowRoles("ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
 
     deleteProduct
 

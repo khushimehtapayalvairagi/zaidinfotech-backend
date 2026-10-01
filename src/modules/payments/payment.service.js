@@ -213,16 +213,178 @@ export const verifyRazorpayPaymentService = async ({
 //     );
 // };
 
+// export const createPayment = async (
+//     paymentData
+// ) => {
+
+//     paymentData.receiptNumber =
+//         await generateReceiptNumber();
+
+//     if (!paymentData.currency) {
+//         paymentData.currency = "INR";
+//     }
+
+//     return await paymentRepository.createPayment(
+//         paymentData
+//     );
+// };
+
+
+// =======================================
+// CREATE PAYMENT
+// =======================================
+
 export const createPayment = async (
     paymentData
 ) => {
 
+    // ---------------------------------------
+    // BASIC VALIDATION
+    // ---------------------------------------
+
+    if (!paymentData) {
+        throw new Error("Payment data is required");
+    }
+
+    if (!paymentData.paymentFor) {
+        throw new Error("Payment For is required");
+    }
+
+    if (!paymentData.referenceId) {
+        throw new Error("Reference ID is required");
+    }
+
+    if (
+        paymentData.amount === undefined ||
+        paymentData.amount === null ||
+        Number(paymentData.amount) <= 0
+    ) {
+        throw new Error("Valid payment amount is required");
+    }
+
+    if (!paymentData.paymentMethod) {
+        throw new Error("Payment method is required");
+    }
+
+
+    // ---------------------------------------
+    // NORMALIZE PAYMENT FOR
+    // ---------------------------------------
+
+    paymentData.paymentFor =
+        String(paymentData.paymentFor)
+            .trim()
+            .toUpperCase();
+
+
+    // ---------------------------------------
+    // NORMALIZE PAYMENT METHOD
+    // ---------------------------------------
+
+    paymentData.paymentMethod =
+        String(paymentData.paymentMethod)
+            .trim()
+            .toUpperCase();
+
+
+    // ---------------------------------------
+    // AMOUNT
+    // ---------------------------------------
+
+    paymentData.amount =
+        Number(
+            Number(paymentData.amount).toFixed(2)
+        );
+
+
+    // ---------------------------------------
+    // DETERMINE SALE SOURCE
+    // ---------------------------------------
+
+    try {
+
+        paymentData.saleSource =
+            await determineSaleSource(
+                paymentData.paymentFor,
+                paymentData.referenceId
+            );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "SALE SOURCE DETECTION ERROR:",
+            error
+        );
+
+        // Don't block payment if old orders
+        // don't have source fields.
+        paymentData.saleSource =
+            paymentData.saleSource ||
+            "ONLINE";
+    }
+
+
+    // ---------------------------------------
+    // RECEIPT NUMBER
+    // ---------------------------------------
+
     paymentData.receiptNumber =
         await generateReceiptNumber();
 
+
+    // ---------------------------------------
+    // CURRENCY
+    // ---------------------------------------
+
     if (!paymentData.currency) {
+
         paymentData.currency = "INR";
+
     }
+
+
+    // ---------------------------------------
+    // PAYMENT STATUS
+    // ---------------------------------------
+
+    if (!paymentData.paymentStatus) {
+
+        paymentData.paymentStatus =
+            PAYMENT_STATUS.PENDING;
+
+    }
+
+
+    // ---------------------------------------
+    // LOG FINAL DATA
+    // ---------------------------------------
+
+    console.log(
+        "======================================"
+    );
+
+    console.log(
+        "FINAL PAYMENT DATA"
+    );
+
+    console.log(
+        JSON.stringify(
+            paymentData,
+            null,
+            2
+        )
+    );
+
+    console.log(
+        "======================================"
+    );
+
+
+    // ---------------------------------------
+    // CREATE PAYMENT
+    // ---------------------------------------
 
     return await paymentRepository.createPayment(
         paymentData

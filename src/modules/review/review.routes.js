@@ -190,7 +190,11 @@ router.delete(
 router.get(
     "/admin/all",
     verifyToken,
-    allowRoles("ADMIN", "SUPER_ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
     reviewController.getAllReviews
 );
 
@@ -199,7 +203,11 @@ router.get(
 router.get(
     "/admin/:id",
     verifyToken,
-    allowRoles("ADMIN", "SUPER_ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
     reviewController.getReviewById
 );
 
@@ -208,7 +216,11 @@ router.get(
 router.patch(
     "/admin/:id/approve",
     verifyToken,
-    allowRoles("ADMIN", "SUPER_ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
     reviewController.approveReview
 );
 
@@ -217,7 +229,11 @@ router.patch(
 router.patch(
     "/admin/:id/reject",
     verifyToken,
-    allowRoles("ADMIN", "SUPER_ADMIN"),
+    allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
     reviewController.rejectReview
 );
 

@@ -190,8 +190,11 @@ router.post(
     verifyToken,
 
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+    "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
 
     validate(
@@ -215,8 +218,11 @@ router.get(
     verifyToken,
 
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+    "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
 
     getOffers
@@ -236,8 +242,11 @@ router.get(
     verifyToken,
 
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+    "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
 
     getOfferById
@@ -257,8 +266,11 @@ router.put(
     verifyToken,
 
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+        "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
 
     validate(
@@ -282,11 +294,15 @@ router.delete(
     verifyToken,
 
     allowRoles(
-        "SUPER_ADMIN",
-        "ADMIN"
+      "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"
     ),
 
     deleteOffer
+    
 
 );
 

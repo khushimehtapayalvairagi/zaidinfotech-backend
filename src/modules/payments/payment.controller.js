@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import * as paymentService
     from "./payment.service.js";
 
@@ -11,6 +5,9 @@ import Order
     from "../orders/order.model.js";
 
 
+// =======================================
+// CREATE RAZORPAY ORDER
+// =======================================
 // =======================================
 // CREATE RAZORPAY ORDER
 // =======================================
@@ -23,13 +20,33 @@ export const createRazorpayOrder = async (
     try {
 
         const {
-            orderId
+            orderId,
+            amount
         } = req.body;
 
+
         console.log(
-            "CREATE RAZORPAY ORDER REQUEST =",
-            req.body
+            "======================================"
         );
+
+        console.log(
+            "CREATE RAZORPAY ORDER REQUEST"
+        );
+
+        console.log(
+            "ORDER ID:",
+            orderId
+        );
+
+        console.log(
+            "REQUEST AMOUNT:",
+            amount
+        );
+
+        console.log(
+            "======================================"
+        );
+
 
         if (!orderId) {
 
@@ -37,18 +54,23 @@ export const createRazorpayOrder = async (
 
                 success: false,
 
-                message: "Order ID is required"
+                message:
+                    "Order ID is required"
 
             });
 
         }
 
+
         // -----------------------------------
-        // Find Order
+        // FIND ORDER
         // -----------------------------------
 
         const order =
-            await Order.findById(orderId);
+            await Order.findById(
+                orderId
+            );
+
 
         if (!order) {
 
@@ -56,38 +78,80 @@ export const createRazorpayOrder = async (
 
                 success: false,
 
-                message: "Order not found"
+                message:
+                    "Order not found"
 
             });
 
         }
 
+
+        // -----------------------------------
+        // VALIDATE AMOUNT
+        // -----------------------------------
+
+        const requestedAmount =
+            Number(amount);
+
+
+        if (
+            !Number.isFinite(
+                requestedAmount
+            ) ||
+            requestedAmount <= 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Valid payment amount is required"
+
+            });
+
+        }
+
+
+        const finalAmount =
+            Math.round(
+                requestedAmount * 100
+            ) / 100;
+
+
         console.log(
-            "ORDER FOUND =",
-            order._id,
+            "ORDER DATABASE TOTAL:",
             order.totalAmount
         );
 
+        console.log(
+            "FINAL RAZORPAY AMOUNT:",
+            finalAmount
+        );
+
+
         // -----------------------------------
-        // Create Razorpay Order
+        // CREATE RAZORPAY ORDER
         // -----------------------------------
 
         const razorpayOrder =
             await paymentService.createRazorpayPaymentOrder(
 
-                order.totalAmount,
+                finalAmount,
 
                 `order_${order._id}`
 
             );
+
 
         console.log(
             "RAZORPAY ORDER CREATED =",
             razorpayOrder
         );
 
+
         // -----------------------------------
-        // IMPORTANT RESPONSE
+        // RESPONSE
         // -----------------------------------
 
         return res.status(200).json({
@@ -97,7 +161,8 @@ export const createRazorpayOrder = async (
             message:
                 "Razorpay order created successfully",
 
-            order: razorpayOrder,
+            order:
+                razorpayOrder,
 
             razorpayOrderId:
                 razorpayOrder.id,
@@ -106,7 +171,10 @@ export const createRazorpayOrder = async (
                 razorpayOrder.amount,
 
             currency:
-                razorpayOrder.currency
+                razorpayOrder.currency,
+
+            paymentAmount:
+                finalAmount
 
         });
 
@@ -118,6 +186,7 @@ export const createRazorpayOrder = async (
             "CREATE RAZORPAY ORDER ERROR =",
             error
         );
+
 
         return res.status(500).json({
 
@@ -132,6 +201,8 @@ export const createRazorpayOrder = async (
     }
 
 };
+
+
 
 
 // =======================================
@@ -266,6 +337,10 @@ export const verifyRazorpayPaymentController =
 // CREATE PAYMENT
 // =======================================
 
+// =======================================
+// CREATE PAYMENT
+// =======================================
+
 export const createPayment = async (
     req,
     res
@@ -274,7 +349,22 @@ export const createPayment = async (
     try {
 
         const userId =
-            req.user._id;
+            req.user?._id;
+
+
+        if (!userId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Authenticated user not found"
+
+            });
+
+        }
+
 
         const paymentData = {
 
@@ -284,15 +374,40 @@ export const createPayment = async (
 
         };
 
+
         console.log(
-            "CREATE PAYMENT DATA =",
+            "======================================"
+        );
+
+        console.log(
+            "CREATE PAYMENT REQUEST"
+        );
+
+        console.log(
+            "USER:",
+            userId
+        );
+
+        console.log(
+            "BODY:",
+            req.body
+        );
+
+        console.log(
+            "FINAL PAYMENT DATA:",
             paymentData
         );
+
+        console.log(
+            "======================================"
+        );
+
 
         const payment =
             await paymentService.createPayment(
                 paymentData
             );
+
 
         return res.status(201).json({
 
@@ -310,23 +425,40 @@ export const createPayment = async (
     catch (error) {
 
         console.error(
-            "CREATE PAYMENT ERROR =",
+            "======================================"
+        );
+
+        console.error(
+            "CREATE PAYMENT ERROR"
+        );
+
+        console.error(
             error
         );
+
+        console.error(
+            "MESSAGE:",
+            error.message
+        );
+
+        console.error(
+            "======================================"
+        );
+
 
         return res.status(400).json({
 
             success: false,
 
             message:
-                error.message
+                error.message ||
+                "Unable to create payment"
 
         });
 
     }
 
 };
-
 
 // =======================================
 // GET PAYMENT BY ID

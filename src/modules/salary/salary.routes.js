@@ -82,7 +82,8 @@ router.post(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR,
-    ROLES.ACCOUNTANT
+    ROLES.ACCOUNTANT,
+      ROLES.SALES
   ),
   createSalaryController
 );
@@ -136,7 +137,8 @@ router.put(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR
+    ROLES.HR,
+      ROLES.SALES
   ),
   updateBankDetailsController
 );

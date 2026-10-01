@@ -17,7 +17,11 @@ const router = express.Router();
 router.post(
   "/",
   verifyToken,
-  allowRoles("ADMIN"),
+  allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
   categoryUpload.single("image"),
   createCategory
 );
@@ -37,14 +41,22 @@ router.get(
 router.put(
   "/:id",
   verifyToken,
-  allowRoles("ADMIN"),
+  allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
   updateCategory
 );
 
 router.delete(
   "/:id",
   verifyToken,
-  allowRoles("ADMIN"),
+  allowRoles(  "ADMIN",
+  "SUPER_ADMIN",
+  "SALES",
+  "RECEPTIONIST",
+  "ACCOUNTANT"),
   deleteCategory
 );
 
