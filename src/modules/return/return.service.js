@@ -1,8 +1,12 @@
+
+
+
 import mongoose from "mongoose";
 
 import Order from "../orders/order.model.js";
 import Inventory from "../inventory/inventory.model.js";
 import Return from "./return.model.js";
+import { autoRefundForReturn } from "../refund/refund.service.js";
 
 import {
     createReturnDB,
@@ -19,13 +23,13 @@ import {
 
 const generateReturnNumber = () => {
 
-    const timestamp = Date.now();
+    // const timestamp = Date.now();
 
     const random = Math.floor(
         1000 + Math.random() * 9000
     );
 
-    return `RET-${timestamp}-${random}`;
+    return `RET-${random}`;
 };
 
 
@@ -759,165 +763,294 @@ export const receiveReturnService =
     };
 
 
-// ======================================================
-// INSPECT RETURN
-// ======================================================
-
-export const inspectReturnService =
-    async (
-        returnId,
-        userId,
-        inspectedItems
-    ) => {
-
-        const session =
-            await mongoose.startSession();
 
 
-        try {
+export const inspectReturnService = async (
+    returnId,
+    userId,
+    inspectedItems = []
+) => {
 
+    const isReplicaSet =
+        mongoose.connection?.client?.topology?.description?.type?.includes("ReplicaSet");
+
+    const session = isReplicaSet ? await mongoose.startSession() : null;
+
+    try {
+        if (session) {
             session.startTransaction();
-
-
-            const returnRequest =
-                await Return.findOne({
-                    _id: returnId,
-                    isDeleted: false
-                }).session(session);
-
-
-            if (!returnRequest) {
-
-                throw new Error(
-                    "Return request not found"
-                );
-
-            }
-
-
-            if (
-                returnRequest.status !==
-                "RECEIVED"
-            ) {
-
-                throw new Error(
-                    "Return must be received before inspection"
-                );
-
-            }
-
-
-            if (
-                !Array.isArray(
-                    inspectedItems
-                ) ||
-                inspectedItems.length === 0
-            ) {
-
-                throw new Error(
-                    "Inspection items are required"
-                );
-
-            }
-
-
-            // ==================================================
-            // INSPECT EACH ITEM
-            // ==================================================
-
-            for (
-                const inspectedItem
-                of inspectedItems
-            ) {
-
-                const returnItem =
-                    returnRequest.items.find(
-                        (item) =>
-                            item.product.toString() ===
-                            inspectedItem.productId.toString()
-                    );
-
-
-                if (!returnItem) {
-
-                    throw new Error(
-                        `Product ${inspectedItem.productId} not found in return`
-                    );
-
-                }
-
-
-                const validConditions = [
-                    "GOOD",
-                    "DAMAGED",
-                    "DEFECTIVE",
-                    "MISSING_PARTS"
-                ];
-
-
-                if (
-                    !validConditions.includes(
-                        inspectedItem.condition
-                    )
-                ) {
-
-                    throw new Error(
-                        `Invalid condition for ${returnItem.title}`
-                    );
-
-                }
-
-
-                returnItem.condition =
-                    inspectedItem.condition;
-
-
-                returnItem.inspectionNote =
-                    inspectedItem.inspectionNote || "";
-
-            }
-
-
-            returnRequest.status =
-                "INSPECTED";
-
-
-            returnRequest.inspectedBy =
-                userId;
-
-
-            returnRequest.inspectedAt =
-                new Date();
-
-
-            await returnRequest.save({
-                session
-            });
-
-
-            await session.commitTransaction();
-
-
-            return returnRequest;
-
-        } catch (error) {
-
-            await session.abortTransaction();
-
-            throw error;
-
-        } finally {
-
-            await session.endSession();
-
         }
 
-    };
+        // 2. Fetch return request
+        const query = Return.findOne({ _id: returnId, isDeleted: false });
+        if (session) query.session(session);
+        const returnRequest = await query;
+
+        if (!returnRequest) {
+            throw new Error("Return request not found");
+        }
+
+        // 3. Status validation
+        if (returnRequest.status !== "RECEIVED") {
+            throw new Error("Return must be in RECEIVED status before inspection");
+        }
+
+        const validConditions = ["GOOD", "DAMAGED", "DEFECTIVE", "MISSING_PARTS"];
+
+        // 4. Update each item condition
+        if (Array.isArray(inspectedItems) && inspectedItems.length > 0) {
+            for (const inspectedItem of inspectedItems) {
+                // Extract incoming ID safely (handles .productId, .product, ._id, or nested objects)
+                const incomingId = (
+                    inspectedItem?.productId ||
+                    inspectedItem?.product?._id ||
+                    inspectedItem?.product ||
+                    inspectedItem?._id
+                )?.toString();
+
+                if (!incomingId) continue;
+
+                // Match with returnRequest items
+                const returnItem = returnRequest.items.find((item) => {
+                    const itemProdId = (item.product?._id || item.product)?.toString();
+                    const itemSubdocId = item._id?.toString();
+                    return itemProdId === incomingId || itemSubdocId === incomingId;
+                });
+
+                if (returnItem) {
+                    const condition = (inspectedItem.condition || "GOOD").toUpperCase();
+                    returnItem.condition = validConditions.includes(condition)
+                        ? condition
+                        : "GOOD";
+                    returnItem.inspectionNote = inspectedItem.inspectionNote || "";
+                }
+            }
+        } else {
+            // Fallback: agar frontend se items list empty aayi, sabhi items ko by default "GOOD" mark kar do
+            returnRequest.items.forEach((item) => {
+                item.condition = item.condition || "GOOD";
+            });
+        }
+
+        // 5. Update parent return status
+        returnRequest.status = "INSPECTED";
+        returnRequest.inspectedBy = userId;
+        returnRequest.inspectedAt = new Date();
+
+        await returnRequest.save(session ? { session } : {});
+
+        if (session) {
+            await session.commitTransaction();
+        }
+
+        return returnRequest;
+    } catch (error) {
+        if (session) {
+            await session.abortTransaction();
+        }
+        console.error("inspectReturnService Error:", error);
+        throw error;
+    } finally {
+        if (session) {
+            await session.endSession();
+        }
+    }
+};
+
+
 
 
 // ======================================================
 // COMPLETE RETURN + UPDATE INVENTORY
 // ======================================================
+
+// export const completeReturnService =
+//     async (
+//         returnId,
+//         userId
+//     ) => {
+
+//         const session =
+//             await mongoose.startSession();
+
+
+//         try {
+
+//             session.startTransaction();
+
+
+//             const returnRequest =
+//                 await Return.findOne({
+//                     _id: returnId,
+//                     isDeleted: false
+//                 }).session(session);
+
+
+//             if (!returnRequest) {
+
+//                 throw new Error(
+//                     "Return request not found"
+//                 );
+
+//             }
+
+
+//             if (
+//                 returnRequest.status !==
+//                 "INSPECTED"
+//             ) {
+
+//                 throw new Error(
+//                     "Return must be inspected before completion"
+//                 );
+
+//             }
+
+
+//             // ==================================================
+//             // PROCESS EACH PRODUCT
+//             // ==================================================
+
+//             for (
+//                 const item
+//                 of returnRequest.items
+//             ) {
+
+//                 // ==============================================
+//                 // GOOD PRODUCT
+//                 // ==============================================
+
+//                 if (
+//                     item.condition ===
+//                     "GOOD"
+//                 ) {
+
+//                     const inventory =
+//                         await Inventory.findOne({
+//                             product:
+//                                 item.product,
+//                             isDeleted: false
+//                         }).session(session);
+
+
+//                     if (!inventory) {
+
+//                         throw new Error(
+//                             `Inventory not found for ${item.title}`
+//                         );
+
+//                     }
+
+
+//                     inventory.currentStock +=
+//                         item.quantity;
+
+
+//                     inventory.lastUpdatedBy =
+//                         userId;
+
+
+//                     // ==========================================
+//                     // UPDATE INVENTORY STATUS
+//                     // ==========================================
+
+//                     const availableStock =
+//                         Math.max(
+//                             Number(
+//                                 inventory.currentStock || 0
+//                             ) -
+//                             Number(
+//                                 inventory.reservedStock || 0
+//                             ),
+//                             0
+//                         );
+
+
+//                     if (
+//                         availableStock <= 0
+//                     ) {
+
+//                         inventory.status =
+//                             "OUT_OF_STOCK";
+
+//                     } else if (
+//                         availableStock <=
+//                         inventory.minimumStock
+//                     ) {
+
+//                         inventory.status =
+//                             "LOW_STOCK";
+
+//                     } else {
+
+//                         inventory.status =
+//                             "IN_STOCK";
+
+//                     }
+
+
+//                     item.restocked = true;
+
+
+//                     await inventory.save({
+//                         session
+//                     });
+
+//                 }
+
+
+//                 // ==============================================
+//                 // DAMAGED / DEFECTIVE
+//                 // ==============================================
+
+//                 else {
+
+//                     item.restocked = false;
+
+//                 }
+
+//             }
+
+
+//             // ==================================================
+//             // COMPLETE RETURN
+//             // ==================================================
+
+//             returnRequest.status =
+//                 "COMPLETED";
+
+
+//             returnRequest.completedBy =
+//                 userId;
+
+
+//             returnRequest.completedAt =
+//                 new Date();
+
+
+//             await returnRequest.save({
+//                 session
+//             });
+
+
+//             await session.commitTransaction();
+
+
+//             return returnRequest;
+
+//         } catch (error) {
+
+//             await session.abortTransaction();
+
+//             throw error;
+
+//         } finally {
+
+//             await session.endSession();
+
+//         }
+
+//     };
 
 export const completeReturnService =
     async (
@@ -981,16 +1114,15 @@ export const completeReturnService =
 
                 if (!inventory) {
 
-                   throw new Error(
-    `Inventory not found for ${item.title}`
-);
+                    throw new Error(
+                        `Inventory not found for ${item.title}`
+                    );
 
                 }
 
 
-                inventory.currentStock =
-    Number(inventory.currentStock || 0) +
-    Number(item.quantity || 0);
+                inventory.currentStock +=
+                    item.quantity;
 
 
                 inventory.lastUpdatedBy =
@@ -1076,9 +1208,22 @@ export const completeReturnService =
         await returnRequest.save();
 
 
+        // Flipkart jaisa: return complete -> refund auto (Razorpay payment ho to)
+        const autoRefund = await autoRefundForReturn(
+            returnRequest._id,
+            userId
+        );
+
+        console.log(
+            `[RETURN ${returnRequest.returnNumber}] auto refund:`,
+            autoRefund.status
+        );
+
+
         return returnRequest;
 
     };
+
 
 // ======================================================
 // CANCEL RETURN
@@ -1134,5 +1279,3 @@ export const cancelReturnService =
         );
 
     };
-
-    

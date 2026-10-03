@@ -1,508 +1,3 @@
-// import Product from "../products/product.model.js";
-// import Inventory from "../inventory/inventory.model.js";
-// import Coupon from "../coupons/coupon.model.js";
-
-
-// import {
-
-// getCartByUserDB,
-// createCartDB,
-// saveCartDB,
-//  updateCartDB,
-// clearCartDB
-
-// } from "./cart.repository.js";
-
-// // =================================
-// // Add To Cart
-// // =================================
-
-// export const addToCartService = async (
-
-//     userId,
-
-//     data
-
-// )=>{
-
-//     const {
-
-//         product,
-
-//         quantity,
-//         originalPrice,
-//         discountAmount,
-//         finalPrice,
-
-//     } = data;
-
-
-
-//     // Product Check
-
-//     const existingProduct =
-//     await Product.findById(product);
-
-
-
-//     if(!existingProduct){
-
-//         throw new Error(
-//             "Product not found"
-//         );
-
-//     }
-
-
-
-//     // Inventory Check
-
-//     const inventory =
-//     await Inventory.findOne({
-
-//         product,
-
-//         isDeleted:false
-
-//     });
-
-
-
-//     if(!inventory){
-
-//         throw new Error(
-//             "Inventory not found"
-//         );
-
-//     }
-
-
-
-//     const availableStock =
-
-//         inventory.currentStock -
-
-//         inventory.reservedStock;
-
-
-
-//     if(availableStock < quantity){
-
-//         throw new Error(
-//             "Insufficient stock"
-//         );
-
-//     }
-
-
-
-//     // Get Cart
-
-//     let cart =
-//     await getCartByUserDB(userId);
-
-
-
-//     // Cart Not Exists
-
-//     if(!cart){
-
-//         cart =
-//         await createCartDB({
-
-//             user:userId,
-
-//         items: [
-//     {
-//         product,
-//         quantity,
-//         originalPrice,
-//         discountAmount,
-//         finalPrice,
-//         offer: existingProduct.offer
-//     }
-// ]
-
-//         });
-
-//         return cart;
-
-//     }
-
-
-
-//     // Product Already Exists
-
-//     const existingItem =
-//     cart.items.find(
-
-//         item=>
-
-//         item.product._id.toString()
-
-//         ===
-
-//         product
-
-//     );
-
-
-
-//     if(existingItem){
-
-//         existingItem.quantity += quantity;
-//     }
-
-//     else{
-
-//         cart.items.push({
-
-//             product,
-
-//             quantity
-
-//         });
-
-//     }
-
-
-
-//     return await saveCartDB(cart);
-
-// };
-
-// // =================================
-// // Get Cart
-// // =================================
-
-// export const getCartService = async(
-
-//     userId
-
-// )=>{
-
-//     return await getCartByUserDB(
-//         userId
-//     );
-
-// };
-
-
-// // =================================
-// // Update Cart Quantity
-// // =================================
-
-// export const updateCartQuantityService = async (
-//     userId,
-//     productId,
-//     quantity
-// ) => {
-
-//     // Quantity validation
-//     if (
-//         !Number.isInteger(quantity) ||
-//         quantity < 1
-//     ) {
-
-//         throw new Error(
-//             "Quantity must be at least 1"
-//         );
-
-//     }
-
-
-//     // Product check
-//     const product =
-//         await Product.findById(productId);
-
-
-//     if (!product) {
-
-//         throw new Error(
-//             "Product not found"
-//         );
-
-//     }
-
-
-//     // Inventory check
-//     const inventory =
-//         await Inventory.findOne({
-
-//             product: productId,
-
-//             isDeleted: false
-
-//         });
-
-
-//     if (!inventory) {
-
-//         throw new Error(
-//             "Inventory not found"
-//         );
-
-//     }
-
-
-//     const availableStock =
-//         inventory.currentStock -
-//         inventory.reservedStock;
-
-
-//     if (quantity > availableStock) {
-
-//         throw new Error(
-//             `Only ${availableStock} item(s) available in stock`
-//         );
-
-//     }
-
-
-//     // Get cart
-//     const cart =
-//         await getCartByUserDB(userId);
-
-
-//     if (!cart) {
-
-//         throw new Error(
-//             "Cart not found"
-//         );
-
-//     }
-
-
-//     // Find item
-//     const cartItem =
-//         cart.items.find(
-
-//             item =>
-//                 item.product._id.toString() ===
-//                 productId.toString()
-
-//         );
-
-
-//     if (!cartItem) {
-
-//         throw new Error(
-//             "Product not found in cart"
-//         );
-
-//     }
-
-
-//     // Update quantity
-//     cartItem.quantity =
-//         quantity;
-
-
-//     await saveCartDB(cart);
-
-
-//     // Return updated populated cart
-//     return await getCartByUserDB(userId);
-
-// };
-
-// export const removeCartItemService = async (
-//     userId,
-//     productId
-// ) => {
-
-//     const cart =
-//         await getCartByUserDB(userId);
-
-
-//     if (!cart) {
-
-//         throw new Error(
-//             "Cart not found"
-//         );
-
-//     }
-
-
-//     const oldLength =
-//         cart.items.length;
-
-
-//     cart.items =
-//         cart.items.filter(
-
-//             item =>
-//                 item.product._id.toString() !==
-//                 productId.toString()
-
-//         );
-
-
-//     if (
-//         cart.items.length ===
-//         oldLength
-//     ) {
-
-//         throw new Error(
-//             "Product not found in cart"
-//         );
-
-//     }
-
-
-//     await saveCartDB(cart);
-
-
-//     return await getCartByUserDB(userId);
-
-// };
-
-
-// // =================================
-// // Clear Cart
-// // =================================
-
-// export const clearCartService = async(
-
-//     userId
-
-// )=>{
-
-//     return await clearCartDB(
-//         userId
-//     );
-
-// };
-
-
-
-
-
-// // =================================
-// // Apply Coupon
-// // =================================
-
-// export const applyCouponService = async (
-//     userId,
-//     couponCode
-// ) => {
-
-//     const cart = await getCartByUserDB(userId);
-
-//     if (!cart) {
-//         throw new Error("Cart not found");
-//     }
-
-//     if (cart.items.length === 0) {
-//         throw new Error("Cart is empty");
-//     }
-
-//     const coupon = await Coupon.findOne({
-//         code: couponCode.toUpperCase(),
-//         isDeleted: false
-//     });
-
-//     if (!coupon) {
-//         throw new Error("Invalid coupon");
-//     }
-
-//     if (!coupon.isActive) {
-//         throw new Error("Coupon is inactive");
-//     }
-
-//     if (new Date(coupon.expiryDate) < new Date()) {
-//         throw new Error("Coupon expired");
-//     }
-
-//     let totalAmount = 0;
-
-//     cart.items.forEach(item => {
-//         totalAmount += item.finalPrice * item.quantity;
-//     });
-
-//     if (totalAmount < coupon.minOrderValue) {
-//         throw new Error(
-//             `Minimum order amount should be ₹${coupon.minOrderValue}`
-//         );
-//     }
-
-//     let discount = 0;
-
-//     if (coupon.discountType === "percent") {
-
-//         discount =
-//             (totalAmount * coupon.value) / 100;
-
-//         if (
-//             coupon.maxDiscount > 0 &&
-//             discount > coupon.maxDiscount
-//         ) {
-
-//             discount = coupon.maxDiscount;
-
-//         }
-
-//     } else {
-
-//         discount = coupon.value;
-
-//     }
-
-//     cart.coupon = coupon._id;
-//     cart.couponCode = coupon.code;
-//     cart.couponDiscount = discount;
-//     cart.finalAmount = totalAmount - discount;
-
-//     await updateCartDB(cart);
-
-//     return await getCartByUserDB(userId);
-
-// };
-
-
-// // =================================
-// // Remove Coupon
-// // =================================
-
-// export const removeCouponService = async (
-//     userId
-// ) => {
-
-//     const cart =
-//         await getCartByUserDB(userId);
-
-//     if (!cart) {
-
-//         throw new Error(
-//             "Cart not found"
-//         );
-
-//     }
-
-//     let total = 0;
-
-//     cart.items.forEach(item => {
-
-//         total +=
-//             item.finalPrice *
-//             item.quantity;
-
-//     });
-
-//     cart.coupon = null;
-//     cart.couponCode = "";
-//     cart.couponDiscount = 0;
-//     cart.finalAmount = total;
-
-//     await updateCartDB(cart);
-
-//     return await getCartByUserDB(userId);
-
-// };
-
-
-
-
 
 import mongoose from "mongoose";
 
@@ -656,7 +151,7 @@ const getProductPrice = (productData, customerType) => {
 export const addToCartService = async (
     userId,
     data,
-      customerType
+    customerType
 ) => {
 
     console.log(
@@ -750,15 +245,15 @@ export const addToCartService = async (
         discountAmount
     } = getProductPrice(
         productData,
-         customerType
+        customerType
     );
     const {
-    finalPrice,
-    appliedOffer
-} = await getOfferAppliedPrice(
-    productData,
-    sellingPrice
-);
+        finalPrice,
+        appliedOffer
+    } = await getOfferAppliedPrice(
+        productData,
+        sellingPrice
+    );
 
     console.log(
         "PRODUCT PRICE:",
@@ -840,49 +335,49 @@ export const addToCartService = async (
     // --------------------------------------------------
     // 10. EXISTING PRODUCT
     // --------------------------------------------------
-if (existingItem) {
+    if (existingItem) {
 
-    const newQuantity =
-        Number(existingItem.quantity || 0) + qty;
+        const newQuantity =
+            Number(existingItem.quantity || 0) + qty;
 
-    if (
-        availableStock !== null &&
-        newQuantity > availableStock
-    ) {
-        throw new Error(
-            `Only ${availableStock} item(s) available`
-        );
+        if (
+            availableStock !== null &&
+            newQuantity > availableStock
+        ) {
+            throw new Error(
+                `Only ${availableStock} item(s) available`
+            );
+        }
+
+        existingItem.quantity = newQuantity;
+        existingItem.price = sellingPrice;
+        existingItem.originalPrice = mrp;
+        existingItem.discountAmount = discountAmount;
+
+        // CHANGED: ab offer applied price save hoga
+        existingItem.finalPrice = finalPrice;
+        existingItem.appliedOffer = appliedOffer;
     }
-
-    existingItem.quantity = newQuantity;
-    existingItem.price = sellingPrice;
-    existingItem.originalPrice = mrp;
-    existingItem.discountAmount = discountAmount;
-
-    // CHANGED: ab offer applied price save hoga
-    existingItem.finalPrice = finalPrice;
-    existingItem.appliedOffer = appliedOffer;
-}
 
     // --------------------------------------------------
     // 11. NEW PRODUCT
     // --------------------------------------------------
 
-   else {
+    else {
 
-    cart.items.push({
+        cart.items.push({
 
-        product: productData._id,
-        quantity: qty,
-        price: sellingPrice,
-        originalPrice: mrp,
-        discountAmount: discountAmount,
+            product: productData._id,
+            quantity: qty,
+            price: sellingPrice,
+            originalPrice: mrp,
+            discountAmount: discountAmount,
 
-        // CHANGED
-        finalPrice: finalPrice,
-        appliedOffer: appliedOffer
-    });
-}
+            // CHANGED
+            finalPrice: finalPrice,
+            appliedOffer: appliedOffer
+        });
+    }
 
     // --------------------------------------------------
     // 12. SAVE CART
@@ -969,7 +464,8 @@ export const getCartService = async (
 export const updateCartQuantityService = async (
     userId,
     productId,
-    quantity
+    quantity,
+    customerType
 ) => {
 
     // --------------------------------------------------
@@ -1095,28 +591,29 @@ export const updateCartQuantityService = async (
         discountAmount
     } = getProductPrice(
         productData,
-        
+        customerType
+
     );
 
-  const {
-    finalPrice,
-    appliedOffer
-} = await getOfferAppliedPrice(
-    productData,
-    sellingPrice
-);
+    const {
+        finalPrice,
+        appliedOffer
+    } = await getOfferAppliedPrice(
+        productData,
+        sellingPrice
+    );
     // --------------------------------------------------
     // UPDATE ITEM
     // --------------------------------------------------
 
-item.quantity = qty;
-item.price = sellingPrice;
-item.originalPrice = mrp;
-item.discountAmount = discountAmount;
+    item.quantity = qty;
+    item.price = sellingPrice;
+    item.originalPrice = mrp;
+    item.discountAmount = discountAmount;
 
-// CHANGED
-item.finalPrice = finalPrice;
-item.appliedOffer = appliedOffer;
+    // CHANGED
+    item.finalPrice = finalPrice;
+    item.appliedOffer = appliedOffer;
 
     // --------------------------------------------------
     // SAVE

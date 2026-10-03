@@ -97,6 +97,7 @@ export const findEmployees = async () => {
     "TECHNICIAN",
     "INVENTORY",
     "ACCOUNTANT",
+        "IT_SUPPORT",
     "OTHER"
   ]
 },

@@ -1,6 +1,3 @@
-
-
-
 import express from "express";
 
 import {
@@ -21,7 +18,13 @@ import {
   resetPassword,
   verifyEmail,
   resendEmailVerificationOtp,
-  changepassword 
+  changepassword ,
+  addCustomerBankAccount,
+getCustomerBankAccountById,
+updateCustomerBankDetails,
+ getCustomerBankAccounts
+  
+
 } from "./user.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
@@ -77,6 +80,9 @@ router.put(
   updateCustomerProfile
 );
 
+//Change Password
+router.put("/change-password", verifyToken, changepassword);
+
 /*
 ====================================================
                 EMPLOYEE
@@ -87,7 +93,7 @@ router.put(
 router.get(
   "/employees",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
   getEmployees
 );
 
@@ -212,6 +218,26 @@ router.post(
   "/resend-verification-otp",
   resendEmailVerificationOtp
 );
-router.put("/change-password", verifyToken, changepassword);
+
+router.get(
+  "/:id/bank-accounts",
+  getCustomerBankAccounts
+);
+
+router.post(
+  "/:id/bank-accounts",
+  addCustomerBankAccount
+);
+
+router.get(
+  "/:id/bank-accounts/:accountId",
+  getCustomerBankAccountById
+);
+
+router.put(
+  "/:id/bank-accounts/:accountId",
+  updateCustomerBankDetails
+);
+
 
 export default router;
