@@ -33,6 +33,11 @@ import {
 } from "../coupons/coupon.service.js";
 
 
+const GST_PERCENTAGE = 18; // apne checkout wala GST % yaha rakho
+
+const round2 = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 // ======================================================
 // HELPER: BUILD SECURE ORDER ITEMS
 // ======================================================
@@ -51,6 +56,8 @@ const buildSecureOrderItems = async (rawItems, customerType) => {
   const secureItems = [];
 
   let totalAmount = 0;
+  let subtotal = 0;
+  let offerDiscount = 0;
 
   for (const item of rawItems) {
 
@@ -163,11 +170,15 @@ const buildSecureOrderItems = async (rawItems, customerType) => {
 
     totalAmount +=
       finalPrice * quantity;
+    subtotal += originalPrice * quantity;
+    offerDiscount += discountAmount * quantity;
   }
 
   return {
     secureItems,
-    totalAmount
+    totalAmount,
+    subtotal,
+    offerDiscount
   };
 };
 
@@ -245,23 +256,39 @@ orderData.orderType =
   // BUILD SECURE ORDER ITEMS
   // ====================================================
 
-  const {
+  // const {
+  //   secureItems,
+  //   totalAmount
+  // } =
+  //   await buildSecureOrderItems(
+  //     orderData.orderItems,
+  //       customer.customerType
+  //   );
+
+
+  // orderData.orderItems =
+  //   secureItems;
+
+
+  // orderData.totalAmount =
+  //   totalAmount;
+
+
+    const {
     secureItems,
-    totalAmount
+    totalAmount,
+    subtotal,
+    offerDiscount
   } =
     await buildSecureOrderItems(
       orderData.orderItems,
-        customer.customerType
+      customer.customerType
     );
 
-
-  orderData.orderItems =
-    secureItems;
-
-
-  orderData.totalAmount =
-    totalAmount;
-
+  orderData.orderItems = secureItems;
+  orderData.totalAmount = totalAmount;
+  orderData.subtotal = round2(subtotal);
+  orderData.offerDiscount = round2(offerDiscount);
 
   // ====================================================
   // COUPON VALIDATION
@@ -291,6 +318,8 @@ orderData.orderType =
         result.discountAmount || 0
       );
 
+      
+
 
     couponData =
       result.coupon;
@@ -317,16 +346,53 @@ orderData.orderType =
   }
 
 
+  
+
   // ====================================================
   // FINAL AMOUNT
   // ====================================================
 
-  orderData.finalAmount =
-    Math.max(
-      totalAmount - couponDiscount,
-      0
-    );
+  // orderData.finalAmount =
+  //   Math.max(
+  //     totalAmount - couponDiscount,
+  //     0
+  //   );
 
+
+    // ====================================================
+  // FINAL AMOUNT (offer + coupon + GST + shipping)
+  // ====================================================
+
+  couponDiscount = round2(couponDiscount);
+
+  const taxableAmount =
+    Math.max(totalAmount - couponDiscount, 0);
+
+  const gstPercentage = GST_PERCENTAGE;
+
+  const gstAmount =
+    round2((taxableAmount * gstPercentage) / 100);
+
+  const shippingCharge =
+    Math.max(Number(orderData.shippingCharge) || 0, 0);
+
+  const otherCharges =
+    Math.max(Number(orderData.otherCharges) || 0, 0);
+
+  orderData.couponDiscount = couponDiscount;
+  orderData.taxableAmount = round2(taxableAmount);
+  orderData.gstPercentage = gstPercentage;
+  orderData.gstAmount = gstAmount;
+  orderData.shippingCharge = round2(shippingCharge);
+  orderData.otherCharges = round2(otherCharges);
+
+  orderData.finalAmount =
+    round2(
+      taxableAmount +
+      gstAmount +
+      shippingCharge +
+      otherCharges
+    );
 
   // ====================================================
   // WALK-IN STOCK CHECK

@@ -1,6 +1,3 @@
-
-
-
 import * as orderService
   from "./order.service.js";
 
@@ -70,8 +67,8 @@ export const createOrder = async (
 
           title:
             item.title,
-             couponCode:
-        req.body.couponCode || "",  
+        //      couponCode:
+        // req.body.couponCode || "",  
 
           quantity:
             Number(item.quantity),

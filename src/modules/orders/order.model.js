@@ -1,6 +1,3 @@
-
-
-
 import mongoose from "mongoose";
 
 import {
@@ -225,6 +222,49 @@ couponDiscount: {
 finalAmount: {
   type: Number,
   required: true,
+  min: 0,
+},
+
+
+// ====================================================
+// PRICE BREAKDOWN (NEW)
+// ====================================================
+
+subtotal: {
+  type: Number,
+  min: 0,
+},
+
+offerDiscount: {
+  type: Number,
+  min: 0,
+},
+
+taxableAmount: {
+  type: Number,
+  min: 0,
+},
+
+gstPercentage: {
+  type: Number,
+  min: 0,
+},
+
+// NOTE: gstAmount par default MAT lagana.
+// Purane orders me ye undefined rahega, isi se
+// ViewOrder purane/naye order ko pehchanta hai.
+gstAmount: {
+  type: Number,
+  min: 0,
+},
+
+shippingCharge: {
+  type: Number,
+  min: 0,
+},
+
+otherCharges: {
+  type: Number,
   min: 0,
 },
 // ====================================================

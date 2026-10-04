@@ -1,5 +1,3 @@
-
-
 import Joi from "joi";
 
 import {
@@ -180,6 +178,17 @@ export const createOrderValidation = Joi.object({
     .optional()
     .default(0),
 
+
+    
+   shippingCharge: Joi.number()
+    .min(0)
+    .optional()
+    .default(0),
+
+  otherCharges: Joi.number()
+    .min(0)
+    .optional()
+    .default(0),
 
   // ====================================================
   // PAYMENT METHOD
