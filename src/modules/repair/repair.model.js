@@ -93,6 +93,59 @@ const repairSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // ==========================================
+// PAYMENT / FINANCIAL DETAILS
+// ==========================================
+
+paymentStatus: {
+  type: String,
+  enum: [
+    "PENDING",
+    "PARTIAL",
+    "PAID",
+    "FAILED",
+    "REFUNDED",
+  ],
+  default: "PENDING",
+},
+
+paidAmount: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+
+balanceAmount: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+
+paymentMethod: {
+  type: String,
+  enum: [
+    "CASH",
+    "UPI",
+    "CARD",
+    "BANK_TRANSFER",
+    "RAZORPAY",
+    "OTHER",
+    "",
+  ],
+  default: "",
+},
+
+paymentId: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
+paidAt: {
+  type: Date,
+  default: null,
+},
+
     technicianName: {
       type: String,
       trim: true,

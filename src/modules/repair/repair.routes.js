@@ -100,6 +100,16 @@ router.patch(
   repairController.updateRepairStatus
 );
 
+// =====================================================
+// REPAIR PAYMENT
+// =====================================================
+
+router.patch(
+  "/:id/payment",
+  verifyToken,
+  repairController.updateRepairPayment
+);
+
 // ==========================================
 // Mark Repair Delivered
 // ==========================================

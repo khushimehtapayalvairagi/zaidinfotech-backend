@@ -60,6 +60,7 @@ allowRoles(
 
 "ADMIN"
 
+
 ),
 
 updateEmployeeStatus
@@ -123,7 +124,7 @@ router.get(
 router.get(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
   getUserById
 );
 
@@ -131,7 +132,7 @@ router.get(
 router.put(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
   updateUser
 );
 
@@ -151,7 +152,8 @@ verifyToken,
 
 allowRoles(
 "SUPER_ADMIN",
-"ADMIN"
+"ADMIN",
+"HR_EXECUTIVE"
 ),
 
 updateSalary
@@ -170,7 +172,8 @@ verifyToken,
 
 allowRoles(
 "SUPER_ADMIN",
-"ADMIN"
+"ADMIN",
+"HR_EXECUTIVE"
 ),
 
 addSalaryHistory
@@ -189,7 +192,8 @@ verifyToken,
 
 allowRoles(
 "SUPER_ADMIN",
-"ADMIN"
+"ADMIN",
+"HR_EXECUTIVE"
 ),
 
 getSalaryHistory

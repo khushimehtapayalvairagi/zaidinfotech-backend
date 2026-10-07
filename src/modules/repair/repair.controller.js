@@ -336,3 +336,31 @@ export const changePassword = async (req, res) => {
   }
 };
 
+// =====================================================
+// UPDATE REPAIR PAYMENT
+// =====================================================
+
+export const updateRepairPayment = async (req, res, next) => {
+  try {
+    const { paidAmount, paymentMethod, paymentId, paymentStatus } =
+      req.body;
+
+    const repair = await repairService.updateRepairPayment(
+      req.params.id,
+      {
+        paidAmount,
+        paymentMethod,
+        paymentId,
+        paymentStatus,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Repair payment updated successfully.",
+      data: repair,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

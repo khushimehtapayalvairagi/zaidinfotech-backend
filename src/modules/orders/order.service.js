@@ -200,16 +200,91 @@ export const createOrder = async (
 // GET CUSTOMER
 // ==========================================
 
-const customer = await User.findById(
-  orderData.user
-).select(
-  "customerType role"
-);
+// const customer = await User.findById(
+//   orderData.user
+// ).select(
+//   "customerType role"
+// );
 
-if (!customer) {
-  throw new Error(
-    "Customer not found."
+// if (!customer) {
+//   throw new Error(
+//     "Customer not found."
+//   );
+// }
+
+
+// ==========================================
+// CUSTOMER / WALK-IN ORDER HANDLING
+// ==========================================
+
+const isWalkIn =
+  orderData.orderSource === "WALK_IN";
+
+let customer;
+
+if (isWalkIn) {
+
+  // Walk-In order staff create karta hai,
+  // isliye customer user ki zarurat nahi hai.
+  if (!createdBy) {
+    throw new Error(
+      "Authenticated staff user is required for walk-in order."
+    );
+  }
+
+  // Order schema me user required ho sakta hai,
+  // isliye authenticated staff ko reference ke liye use karenge.
+  orderData.user =
+    orderData.user || createdBy;
+
+  // Walk-In ko Personal/B2C pricing ke saath process karo.
+  customer = {
+    role: "CUSTOMER",
+    customerType: "PERSONAL",
+  };
+
+} else {
+
+  // ==========================================
+  // EXISTING ONLINE CUSTOMER VALIDATION
+  // ==========================================
+
+  customer = await User.findById(
+    orderData.user
+  ).select(
+    "customerType role"
   );
+
+  if (!customer) {
+    throw new Error(
+      "Customer not found."
+    );
+  }
+
+  // ==========================================
+  // CUSTOMER CHECK
+  // ==========================================
+
+  if (customer.role !== "CUSTOMER") {
+    throw new Error(
+      "Only customers can create this order."
+    );
+  }
+
+  // ==========================================
+  // CUSTOMER TYPE CHECK
+  // ==========================================
+
+  if (
+    !["PERSONAL", "BUSINESS"].includes(
+      customer.customerType
+    )
+  ) {
+    throw new Error(
+      "Customer type is not configured properly."
+    );
+  }
+
 }
 
 // ==========================================
@@ -248,8 +323,8 @@ orderData.orderType =
   // EXISTING CODE
   // ==========================================
 
-  const isWalkIn =
-    orderData.orderSource === "WALK_IN";
+  // const isWalkIn =
+  //   orderData.orderSource === "WALK_IN";
 
 
   // ====================================================

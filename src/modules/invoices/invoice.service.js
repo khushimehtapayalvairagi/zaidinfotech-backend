@@ -194,8 +194,96 @@ export const createInvoiceFromOrder = async (orderId) => {
   // 9. TOTAL
   // ==========================================
 
-  const totalAmount =
-    Number(order.totalAmount || 0);
+  // const totalAmount =
+  //   Number(order.totalAmount || 0);
+
+// ==========================================
+// 9. TOTAL
+// ==========================================
+
+// order.totalAmount = product/offer ke baad amount
+// order.finalAmount = GST + coupon + shipping ke baad
+// actual payable amount
+
+const totalAmount =
+  Number(
+    order.finalAmount ??
+    order.totalAmount ??
+    0
+  );
+
+
+  // ==========================================
+// 9A. FINANCIAL BREAKDOWN
+// ==========================================
+
+const orderSubtotal =
+  Number(
+    order.subtotal ??
+    subtotal ??
+    0
+  );
+
+const orderOfferDiscount =
+  Number(
+    order.offerDiscount ??
+    discount ??
+    0
+  );
+
+const couponDiscount =
+  Number(
+    order.couponDiscount ??
+    0
+  );
+
+const taxableAmount =
+  Number(
+    order.taxableAmount ??
+    Math.max(
+      Number(order.totalAmount || 0) -
+        couponDiscount,
+      0
+    )
+  );
+
+const gstPercentage =
+  Number(
+    order.gstPercentage ??
+    18
+  );
+
+const gstAmount =
+  Number(
+    order.gstAmount ??
+    (
+      taxableAmount *
+      gstPercentage
+    ) / 100
+  );
+
+const shippingCharge =
+  Number(
+    order.shippingCharge ??
+    0
+  );
+
+const otherCharges =
+  Number(
+    order.otherCharges ??
+    0
+  );
+
+const finalAmount =
+  Number(
+    order.finalAmount ??
+    (
+      taxableAmount +
+      gstAmount +
+      shippingCharge +
+      otherCharges
+    )
+  );
 
   // ==========================================
   // 10. PAID AMOUNT
@@ -265,55 +353,145 @@ export const createInvoiceFromOrder = async (orderId) => {
   // 14. CREATE INVOICE
   // ==========================================
 
+  // const invoiceData = {
+  //   invoiceNumber:
+  //     await generateInvoiceNumber(),
+
+  //   order:
+  //     order._id,
+
+  //   user:
+  //     order.user._id,
+
+  //   invoiceFor:
+  //     "ORDER",
+
+  //   referenceId:
+  //     order._id,
+
+  //   orderSource,
+
+  //   soldBy:
+  //     order.soldBy?._id ||
+  //     null,
+
+  //   items,
+
+  //   subtotal,
+
+  //   discount,
+
+  //   totalAmount,
+
+  //   paidAmount,
+
+  //   balanceAmount,
+
+  //   paymentStatus:
+  //     order.paymentStatus,
+
+  //   paymentMethod,
+
+  //   payment:
+  //     payment?._id ||
+  //     null,
+
+  //   billingAddress:
+  //     order.shippingAddress || {},
+
+  //   invoiceDate:
+  //     new Date(),
+  // };
+
   const invoiceData = {
-    invoiceNumber:
-      await generateInvoiceNumber(),
+  invoiceNumber:
+    await generateInvoiceNumber(),
 
-    order:
-      order._id,
+  order:
+    order._id,
 
-    user:
-      order.user._id,
+  user:
+    order.user._id,
 
-    invoiceFor:
-      "ORDER",
+  invoiceFor:
+    "ORDER",
 
-    referenceId:
-      order._id,
+  referenceId:
+    order._id,
 
-    orderSource,
+  orderSource,
 
-    soldBy:
-      order.soldBy?._id ||
-      null,
+  soldBy:
+    order.soldBy?._id ||
+    null,
 
-    items,
+  items,
 
-    subtotal,
+  // =========================================
+  // FINANCIAL BREAKDOWN
+  // =========================================
 
-    discount,
+  subtotal:
+    orderSubtotal,
 
-    totalAmount,
+  // Offer / product discount
+  discount:
+    orderOfferDiscount,
 
-    paidAmount,
+  // Coupon discount
+  couponDiscount:
+    couponDiscount,
 
-    balanceAmount,
+  // Amount after coupon
+  taxableAmount:
+    taxableAmount,
 
-    paymentStatus:
-      order.paymentStatus,
+  // GST
+  gstPercentage:
+    gstPercentage,
 
-    paymentMethod,
+  gstAmount:
+    gstAmount,
 
-    payment:
-      payment?._id ||
-      null,
+  // Shipping
+  shippingCharge:
+    shippingCharge,
 
-    billingAddress:
-      order.shippingAddress || {},
+  // Other charges
+  otherCharges:
+    otherCharges,
 
-    invoiceDate:
-      new Date(),
-  };
+  // Original order amount after offer
+  // Keep this for backward compatibility
+  productTotalAmount:
+    Number(order.totalAmount || 0),
+
+  // FINAL CUSTOMER PAYABLE
+  totalAmount:
+    finalAmount,
+
+  finalAmount:
+    finalAmount,
+
+  paidAmount,
+
+  balanceAmount,
+
+  paymentStatus:
+    order.paymentStatus,
+
+  paymentMethod,
+
+  payment:
+    payment?._id ||
+    null,
+
+  billingAddress:
+    order.shippingAddress || {},
+
+  invoiceDate:
+    new Date(),
+};
 
   console.log(
     "FINAL INVOICE DATA:",
