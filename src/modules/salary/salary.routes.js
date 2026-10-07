@@ -28,7 +28,7 @@ router.get(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
     ROLES.SALES
   ),
   getAllEmployeesSalaryController
@@ -45,7 +45,7 @@ router.get(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
     ROLES.SALES
   ),
   exportSalaryExcel
@@ -62,7 +62,7 @@ router.get(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
     ROLES.SALES
   ),
   getSalarySummaryController
@@ -81,7 +81,7 @@ router.post(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
     ROLES.ACCOUNTANT,
       ROLES.SALES
   ),
@@ -100,7 +100,7 @@ router.post(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
     ROLES.SALES
   ),
   calculateEmployeeSalaryController
@@ -137,7 +137,7 @@ router.put(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
       ROLES.SALES
   ),
   updateBankDetailsController
@@ -154,7 +154,7 @@ router.get(
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
-    ROLES.HR,
+    ROLES.HR_EXECUTIVE,
   
     ROLES.SALES
   ),
