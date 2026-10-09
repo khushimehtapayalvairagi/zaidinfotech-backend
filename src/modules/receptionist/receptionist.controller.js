@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import User from "../users/user.model.js";
 
 // GET Receptionist Profile
+
 export const getReceptionistProfile = async (req, res) => {
     try {
         const userId = req.user?._id || req.user?.id;

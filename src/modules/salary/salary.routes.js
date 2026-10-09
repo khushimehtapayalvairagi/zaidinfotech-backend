@@ -19,6 +19,19 @@ const router = express.Router();
 
 
 // ======================================================
+// SALARY ACCESS ROLES
+// ======================================================
+//
+// ADMIN
+// HR_EXECUTIVE
+// ACCOUNTANT
+// SALES
+//
+// All salary routes below use these roles.
+// ======================================================
+
+
+// ======================================================
 // GET ALL EMPLOYEES SALARY
 // GET /api/salary/all-summary
 // ======================================================
@@ -29,6 +42,7 @@ router.get(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   getAllEmployeesSalaryController
@@ -46,6 +60,7 @@ router.get(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   exportSalaryExcel
@@ -63,6 +78,7 @@ router.get(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   getSalarySummaryController
@@ -73,8 +89,6 @@ router.get(
 // CONFIGURE EMPLOYEE SALARY
 // POST /api/salary/config/:employeeId
 // ======================================================
-// HR sets salary structure
-// ADMIN can also manage
 
 router.post(
   "/config/:employeeId",
@@ -83,7 +97,7 @@ router.post(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
     ROLES.ACCOUNTANT,
-      ROLES.SALES
+    ROLES.SALES
   ),
   createSalaryController
 );
@@ -93,7 +107,6 @@ router.post(
 // CALCULATE MONTHLY SALARY
 // POST /api/salary/calculate/:employeeId
 // ======================================================
-// Calculates salary and creates/updates PENDING record
 
 router.post(
   "/calculate/:employeeId",
@@ -101,6 +114,7 @@ router.post(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   calculateEmployeeSalaryController
@@ -111,14 +125,22 @@ router.post(
 // PAY SALARY
 // PUT /api/salary/pay/:employeeId
 // ======================================================
-// Actual payment is done by ACCOUNTANT
-// ADMIN can also pay
+//
+// Salary payment can be done by:
+// ADMIN
+// HR
+// ACCOUNTANT
+// SALES
+//
+// ======================================================
 
 router.put(
   "/pay/:employeeId",
   verifyToken,
   allowRoles(
     ROLES.ADMIN,
+    ROLES.HR_EXECUTIVE,
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   updateSalaryController
@@ -129,8 +151,6 @@ router.put(
 // UPDATE BANK DETAILS
 // PUT /api/salary/bank/:employeeId
 // ======================================================
-// HR maintains employee bank details
-// ADMIN can manage
 
 router.put(
   "/bank/:employeeId",
@@ -138,7 +158,8 @@ router.put(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
-      ROLES.SALES
+    ROLES.ACCOUNTANT,
+    ROLES.SALES
   ),
   updateBankDetailsController
 );
@@ -155,7 +176,7 @@ router.get(
   allowRoles(
     ROLES.ADMIN,
     ROLES.HR_EXECUTIVE,
-  
+    ROLES.ACCOUNTANT,
     ROLES.SALES
   ),
   getSalaryController

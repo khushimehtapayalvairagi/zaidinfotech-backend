@@ -1,10 +1,216 @@
+// import mongoose from "mongoose";
+
+// const repairPartSchema = new mongoose.Schema(
+//   {
+//     repairPart: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "RepairPart", // 
+//       required: true,
+//     },
+
+//     quantity: {
+//       type: Number,
+//       required: true,
+//       min: 1,
+//     },
+
+//     unitCost: {
+//       type: Number,
+//       default: 0,
+//       min: 0,
+//     },
+
+//     totalCost: {
+//       type: Number,
+//       default: 0,
+//       min: 0,
+//     },
+//   },
+//   {
+//     _id: true,
+//   }
+// );
+
+// const repairSchema = new mongoose.Schema(
+//   {
+//     user: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//     },
+
+//     product: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Product",
+//     },
+//     customerName: {  //customerName
+//       type: String,
+//       required: true,
+//       trim: true
+//     },
+//     customerPhone: {   //customephone
+//       type: String,
+//       required: true,
+//       trim: true
+//     },
+//     customerEmail: {  //customrEmail
+//       type: String,
+//       unique: true,
+//       required: true,
+//       trim: true
+//     },
+//     deviceModel: {
+//       type: String,
+//       required: true,
+//       trim: true
+//     },
+//     issueDescription: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//     },
+
+//     status: {
+//       type: String,
+//       enum: [
+//         "Received",
+//         "In Progress",
+//         "Assigned",
+//         "Waiting for Parts",
+//         "Completed",
+//         "Cancelled",
+//         "Delivered",
+//       ],
+//       default: "Received",
+//     },
+
+//     estimatedCompletionDate: {
+//       type: Date,
+//     },
+
+//     repairCost: {
+//       type: Number,
+//       default: 0,
+//       min: 0,
+//     },
+
+//     // ==========================================
+// // PAYMENT / FINANCIAL DETAILS
+// // ==========================================
+
+// paymentStatus: {
+//   type: String,
+//   enum: [
+//     "PENDING",
+//     "PARTIAL",
+//     "PAID",
+//     "FAILED",
+//     "REFUNDED",
+//   ],
+//   default: "PENDING",
+// },
+
+// paidAmount: {
+//   type: Number,
+//   default: 0,
+//   min: 0,
+// },
+
+// balanceAmount: {
+//   type: Number,
+//   default: 0,
+//   min: 0,
+// },
+
+// paymentMethod: {
+//   type: String,
+//   enum: [
+//     "CASH",
+//     "UPI",
+//     "CARD",
+//     "BANK_TRANSFER",
+//     "RAZORPAY",
+//     "OTHER",
+//     "",
+//   ],
+//   default: "",
+// },
+
+// paymentId: {
+//   type: String,
+//   default: "",
+//   trim: true,
+// },
+
+// paidAt: {
+//   type: Date,
+//   default: null,
+// },
+
+//     technicianName: {
+//       type: String,
+//       trim: true,
+//       default: "",
+//     },
+//     assignedTechnician: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       default: null,
+//     },
+//     remarks: {
+//       type: String,
+//       trim: true,
+//       default: "",
+//     },
+
+//     // ==========================================
+//     // SPARE PARTS USED
+//     // ==========================================
+
+//     partsUsed: [
+//       repairPartSchema
+//     ],
+
+//     // ==========================================
+//     // TOTAL PARTS COST
+//     // ==========================================
+
+//     partsCost: {
+//       type: Number,
+//       default: 0,
+//       min: 0,
+//     },
+
+//     isDelivered: {
+//       type: Boolean,
+//       default: false,
+//     },
+
+//     deliveredAt: {
+//       type: Date,
+//       default: null,
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+// const Repair =
+//   mongoose.model("Repair", repairSchema);
+
+// export default Repair;
+
 import mongoose from "mongoose";
+
+// ======================================================
+// REPAIR PART USED SUB-DOCUMENT
+// ======================================================
 
 const repairPartSchema = new mongoose.Schema(
   {
     repairPart: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RepairPart", // 
+      ref: "RepairPart",
       required: true,
     },
 
@@ -31,43 +237,87 @@ const repairPartSchema = new mongoose.Schema(
   }
 );
 
+// ======================================================
+// REPAIR SCHEMA
+// ======================================================
+
 const repairSchema = new mongoose.Schema(
   {
+    // ==================================================
+    // CUSTOMER / USER
+    // ==================================================
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
+
+    customerName: {
+      type: String,
+      required: [true, "Customer name is required"],
+      trim: true,
+    },
+
+    customerPhone: {
+      type: String,
+      required: [true, "Customer phone is required"],
+      trim: true,
+    },
+
+    // ==================================================
+    // CUSTOMER EMAIL - OPTIONAL
+    // ==================================================
+    //
+    // Email can be provided OR left empty.
+    // Do NOT add required:true here.
+    // Do NOT add unique:true here.
+    //
+    // Same customer can have multiple repair tickets.
+    // ==================================================
+
+    customerEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+
+    // ==================================================
+    // DEVICE
+    // ==================================================
 
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
+      default: null,
     },
-    customerName: {  //customerName
-      type: String,
-      required: true,
-      trim: true
-    },
-    customerPhone: {   //customephone
-      type: String,
-      required: true,
-      trim: true
-    },
-    customerEmail: {  //customrEmail
-      type: String,
-      unique: true,
-      required: true,
-      trim: true
-    },
+
     deviceModel: {
       type: String,
-      required: true,
-      trim: true
-    },
-    issueDescription: {
-      type: String,
-      required: true,
+      required: [true, "Device model is required"],
       trim: true,
     },
+
+    serialNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // ==================================================
+    // ISSUE
+    // ==================================================
+
+    issueDescription: {
+      type: String,
+      required: [true, "Issue description is required"],
+      trim: true,
+    },
+
+    // ==================================================
+    // STATUS
+    // ==================================================
 
     status: {
       type: String,
@@ -83,8 +333,25 @@ const repairSchema = new mongoose.Schema(
       default: "Received",
     },
 
-    estimatedCompletionDate: {
-      type: Date,
+    priority: {
+      type: String,
+      enum: [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent",
+      ],
+      default: "Medium",
+    },
+
+    // ==================================================
+    // COST
+    // ==================================================
+
+    estimatedCost: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     repairCost: {
@@ -93,92 +360,108 @@ const repairSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // ==========================================
-// PAYMENT / FINANCIAL DETAILS
-// ==========================================
+    // ==================================================
+    // ESTIMATED COMPLETION
+    // ==================================================
 
-paymentStatus: {
-  type: String,
-  enum: [
-    "PENDING",
-    "PARTIAL",
-    "PAID",
-    "FAILED",
-    "REFUNDED",
-  ],
-  default: "PENDING",
-},
+    estimatedCompletionDate: {
+      type: Date,
+      default: null,
+    },
 
-paidAmount: {
-  type: Number,
-  default: 0,
-  min: 0,
-},
-
-balanceAmount: {
-  type: Number,
-  default: 0,
-  min: 0,
-},
-
-paymentMethod: {
-  type: String,
-  enum: [
-    "CASH",
-    "UPI",
-    "CARD",
-    "BANK_TRANSFER",
-    "RAZORPAY",
-    "OTHER",
-    "",
-  ],
-  default: "",
-},
-
-paymentId: {
-  type: String,
-  default: "",
-  trim: true,
-},
-
-paidAt: {
-  type: Date,
-  default: null,
-},
+    // ==================================================
+    // TECHNICIAN
+    // ==================================================
 
     technicianName: {
       type: String,
       trim: true,
       default: "",
     },
+
     assignedTechnician: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
+
     remarks: {
       type: String,
       trim: true,
       default: "",
     },
 
-    // ==========================================
-    // SPARE PARTS USED
-    // ==========================================
+    // ==================================================
+    // PAYMENT
+    // ==================================================
 
-    partsUsed: [
-      repairPartSchema
-    ],
+    paymentStatus: {
+      type: String,
+      enum: [
+        "PENDING",
+        "PARTIAL",
+        "PAID",
+        "FAILED",
+        "REFUNDED",
+      ],
+      default: "PENDING",
+    },
 
-    // ==========================================
-    // TOTAL PARTS COST
-    // ==========================================
+    paidAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    balanceAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: [
+        "CASH",
+        "UPI",
+        "CARD",
+        "BANK_TRANSFER",
+        "RAZORPAY",
+        "OTHER",
+        "",
+      ],
+      default: "",
+    },
+
+    paymentId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ==================================================
+    // SPARE PARTS
+    // ==================================================
+
+    partsUsed: {
+      type: [repairPartSchema],
+      default: [],
+    },
 
     partsCost: {
       type: Number,
       default: 0,
       min: 0,
     },
+
+    // ==================================================
+    // DELIVERY
+    // ==================================================
 
     isDelivered: {
       type: Boolean,
@@ -195,7 +478,10 @@ paidAt: {
   }
 );
 
-const Repair =
-  mongoose.model("Repair", repairSchema);
+// ======================================================
+// MODEL
+// ======================================================
+
+const Repair = mongoose.model("Repair", repairSchema);
 
 export default Repair;

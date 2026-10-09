@@ -1,33 +1,46 @@
+
+
 import express from "express";
 
-const router = express.Router();
-
 import { validate } from "../../common/middleware/validate.middleware.js";
-
-// Auth middleware
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
 
-// Validation
 import {
   createRepairValidation,
   updateRepairStatusValidation,
   updateRepairValidation,
 } from "./repair.validation.js";
 
-// Controller
 import * as repairController from "./repair.controller.js";
 
+const router = express.Router();
 
-//here new routes for password and profile chnage
+// ======================================================
+// PROFILE
+// ======================================================
 
-router.get("/profile", verifyToken, repairController.getTechnicianProfile);
-router.put("/profile", verifyToken, repairController.updateTechnicianProfile);
-router.put("/change-password", verifyToken, repairController.changePassword);
+router.get(
+  "/profile",
+  verifyToken,
+  repairController.getTechnicianProfile
+);
 
+router.put(
+  "/profile",
+  verifyToken,
+  repairController.updateTechnicianProfile
+);
 
-// ==========================================
-// Create Repair Request
-// ==========================================
+router.put(
+  "/change-password",
+  verifyToken,
+  repairController.changePassword
+);
+
+// ======================================================
+// CREATE REPAIR
+// ======================================================
+
 router.post(
   "/request",
   verifyToken,
@@ -35,54 +48,70 @@ router.post(
   repairController.createRepair
 );
 
+// ======================================================
+// ASSIGNED REPAIRS
+// ======================================================
+
 router.get(
   "/my-assigned-repairs",
   verifyToken,
   repairController.getMyAssignedRepairs
 );
 
+// ======================================================
+// TECHNICIANS
+// ======================================================
 
-router.get("/technicians", repairController.getTechniciansList)
+router.get(
+  "/technicians",
+  verifyToken,
+  repairController.getTechniciansList
+);
 
-// ==========================================
-// Get All Repair Requests
-// ==========================================
+// ======================================================
+// ALL REPAIRS
+// ======================================================
+
 router.get(
   "/",
   verifyToken,
   repairController.getAllRepairs
 );
 
-// ==========================================
-// Get Repair By Id
-// ==========================================
+// ======================================================
+// REPAIR BY ID
+// ======================================================
+
 router.get(
   "/:id",
   verifyToken,
   repairController.getRepairById
 );
 
-// ==========================================
-// Get Repairs By User
-// ==========================================
+// ======================================================
+// REPAIRS BY USER
+// ======================================================
+
 router.get(
   "/user/:userId",
   verifyToken,
   repairController.getRepairsByUser
 );
 
-// ==========================================
-// Get Repairs By Product
-// ==========================================
+// ======================================================
+// REPAIRS BY PRODUCT
+// ======================================================
+
 router.get(
   "/product/:productId",
   verifyToken,
   repairController.getRepairsByProduct
 );
 
-// ==========================================
-// Update Repair
-// ==========================================
+// ======================================================
+// UPDATE REPAIR
+// ======================================================
+
 router.put(
   "/:id",
   verifyToken,
@@ -90,9 +119,10 @@ router.put(
   repairController.updateRepair
 );
 
-// ==========================================
-// Update Repair Status
-// ==========================================
+// ======================================================
+// UPDATE STATUS
+// ======================================================
+
 router.patch(
   "/:id/status",
   verifyToken,
@@ -100,9 +130,9 @@ router.patch(
   repairController.updateRepairStatus
 );
 
-// =====================================================
-// REPAIR PAYMENT
-// =====================================================
+// ======================================================
+// PAYMENT
+// ======================================================
 
 router.patch(
   "/:id/payment",
@@ -110,46 +140,56 @@ router.patch(
   repairController.updateRepairPayment
 );
 
-// ==========================================
-// Mark Repair Delivered
-// ==========================================
+// ======================================================
+// DELIVERED
+// ======================================================
+
 router.patch(
   "/:id/delivered",
   verifyToken,
   repairController.markDelivered
 );
 
-// ==========================================
-// Delete Repair
-// ==========================================
+// ======================================================
+// DELETE
+// ======================================================
+
 router.delete(
   "/:id",
   verifyToken,
   repairController.deleteRepair
 );
 
-// ==========================================
-// Add Repair Part
-// ==========================================
+// ======================================================
+// LEGACY PRODUCT PART ROUTE
+// ======================================================
+// addRepairPart controller is currently not exported.
+// Keep the endpoint registered safely so the server does
+// not crash during startup.
+//
+// Once addRepairPart is exported from repair.controller.js,
+// this can be changed back to:
+//
+// router.post(
+//   "/:id/parts",
+//   verifyToken,
+//   repairController.addRepairPart
+// );
+
 router.post(
   "/:id/parts",
   verifyToken,
-  repairController.addRepairPart
+  (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message:
+        "Repair part API is not implemented in the repair controller yet.",
+    });
+  }
 );
 
-
-// router.get(
-//   "/technician/:technicianId",
-//   verifyToken,
-//   repairController.getRepairsByTechnician
-// );
-
-// router.get(
-//   "/my-assigned-repairs",
-//   verifyToken,
-//   repairController.getMyAssignedRepairs
-// );
-
-//get all techinicinas
+// ======================================================
+// EXPORT
+// ======================================================
 
 export default router;

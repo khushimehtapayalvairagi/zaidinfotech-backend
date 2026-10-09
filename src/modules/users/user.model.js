@@ -94,16 +94,25 @@ businessDetails: {
       trim: true,
     },
 
+    // email: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    //   lowercase: true,
+    //   trim: true,
+    //    required: function () {
+    //     return this.hasSystemAccess;
+    // }
+    // },
+
+
     email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-       required: function () {
-        return this.hasSystemAccess;
-    }
-    },
+  type: String,
+  unique: true,
+  lowercase: true,
+  trim: true,
+  default: undefined,
+},
 
  biometricId: {
     type: String,
