@@ -1,5 +1,3 @@
-
-
 import express from "express";
 
 import { validate } from "../../common/middleware/validate.middleware.js";

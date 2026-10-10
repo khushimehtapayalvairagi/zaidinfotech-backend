@@ -1,5 +1,4 @@
 import express from "express";
-
 import {
   createUser,
   getUsers,
@@ -18,53 +17,36 @@ import {
   resetPassword,
   verifyEmail,
   resendEmailVerificationOtp,
-  changepassword ,
+  changepassword,
   addCustomerBankAccount,
-getCustomerBankAccountById,
-updateCustomerBankDetails,
- getCustomerBankAccounts
-  
-
+  getCustomerBankAccounts,
+  getCustomerBankAccountById,
+  updateCustomerBankDetails
 } from "./user.controller.js";
-
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
 import { allowRoles } from "../../common/middleware/role.middleware.js";
-
 const router = express.Router();
-
 /*
-====================================================
-                PUBLIC ROUTES
-====================================================
+            PUBLIC ROUTES
+============
 */
-
 // Customer Register
 router.post("/register", register);
-
 /*
-====================================================
-                PROFILE
-====================================================
+            PROFILE
+============
 */
- 
-
+router.get("/bank-accounts", verifyToken, getCustomerBankAccounts);   ////-->Added New 
+router.patch("/bank-accounts/:accountId", verifyToken,  updateCustomerBankDetails);////-->Added New 
 router.put(
-
-"/status/:id",
-
-verifyToken,
-
-allowRoles(
-
+  "/status/:id",
+  verifyToken,
+  allowRoles(
 "SUPER_ADMIN",
 
 "ADMIN"
-
-
-),
-
-updateEmployeeStatus
-
+  ),
+  updateEmployeeStatus
 );
 // Logged In User Profile
 router.get(
@@ -72,46 +54,34 @@ router.get(
   verifyToken,
   getProfile
 );
-
-
 // Update Profile
 router.put(
   "/profile",
   verifyToken,
   updateCustomerProfile
 );
-
-//Change Password
-router.put("/change-password", verifyToken, changepassword);
-
 /*
-====================================================
-                EMPLOYEE
-====================================================
+            EMPLOYEE
+============
 */
-
 // Employee List
 router.get(
   "/employees",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
+  allowRoles("SUPER_ADMIN", "ADMIN"),
   getEmployees
 );
-
 /*
-====================================================
-                USER MANAGEMENT
-====================================================
+            USER MANAGEMENT
+============
 */
-
 // Create User / Employee
 router.post(
   "/",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
+  allowRoles("SUPER_ADMIN", "ADMIN"),
   createUser
 );
-
 // Get All Users
 router.get(
   "/",
@@ -119,23 +89,20 @@ router.get(
   allowRoles("SUPER_ADMIN", "ADMIN"),
   getUsers
 );
-
 // Get User By Id
 router.get(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
+  allowRoles("SUPER_ADMIN", "ADMIN"),
   getUserById
 );
-
 // Update User
 router.put(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN","HR_EXECUTIVE"),
+  allowRoles("SUPER_ADMIN", "ADMIN"),
   updateUser
 );
-
 // Delete User
 router.delete(
   "/:id",
@@ -143,105 +110,59 @@ router.delete(
   allowRoles("SUPER_ADMIN", "ADMIN"),
   deleteUser
 );
-
-
 router.put(
-"/:id/salary",
-
-verifyToken,
-
-allowRoles(
-"SUPER_ADMIN",
-"ADMIN",
-"HR_EXECUTIVE"
-),
-
-updateSalary
-
+  "/:id/salary",
+  verifyToken,
+  allowRoles(
+    "SUPER_ADMIN",
+    "ADMIN"
+  ),
+  updateSalary
 );
-
-
-
 
 // Add Salary Payment History
-
 router.post(
-"/:id/salary-history",
-
-verifyToken,
-
-allowRoles(
-"SUPER_ADMIN",
-"ADMIN",
-"HR_EXECUTIVE"
-),
-
-addSalaryHistory
-
+  "/:id/salary-history",
+  verifyToken,
+  allowRoles(
+    "SUPER_ADMIN",
+    "ADMIN"
+  ),
+  addSalaryHistory
 );
-
-
-
 
 // Get Salary History
-
 router.get(
-"/:id/salary-history",
-
-verifyToken,
-
-allowRoles(
-"SUPER_ADMIN",
-"ADMIN",
-"HR_EXECUTIVE"
-),
-
-getSalaryHistory
-
+  "/:id/salary-history",
+  verifyToken,
+  allowRoles(
+    "SUPER_ADMIN",
+    "ADMIN"
+  ),
+  getSalaryHistory
 );
-
 router.post(
   "/forgot-password",
   forgotPassword
 );
-
 router.post(
   "/reset-password/:token",
   resetPassword
 );
-
 // Verify Email
 router.post(
   "/verify-email",
   verifyEmail
 );
-
-
 // Resend Email Verification OTP
 router.post(
   "/resend-verification-otp",
   resendEmailVerificationOtp
 );
-
-router.get(
-  "/:id/bank-accounts",
-  getCustomerBankAccounts
-);
-
-router.post(
-  "/:id/bank-accounts",
-  addCustomerBankAccount
-);
-
-router.get(
-  "/:id/bank-accounts/:accountId",
-  getCustomerBankAccountById
-);
-
-router.put(
-  "/:id/bank-accounts/:accountId",
-  updateCustomerBankDetails
-);
-
-
+router.put("/change-password", verifyToken, changepassword);
+router.post("/:id/bank-accounts", addCustomerBankAccount);
+// router.get("/:id/bank-accounts", getCustomerBankAccounts)
+// router.get("/:id/bank-accounts/:accountId", getCustomerBankAccountById);
+// router.get("/bank-accounts", verifyToken, allowRoles("CUSTOMER"), getCustomerBankAccounts);
+// router.patch("/bank-accounts/:accountId", verifyToken, allowRoles("CUSTOMER"), updateCustomerBankDetails);
 export default router;

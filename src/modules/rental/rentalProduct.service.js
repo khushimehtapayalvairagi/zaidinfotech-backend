@@ -14,9 +14,7 @@ import Product from "../products/product.model.js";
 // =====================================================
 
 export const getRentalProductsService = async () => {
-
     return await getRentalProductsDB();
-
 };
 
 
@@ -24,30 +22,27 @@ export const getRentalProductsService = async () => {
 // GET RENTAL PRODUCT BY PRODUCT ID
 // =====================================================
 
-export const getRentalProductService = async (
-    productId
-) => {
+export const getRentalProductService = async (productId) => {
 
-    const rentalProduct =
-        await getRentalProductByProductDB(
-            productId
-        );
+    const rentalProduct = await getRentalProductByProductDB(productId);
 
     if (!rentalProduct) {
-
-        throw new Error(
-            "Rental configuration not found"
-        );
-
+        throw new Error("Rental configuration not found");
     }
 
     return rentalProduct;
-
 };
 
 
 // =====================================================
 // CREATE / UPDATE RENTAL CONFIG
+//
+// Inventory rule (hamesha):
+//   total = available + rented
+//
+// FIX: pehle agar update me totalQuantity nahi bheja jaata tha
+// to total 0 maan liya jata tha (stock 0 ho jata ya error aata).
+// Ab existing total hi use hota hai.
 // =====================================================
 
 export const saveRentalProductService = async (
@@ -56,86 +51,53 @@ export const saveRentalProductService = async (
     userId
 ) => {
 
-    // =================================================
-    // CHECK PRODUCT
-    // =================================================
-
-    const product =
-        await Product.findById(productId);
+    const product = await Product.findById(productId);
 
     if (!product) {
-
-        throw new Error(
-            "Product not found"
-        );
-
+        throw new Error("Product not found");
     }
 
+    const existing = await getRentalProductByProductDB(productId);
 
-    // =================================================
-    // CHECK EXISTING RENTAL CONFIG
-    // =================================================
+    const toQuantity = (value, fallback) => {
 
-    const existing =
-        await getRentalProductByProductDB(
-            productId
-        );
+        const quantity = Number(value ?? fallback ?? 0);
 
+        if (!Number.isInteger(quantity) || quantity < 0) {
+            throw new Error(
+                "Total quantity must be a whole number (0 or more)"
+            );
+        }
 
-    // =================================================
-    // QUANTITY
-    // =================================================
+        return quantity;
+    };
 
-    const requestedTotalQuantity =
-        Math.max(
-            Number(data.totalQuantity ?? 0),
-            0
-        );
-
-
-    // =================================================
-    // NEW RENTAL PRODUCT
-    // =================================================
+    // ---------------- NEW RENTAL PRODUCT ----------------
 
     if (!existing) {
 
-        const rentalData = {
+        const totalQuantity = toQuantity(data.totalQuantity, 0);
 
+        return await RentalProduct.create({
             productId,
 
-            isAvailableForRent:
-                data.isAvailableForRent ?? true,
+            isAvailableForRent: data.isAvailableForRent ?? true,
 
-            monthlyRent:
-                Number(data.monthlyRent || 0),
+            monthlyRent: Number(data.monthlyRent || 0),
+            securityDeposit: Number(data.securityDeposit || 0),
 
-            securityDeposit:
-                Number(data.securityDeposit || 0),
+            minimumRentalMonths: Math.max(
+                Number(data.minimumRentalMonths || 3),
+                3
+            ),
 
-            minimumRentalMonths:
-                Math.max(
-                    Number(
-                        data.minimumRentalMonths || 3
-                    ),
-                    3
-                ),
+            gst: Number(data.gst || 0),
 
-            gst:
-                Number(data.gst || 0),
+            totalQuantity,
+            availableQuantity: totalQuantity,
+            rentedQuantity: 0,
 
-            // First time:
-            // Total = Available
-            totalQuantity:
-                requestedTotalQuantity,
-
-            availableQuantity:
-                requestedTotalQuantity,
-
-            rentedQuantity:
-                0,
-
-            basicSoftwareInstalled:
-                data.basicSoftwareInstalled ?? true,
+            basicSoftwareInstalled: data.basicSoftwareInstalled ?? true,
 
             includedItems:
                 data.includedItems || [
@@ -144,142 +106,69 @@ export const saveRentalProductService = async (
                     "BACKPACK"
                 ],
 
-            status:
-                data.status || "ACTIVE",
+            status: data.status || "ACTIVE",
+            notes: data.notes || "",
 
-            notes:
-                data.notes || "",
-
-            createdBy:
-                userId,
-
-            updatedBy:
-                userId
-
-        };
-
-
-        return await RentalProduct.create(
-            rentalData
-        );
-
+            createdBy: userId,
+            updatedBy: userId
+        });
     }
 
+    // ---------------- EXISTING RENTAL PRODUCT ----------------
 
-    // =================================================
-    // EXISTING RENTAL PRODUCT
-    // =================================================
+    const rentedQuantity = Number(existing.rentedQuantity || 0);
 
-    const rentedQuantity =
-        Number(existing.rentedQuantity || 0);
+    const totalQuantity = toQuantity(
+        data.totalQuantity,
+        existing.totalQuantity
+    );
 
-
-    // =================================================
-    // TOTAL CANNOT BE LESS THAN RENTED
-    // =================================================
-
-    if (
-        requestedTotalQuantity <
-        rentedQuantity
-    ) {
-
+    if (totalQuantity < rentedQuantity) {
         throw new Error(
             `Total quantity cannot be less than currently rented quantity (${rentedQuantity})`
         );
-
     }
 
-
-    // =================================================
-    // AVAILABLE = TOTAL - RENTED
-    // =================================================
-
-    const availableQuantity =
-        requestedTotalQuantity -
-        rentedQuantity;
-
-
-    // =================================================
-    // UPDATE RENTAL DATA
-    // =================================================
-
     const rentalData = {
-
         productId,
 
         isAvailableForRent:
-            data.isAvailableForRent ??
-            existing.isAvailableForRent,
+            data.isAvailableForRent ?? existing.isAvailableForRent,
 
-        monthlyRent:
+        monthlyRent: Number(
+            data.monthlyRent ?? existing.monthlyRent ?? 0
+        ),
+
+        securityDeposit: Number(
+            data.securityDeposit ?? existing.securityDeposit ?? 0
+        ),
+
+        minimumRentalMonths: Math.max(
             Number(
-                data.monthlyRent ??
-                existing.monthlyRent ??
-                0
-            ),
-
-        securityDeposit:
-            Number(
-                data.securityDeposit ??
-                existing.securityDeposit ??
-                0
-            ),
-
-        minimumRentalMonths:
-            Math.max(
-                Number(
-                    data.minimumRentalMonths ??
-                    existing.minimumRentalMonths ??
-                    3
-                ),
+                data.minimumRentalMonths ??
+                existing.minimumRentalMonths ??
                 3
             ),
+            3
+        ),
 
-        gst:
-            Number(
-                data.gst ??
-                existing.gst ??
-                0
-            ),
+        gst: Number(data.gst ?? existing.gst ?? 0),
 
-        totalQuantity:
-            requestedTotalQuantity,
-
-        availableQuantity:
-            availableQuantity,
-
-        // IMPORTANT:
-        // rented quantity automatically maintain hoga
-        rentedQuantity:
-            rentedQuantity,
+        totalQuantity,
+        availableQuantity: totalQuantity - rentedQuantity,
+        rentedQuantity,
 
         basicSoftwareInstalled:
-            data.basicSoftwareInstalled ??
-            existing.basicSoftwareInstalled,
+            data.basicSoftwareInstalled ?? existing.basicSoftwareInstalled,
 
-        includedItems:
-            data.includedItems ??
-            existing.includedItems,
+        includedItems: data.includedItems ?? existing.includedItems,
 
-        status:
-            data.status ??
-            existing.status,
+        status: data.status ?? existing.status,
 
-        notes:
-            data.notes ??
-            existing.notes ??
-            "",
+        notes: data.notes ?? existing.notes ?? "",
 
-        updatedBy:
-            userId
-
+        updatedBy: userId
     };
 
-
-    
-    return await updateRentalProductDB(
-        productId,
-        rentalData
-    );
-
+    return await updateRentalProductDB(productId, rentalData);
 };

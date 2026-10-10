@@ -1,8 +1,6 @@
 import { registerSchema } from "./user.validation.js";
 import { registerUser } from "./user.service.js";
 import * as userService from "./user.service.js";
-import mongoose from "mongoose";
-import User from "./user.model.js";
 
 
 
@@ -291,51 +289,47 @@ export const updateEmployeeStatus = async (
 // Update Employee Salary
 // ===============================
 
-export const updateSalary = async(req,res)=>{
+export const updateSalary = async (req, res) => {
 
-try{
-
-
-const employee =
-await userService.updateSalary(
-
-req.params.id,
-
-req.body.salaryDetails
-
-);
+  try {
 
 
-res.status(200).json({
+    const employee =
+      await userService.updateSalary(
 
-success:true,
+        req.params.id,
 
-message:"Salary updated successfully",
+        req.body.salaryDetails
 
-data:employee
-
-});
+      );
 
 
-}
-catch(error){
+    res.status(200).json({
 
-res.status(400).json({
+      success: true,
 
-success:false,
+      message: "Salary updated successfully",
 
-message:error.message
+      data: employee
 
-});
+    });
 
-}
+
+  }
+  catch (error) {
+
+    res.status(400).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
 
 
 };
-
-
-
-
 
 
 
@@ -345,45 +339,45 @@ message:error.message
 // Add Salary History
 // ===============================
 
-export const addSalaryHistory = async(req,res)=>{
+export const addSalaryHistory = async (req, res) => {
 
-try{
-
-
-const employee =
-await userService.addSalaryHistory(
-
-req.params.id,
-
-req.body
-
-);
+  try {
 
 
+    const employee =
+      await userService.addSalaryHistory(
 
-res.status(200).json({
+        req.params.id,
 
-success:true,
+        req.body
 
-message:"Salary payment added",
-
-data:employee
-
-});
+      );
 
 
-}
-catch(error){
 
-res.status(400).json({
+    res.status(200).json({
 
-success:false,
+      success: true,
 
-message:error.message
+      message: "Salary payment added",
 
-});
+      data: employee
 
-}
+    });
+
+
+  }
+  catch (error) {
+
+    res.status(400).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
 
 };
 
@@ -395,56 +389,83 @@ message:error.message
 // Get Salary History
 // ===============================
 
-export const getSalaryHistory = async(req,res)=>{
+export const getSalaryHistory = async (req, res) => {
 
 
-try{
+  try {
 
 
-const employee =
-await userService.getSalaryHistory(
-req.params.id
-);
+    const employee =
+      await userService.getSalaryHistory(
+        req.params.id
+      );
 
 
 
-res.status(200).json({
+    res.status(200).json({
 
-success:true,
+      success: true,
 
-data:employee
+      data: employee
 
-});
+    });
 
 
-}
-catch(error){
+  }
+  catch (error) {
 
-res.status(400).json({
+    res.status(400).json({
 
-success:false,
+      success: false,
 
-message:error.message
+      message: error.message
 
-});
+    });
 
-}
+  }
 
 
 };
 
+
+
 export const forgotPassword = async (req, res) => {
   try {
-    const result = await userService.forgotPassword(req.body.email);
+    const rawEmail = req.body?.email;
+
+    // Validate email presence
+    if (!rawEmail || typeof rawEmail !== "string" || !rawEmail.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid email address is required",
+      });
+    }
+
+
+    const email = rawEmail.trim().toLowerCase();
+
+
+    const result = await userService.forgotPassword(email);
 
     return res.status(200).json({
       success: true,
-      message: result,
+      message: typeof result === "string" ? result : "Password reset instructions sent to your email",
+      data: typeof result === "object" ? result : undefined,
     });
   } catch (error) {
-    return res.status(400).json({
+
+    console.error(error);
+
+
+    const isClientError =
+      error.statusCode === 400 ||
+      error.statusCode === 404 ||
+      error.name === "ValidationError" ||
+      error.message?.toLowerCase().includes("not found");
+
+    return res.status(isClientError ? 400 : 500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to process forgot password request",
     });
   }
 };
@@ -467,7 +488,6 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -570,12 +590,10 @@ export const resendEmailVerificationOtp = async (
     });
   }
 };
-
-
 export const changepassword = async (req, res) => {
   try {
     // const userId = req.user.id;
-    const userId = req.user?.id || req.user?._id;   
+    const userId = req.user?.id || req.user?._id;
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
@@ -587,7 +605,6 @@ export const changepassword = async (req, res) => {
 
     if (oldPassword === newPassword) {
       return res.status(400).json({
-
         success: false,
         message: "New password must be different from the old password",
       });
@@ -611,14 +628,15 @@ export const changepassword = async (req, res) => {
   }
 };
 
-// ======================================================
-// ADD CUSTOMER BANK ACCOUNT
-// ======================================================
+
+import mongoose from "mongoose";
+import User from "./user.model.js";
+
+
 
 export const addCustomerBankAccount = async (req, res) => {
   try {
     const { id } = req.params;
-
     const {
       accountHolderName,
       accountNumber,
@@ -636,27 +654,11 @@ export const addCustomerBankAccount = async (req, res) => {
       });
     }
 
-    if (
-      !accountHolderName ||
-      !accountNumber ||
-      !ifscCode ||
-      !bankName
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Account holder name, account number, IFSC code and bank name are required.",
-      });
-    }
+    const trimmedAccNo = accountNumber?.trim();
+    const formattedIfsc = ifscCode?.trim().toUpperCase();
 
-    const trimmedAccNo = accountNumber.trim();
-    const formattedIfsc = ifscCode.trim().toUpperCase();
-
-    const customer = await User.findOne({
-      _id: id,
-      isDeleted: false,
-    });
-
+    // 1. Fetch user to check for duplicates and check existing accounts
+    const customer = await User.findOne({ _id: id, isDeleted: false });
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -666,31 +668,26 @@ export const addCustomerBankAccount = async (req, res) => {
 
     const existingAccounts = customer.bankAccounts || [];
 
-    // Duplicate account check
+    // Check duplicate
     const isDuplicate = existingAccounts.some(
       (acc) => acc.accountNumber === trimmedAccNo
     );
-
     if (isDuplicate) {
       return res.status(409).json({
         success: false,
-        message:
-          "This bank account number already exists for this customer.",
+        message: "This bank account number already exists for this customer.",
       });
     }
 
-    // First bank account automatically becomes primary
     const shouldBePrimary =
-      existingAccounts.length === 0
-        ? true
-        : Boolean(isPrimaryForRefund);
+      existingAccounts.length === 0 ? true : Boolean(isPrimaryForRefund);
 
-    // If new account is primary,
-    // make all previous accounts non-primary
+    // If new account is primary, reset existing ones
     if (shouldBePrimary && existingAccounts.length > 0) {
-      existingAccounts.forEach((account) => {
-        account.isPrimaryForRefund = false;
-      });
+      await User.updateOne(
+        { _id: id },
+        { $set: { "bankAccounts.$[].isPrimaryForRefund": false } }
+      );
     }
 
     const newAccount = {
@@ -703,109 +700,37 @@ export const addCustomerBankAccount = async (req, res) => {
       isPrimaryForRefund: shouldBePrimary,
     };
 
-    customer.bankAccounts.push(newAccount);
-
-    if (req.user?._id) {
-      customer.updatedBy = req.user._id;
-    }
-
-    await customer.save();
-
-    const addedAccount =
-      customer.bankAccounts[
-        customer.bankAccounts.length - 1
-      ];
+    // 2. Use findByIdAndUpdate to push without re-validating unrelated fields
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $push: { bankAccounts: newAccount },
+        $set: { updatedBy: req.user?._id || null },
+      },
+      { new: true, runValidators: false } // runValidators: false avoids unrelated doc validation
+    );
 
     return res.status(201).json({
       success: true,
       message: "Bank account added successfully.",
-      data: addedAccount,
+      data: updatedUser.bankAccounts,
     });
-
   } catch (error) {
-    console.error(
-      "Error saving customer bank details:",
-      error
-    );
-
+    console.error("Error saving customer bank details:", error);
     return res.status(500).json({
       success: false,
-      message:
-        "Internal server error while saving bank details.",
+      message: "Internal server error while saving bank details.",
       error: error.message,
     });
   }
 };
 
 
-// ======================================================
-// GET ALL CUSTOMER BANK ACCOUNTS
-// ======================================================
-
-export const getCustomerBankAccounts = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid customer ID format.",
-      });
-    }
-
-    const customer = await User.findOne(
-      {
-        _id: id,
-        isDeleted: false,
-      },
-      {
-        bankAccounts: 1,
-      }
-    ).lean();
-
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "Customer not found.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      count: customer.bankAccounts?.length || 0,
-      data: customer.bankAccounts || [],
-    });
-
-  } catch (error) {
-    console.error(
-      "GET CUSTOMER BANK ACCOUNTS ERROR:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch bank accounts.",
-      error: error.message,
-    });
-  }
-};
-
-
-// ======================================================
-// GET SINGLE CUSTOMER BANK ACCOUNT
-// ======================================================
-
-export const getCustomerBankAccountById = async (
-  req,
-  res
-) => {
+export const getCustomerBankAccountById = async (req, res) => {
   try {
     const { id, accountId } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id) ||
-      !mongoose.Types.ObjectId.isValid(accountId)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(accountId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid ID format.",
@@ -813,13 +738,8 @@ export const getCustomerBankAccountById = async (
     }
 
     const customer = await User.findOne(
-      {
-        _id: id,
-        isDeleted: false,
-      },
-      {
-        bankAccounts: 1,
-      }
+      { _id: id, isDeleted: false },
+      { bankAccounts: 1 }
     ).lean();
 
     if (!customer) {
@@ -842,80 +762,34 @@ export const getCustomerBankAccountById = async (
 
     return res.status(200).json({
       success: true,
-      message:
-        "Bank account details fetched successfully.",
+      message: "Bank account details fetched successfully.",
       data: account,
     });
-
   } catch (error) {
-    console.error(
-      "Error fetching bank account details:",
-      error
-    );
-
+    console.error("Error fetching bank account details:", error);
     return res.status(500).json({
       success: false,
-      message:
-        "Internal server error while fetching bank account details.",
+      message: "Internal server error while fetching bank account details.",
       error: error.message,
     });
   }
 };
 
-
-// ======================================================
-// UPDATE CUSTOMER BANK ACCOUNT
-// ======================================================
-
-export const updateCustomerBankDetails = async (
-  req,
-  res
-) => {
+//get Bank Account using jwt token
+export const getCustomerBankAccounts = async (req, res) => {
   try {
-    const { id } = req.params;
+    // Extract user ID from authenticated JWT payload
+    const userId = req.user?._id || req.user?.id;
 
-    const accountId =
-      req.params.accountId ||
-      req.body?._id ||
-      req.body?.accountId;
-
-    console.log(
-      "UPDATE BANK ACCOUNT:",
-      req.params,
-      req.body
-    );
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid customer id",
-      });
-    }
-
-    if (
-      !accountId ||
-      !mongoose.Types.ObjectId.isValid(accountId)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Valid bank account id is required",
-      });
-    }
-
-    // User can update own account or admin can update
-    if (
-      req.user &&
-      req.user._id.toString() !== id &&
-      req.user.role !== "admin"
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Not allowed",
-      });
-    }
-
-    const customer = await User.findById(id);
+    const customer = await User.findOne(
+      {
+        _id: userId,
+        isDeleted: false,
+      },
+      {
+        bankAccounts: 1,
+      }
+    ).lean();
 
     if (!customer) {
       return res.status(404).json({
@@ -924,16 +798,27 @@ export const updateCustomerBankDetails = async (
       });
     }
 
-    const bankAccount =
-      customer.bankAccounts.id(accountId);
+    return res.status(200).json({
+      success: true,
+      count: customer.bankAccounts?.length || 0,
+      data: customer.bankAccounts || [],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch bank accounts",
+      error: error.message,
+    });
+  }
+};
 
-    if (!bankAccount) {
-      return res.status(404).json({
-        success: false,
-        message: "Bank account not found",
-      });
-    }
+ //Update Bank Account using jwt token
+export const updateCustomerBankDetails = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    const { accountId } = req.params;
 
+    // Allowed bank fields only
     const fields = [
       "accountHolderName",
       "accountNumber",
@@ -944,69 +829,48 @@ export const updateCustomerBankDetails = async (
       "isPrimaryForRefund",
     ];
 
+    // Build the subdocument update object (e.g. "bankAccounts.$[elem].bankName")
+    const updateFields = {};
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        bankAccount[field] = req.body[field];
+        updateFields[`bankAccounts.$[elem].${field}`] = req.body[field];
       }
     });
 
-    // Format values
-    if (bankAccount.accountHolderName) {
-      bankAccount.accountHolderName =
-        bankAccount.accountHolderName.trim();
+    // If making this account primary, reset other accounts first
+    if (req.body.isPrimaryForRefund === true) {
+      await User.updateOne(
+        { _id: userId },
+        { $set: { "bankAccounts.$[].isPrimaryForRefund": false } }
+      );
     }
 
-    if (bankAccount.accountNumber) {
-      bankAccount.accountNumber =
-        bankAccount.accountNumber.trim();
-    }
+    // Direct MongoDB atomic update: skips entire User document validation
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, "bankAccounts._id": accountId },
+      { $set: updateFields },
+      {
+        arrayFilters: [{ "elem._id": accountId }],
+        new: true,
+        runValidators: false, // Bypasses department & shift validation completely
+      }
+    );
 
-    if (bankAccount.ifscCode) {
-      bankAccount.ifscCode =
-        bankAccount.ifscCode.trim().toUpperCase();
-    }
-
-    if (bankAccount.bankName) {
-      bankAccount.bankName =
-        bankAccount.bankName.trim();
-    }
-
-    if (bankAccount.branchName) {
-      bankAccount.branchName =
-        bankAccount.branchName.trim();
-    }
-
-    // Only one primary refund account
-    if (bankAccount.isPrimaryForRefund) {
-      customer.bankAccounts.forEach((acc) => {
-        if (
-          acc._id.toString() !==
-          bankAccount._id.toString()
-        ) {
-          acc.isPrimaryForRefund = false;
-        }
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer or bank account not found",
       });
     }
 
-    if (req.user?._id) {
-      customer.updatedBy = req.user._id;
-    }
-
-    await customer.save();
+    const updatedAccount = updatedUser.bankAccounts.id(accountId);
 
     return res.status(200).json({
       success: true,
-      message:
-        "Bank account updated successfully",
-      data: bankAccount,
+      message: "Bank account updated successfully",
+      data: updatedAccount,
     });
-
   } catch (error) {
-    console.error(
-      "UPDATE BANK ACCOUNT ERROR:",
-      error
-    );
-
     return res.status(500).json({
       success: false,
       message: error.message,
