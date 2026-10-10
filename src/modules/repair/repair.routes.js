@@ -1,3 +1,6 @@
+
+
+
 import express from "express";
 
 import { validate } from "../../common/middleware/validate.middleware.js";
@@ -160,19 +163,8 @@ router.delete(
 
 // ======================================================
 // LEGACY PRODUCT PART ROUTE
+// Existing behavior preserved
 // ======================================================
-// addRepairPart controller is currently not exported.
-// Keep the endpoint registered safely so the server does
-// not crash during startup.
-//
-// Once addRepairPart is exported from repair.controller.js,
-// this can be changed back to:
-//
-// router.post(
-//   "/:id/parts",
-//   verifyToken,
-//   repairController.addRepairPart
-// );
 
 router.post(
   "/:id/parts",

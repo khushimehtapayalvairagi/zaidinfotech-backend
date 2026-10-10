@@ -1,18 +1,42 @@
-import express from 'express';
-import * as serviceCatlog from './service.contoller.js';
+
+
+import express from "express";
+import * as serviceCatlog from "./service.contoller.js";
+import { verifyToken } from "../../../common/middleware/auth.middleware.js";
+import { allowRoles } from "../../../common/middleware/role.middleware.js";
 
 const router = express.Router();
 
-// GET all service rates
-router.get('/get-services', serviceCatlog.getAllServices);
+// View service rates: Admin, Technician, Receptionist
+router.get(
+  "/get-services",
+  verifyToken,
+  allowRoles("ADMIN", "TECHNICIAN", "RECEPTIONIST"),
+  serviceCatlog.getAllServices
+);
 
-// POST create service rate
-router.post('/create-service', serviceCatlog.createService);
+// Create service rates
+router.post(
+  "/create-service",
+  verifyToken,
+  allowRoles("ADMIN", "TECHNICIAN"),
+  serviceCatlog.createService
+);
 
-// DELETE service rate
-router.delete('/delete-service/:id', serviceCatlog.deleteService);
+// Update service rates
+router.put(
+  "/update-service/:id",
+  verifyToken,
+  allowRoles("ADMIN", "TECHNICIAN"),
+  serviceCatlog.updateService
+);
 
-//UPDATE service rate
-router.put('/update-service/:id', serviceCatlog.updateService);
+// Delete service rates
+router.delete(
+  "/delete-service/:id",
+  verifyToken,
+  allowRoles("ADMIN", "TECHNICIAN"),
+  serviceCatlog.deleteService
+);
 
 export default router;
