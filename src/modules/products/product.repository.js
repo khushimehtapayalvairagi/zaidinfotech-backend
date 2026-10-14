@@ -3,6 +3,8 @@ import Inventory from "../inventory/inventory.model.js";
 import Offer from "../offer/offer.model.js";
 import mongoose from "mongoose";
 
+import RentalProduct from "../rental/rentalProduct.model.js";
+
 // Create Product
 
 export const createProductDB = async (data) => {
@@ -16,39 +18,113 @@ export const createProductDB = async (data) => {
 
 // Get All Products (Admin)
 
+// export const getProductsDB = async (query = {}) => {
+
+//     const products = await Product.find({
+//         isDeleted: false,
+//         ...query
+//     })
+//     .populate("category", "name slug")
+//     .populate("subcategory", "name slug parentCategory")
+//     .populate("brand", "name slug logo")
+//     .populate("createdBy", "name email")
+//     .sort({ createdAt: -1 });
+
+//     const productIds = products.map(p => p._id);
+
+//     const inventories = await Inventory.find({
+//         product: { $in: productIds }
+//     });
+
+//     const inventoryMap = {};
+
+//     inventories.forEach(inv => {
+//         inventoryMap[inv.product.toString()] = inv;
+//     });
+
+//     return products.map(product => ({
+//         ...product.toObject(),
+//         inventory: inventoryMap[product._id.toString()] || {
+//             currentStock: 0,
+//             reservedStock: 0,
+//             minimumStock: 0,
+//             maximumStock: 0
+//         }
+//     }));
+// };
+
+
+
 export const getProductsDB = async (query = {}) => {
 
     const products = await Product.find({
         isDeleted: false,
         ...query
     })
-    .populate("category", "name slug")
-    .populate("subcategory", "name slug parentCategory")
-    .populate("brand", "name slug logo")
-    .populate("createdBy", "name email")
-    .sort({ createdAt: -1 });
+        .populate("category", "name slug")
+        .populate("subcategory", "name slug parentCategory")
+        .populate("brand", "name slug logo")
+        .populate("createdBy", "name email")
+        .sort({ createdAt: -1 });
 
-    const productIds = products.map(p => p._id);
+    const productIds = products.map((p) => p._id);
 
-    const inventories = await Inventory.find({
-        product: { $in: productIds }
+    const [inventories, rentalProducts] = await Promise.all([
+        Inventory.find({
+            product: { $in: productIds }
+        }).lean(),
+
+        RentalProduct.find({
+            productId: { $in: productIds }
+        }).lean()
+    ]);
+
+    const inventoryMap = new Map();
+    const rentalMap = new Map();
+
+    inventories.forEach((inventory) => {
+        inventoryMap.set(
+            String(inventory.product),
+            inventory
+        );
     });
 
-    const inventoryMap = {};
-
-    inventories.forEach(inv => {
-        inventoryMap[inv.product.toString()] = inv;
+    rentalProducts.forEach((rental) => {
+        rentalMap.set(
+            String(rental.productId),
+            rental
+        );
     });
 
-    return products.map(product => ({
-        ...product.toObject(),
-        inventory: inventoryMap[product._id.toString()] || {
-            currentStock: 0,
-            reservedStock: 0,
-            minimumStock: 0,
-            maximumStock: 0
-        }
-    }));
+    return products.map((product) => {
+
+        const productData = product.toObject();
+        const productId = String(product._id);
+
+        const rentalDetails = rentalMap.get(productId);
+
+        return {
+            ...productData,
+
+            inventory:
+                inventoryMap.get(productId) || {
+                    currentStock: 0,
+                    reservedStock: 0,
+                    minimumStock: 0,
+                    maximumStock: 0
+                },
+
+            rental: rentalDetails
+                ? {
+                    ...rentalDetails,
+                    isAvailableForRent:
+                        productData.rental?.isAvailableForRent ??
+                        rentalDetails.isAvailableForRent ??
+                        false
+                }
+                : productData.rental
+        };
+    });
 };
 
 
