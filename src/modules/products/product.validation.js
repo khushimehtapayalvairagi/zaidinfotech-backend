@@ -2,6 +2,22 @@ import Joi from "joi";
 
 
 // =====================================================
+// MERGED PRODUCT VALIDATION
+// =====================================================
+//
+// createProductValidation
+//   -> hsnCode wale version se (baaki sab same tha)
+//
+// updateProductValidation
+//   -> "fixed" version se (productType me default("NEW")
+//      nahi, status allowed, rental fields optional,
+//      totalQuantity / rentedQuantity allowed)
+//   -> + hsnCode (4 / 6 / 8 digits) add kiya
+//
+// =====================================================
+
+
+// =====================================================
 // CREATE PRODUCT VALIDATION
 // =====================================================
 
@@ -26,11 +42,10 @@ export const createProductValidation = Joi.object({
     // HSN CODE (used on tax invoices)
     // Optional. 4, 6 or 8 digits.
     //
-    // CHANGE: Added hsnCode field.
-    // Reason: Joi rejects unknown keys by default, so
-    // without this the AddProduct form would fail with
-    // '"hsnCode" is not allowed'.
-    // Empty string is allowed so the field stays optional.
+    // Joi unknown keys reject karta hai, isliye ye field
+    // yahan hona zaroori hai, warna AddProduct form par
+    // '"hsnCode" is not allowed' error aata.
+    // Empty string allowed hai, taaki field optional rahe.
     // =================================================
 
     hsnCode: Joi.string()
@@ -237,49 +252,57 @@ export const createProductValidation = Joi.object({
 
 export const updateProductValidation = Joi.object({
 
-    // =================================================
+    // =====================================================
     // BASIC INFORMATION
-    // =================================================
+    // =====================================================
 
     name: Joi.string()
         .trim()
         .min(2)
-        .max(150),
+        .max(150)
+        .optional(),
 
     barcode: Joi.string()
         .trim()
-        .allow(""),
+        .allow("")
+        .optional(),
 
-    // =================================================
+    // =====================================================
     // HSN CODE (used on tax invoices)
     // Optional. 4, 6 or 8 digits.
     //
-    // CHANGE: Added hsnCode field.
-    // Reason: Allows HSN code to be edited later from
-    // the EditProduct form. Without this, update requests
-    // containing hsnCode would be rejected by Joi.
-    // =================================================
+    // EditProduct form se HSN code later edit ho sake,
+    // isliye yahan bhi allowed hai.
+    // =====================================================
 
     hsnCode: Joi.string()
         .trim()
         .pattern(/^\d{4}(\d{2}(\d{2})?)?$/)
         .allow("")
+        .optional()
         .messages({
             "string.pattern.base":
                 "HSN code must be 4, 6 or 8 digits"
         }),
 
     category: Joi.string()
-        .trim(),
+        .trim()
+        .optional(),
 
     subcategory: Joi.string()
         .trim()
         .allow("")
-        .allow(null),
+        .allow(null)
+        .optional(),
 
-    // =================================================
+    // =====================================================
     // PRODUCT TYPE
-    // =================================================
+    // =====================================================
+    // IMPORTANT:
+    // Update mein default("NEW") nahi lagana.
+    // Warna existing REFURBISHED / RENTAL product
+    // galti se NEW ban sakta hai.
+    // =====================================================
 
     productType: Joi.string()
         .valid(
@@ -287,152 +310,201 @@ export const updateProductValidation = Joi.object({
             "REFURBISHED",
             "RENTAL"
         )
-        .default("NEW"),
+        .optional(),
 
-    // =================================================
+    // =====================================================
+    // PRODUCT STATUS
+    // =====================================================
+    // FIX:
+    // "status" is not allowed
+    // =====================================================
+
+    status: Joi.string()
+        .valid(
+            "ACTIVE",
+            "INACTIVE",
+            "OUT_OF_STOCK",
+            "DISCONTINUED"
+        )
+        .optional(),
+
+    // =====================================================
     // REFURBISHED DETAILS
-    // =================================================
+    // =====================================================
 
     refurbishedDetails: Joi.object({
 
         grade: Joi.string()
-            .valid("A+", "A", "B", "C"),
+            .valid(
+                "A+",
+                "A",
+                "B",
+                "C"
+            )
+            .optional(),
 
         batteryHealth: Joi.number()
             .min(0)
-            .max(100),
+            .max(100)
+            .optional(),
 
         warrantyMonths: Joi.number()
-            .min(0),
+            .min(0)
+            .optional(),
 
         testingStatus: Joi.string()
-            .valid("TESTED", "NOT_TESTED")
+            .valid(
+                "TESTED",
+                "NOT_TESTED"
+            )
+            .optional()
 
-    }),
+    }).optional(),
 
-    // =================================================
+    // =====================================================
     // BRAND
-    // =================================================
+    // =====================================================
 
     brand: Joi.string()
-        .trim(),
+        .trim()
+        .optional(),
 
-    // =================================================
+    // =====================================================
     // DESCRIPTION
-    // =================================================
+    // =====================================================
 
     description: Joi.string()
-        .allow(""),
+        .allow("")
+        .optional(),
 
     shortDescription: Joi.string()
-        .allow(""),
+        .allow("")
+        .optional(),
 
-    // =================================================
+    // =====================================================
     // PRICING
-    // purchasePrice   = company purchase/cost price
-    // retailPrice     = PERSONAL customer price
-    // wholesalePrice  = BUSINESS / CORPORATE customer price
-    // =================================================
+    // =====================================================
+    //
+    // purchasePrice   = Company purchase price
+    // retailPrice     = Personal customer price
+    // wholesalePrice  = Business customer price
+    //
+    // =====================================================
 
     pricing: Joi.object({
 
         purchasePrice: Joi.number()
-            .min(0),
+            .min(0)
+            .optional(),
 
         retailPrice: Joi.number()
-            .min(0),
+            .min(0)
+            .optional(),
 
         wholesalePrice: Joi.number()
             .min(0)
-            .allow(null),
+            .allow(null)
+            .optional(),
 
         mrp: Joi.number()
-            .min(0),
+            .min(0)
+            .optional(),
 
         discount: Joi.number()
             .min(0)
-            .max(100),
+            .max(100)
+            .optional(),
 
         gst: Joi.number()
             .min(0)
             .max(100)
+            .optional()
 
-    }),
-
-    // =================================================
-    // SEO
-    // =================================================
-
-    metaTitle: Joi.string()
-        .allow(""),
-
-    metaDescription: Joi.string()
-        .allow(""),
-
-    // =================================================
-    // SPECIFICATIONS
-    // =================================================
-
-    specifications: Joi.object(),
+    }).optional(),
 
     // =====================================================
-    // RENTAL
+    // SEO
+    // =====================================================
+
+    metaTitle: Joi.string()
+        .allow("")
+        .optional(),
+
+    metaDescription: Joi.string()
+        .allow("")
+        .optional(),
+
+    // =====================================================
+    // SPECIFICATIONS
+    // =====================================================
+
+    specifications: Joi.object()
+        .optional(),
+
+    // =====================================================
+    // RENTAL DETAILS
+    // =====================================================
+    //
+    // Rental fields optional for Edit.
+    //
+    // Existing rental allocation/return functionality
+    // should continue managing stock quantities.
+    //
     // =====================================================
 
     rental: Joi.object({
 
-        isAvailableForRent: Joi.boolean().required(),
+        isAvailableForRent: Joi.boolean()
+            .optional(),
 
         monthlyRent: Joi.number()
             .min(0)
-            .when("isAvailableForRent", {
-                is: true,
-                then: Joi.required(),
-                otherwise: Joi.optional()
-            }),
+            .optional(),
 
         securityDeposit: Joi.number()
             .min(0)
-            .when("isAvailableForRent", {
-                is: true,
-                then: Joi.required(),
-                otherwise: Joi.optional()
-            }),
+            .optional(),
 
         minimumRentalMonths: Joi.number()
             .integer()
             .min(3)
-            .when("isAvailableForRent", {
-                is: true,
-                then: Joi.required(),
-                otherwise: Joi.optional()
-            }),
+            .optional(),
 
         gst: Joi.number()
             .min(0)
             .max(100)
-            .default(0),
+            .optional(),
 
         availableQuantity: Joi.number()
             .integer()
-            .min(1)
-            .when("isAvailableForRent", {
-                is: true,
-                then: Joi.required(),
-                otherwise: Joi.optional()
-            }),
+            .min(0)
+            .optional(),
+
+        totalQuantity: Joi.number()
+            .integer()
+            .min(0)
+            .optional(),
+
+        rentedQuantity: Joi.number()
+            .integer()
+            .min(0)
+            .optional(),
 
         basicSoftwareInstalled: Joi.boolean()
-            .default(true),
+            .optional(),
 
         includedItems: Joi.array()
-            .items(Joi.string().trim())
-            .default([]),
+            .items(
+                Joi.string().trim()
+            )
+            .optional(),
 
         notes: Joi.string()
             .allow("")
-            .default("")
+            .optional()
 
     })
+        .min(1)
+        .optional()
 
 });
