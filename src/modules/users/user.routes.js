@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   createUser,
   getUsers,
@@ -21,148 +22,190 @@ import {
   addCustomerBankAccount,
   getCustomerBankAccounts,
   getCustomerBankAccountById,
-  updateCustomerBankDetails
+  updateCustomerBankDetails,
 } from "./user.controller.js";
-import { verifyToken } from "../../common/middleware/auth.middleware.js";
-import { allowRoles } from "../../common/middleware/role.middleware.js";
-const router = express.Router();
-/*
-            PUBLIC ROUTES
-============
-*/
-// Customer Register
-router.post("/register", register);
-/*
-            PROFILE
-============
-*/
-router.get("/bank-accounts", verifyToken, getCustomerBankAccounts);   ////-->Added New 
-router.patch("/bank-accounts/:accountId", verifyToken,  updateCustomerBankDetails);////-->Added New 
-router.put(
-  "/status/:id",
-  verifyToken,
-  allowRoles(
-"SUPER_ADMIN",
 
-"ADMIN"
-  ),
-  updateEmployeeStatus
+import { verifyToken } from "../../common/middleware/auth.middleware.js";
+
+import { allowRoles } from "../../common/middleware/role.middleware.js";
+
+const router = express.Router();
+
+// ======================================================
+// ROLES
+// ======================================================
+
+// Admin + HR Employee Management
+const EMPLOYEE_MANAGEMENT_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "HR_EXECUTIVE",
+];
+
+// ======================================================
+// PUBLIC ROUTES
+// ======================================================
+
+// Customer Registration
+router.post("/register", register);
+
+// Forgot Password
+router.post("/forgot-password", forgotPassword);
+
+// Reset Password
+router.post("/reset-password/:token", resetPassword);
+
+// Verify Email
+router.post("/verify-email", verifyEmail);
+
+// Resend Verification OTP
+router.post(
+  "/resend-verification-otp",
+  resendEmailVerificationOtp
 );
+
+// ======================================================
+// PROFILE ROUTES
+// ======================================================
+
 // Logged In User Profile
 router.get(
   "/profile",
   verifyToken,
   getProfile
 );
+
 // Update Profile
 router.put(
   "/profile",
   verifyToken,
   updateCustomerProfile
 );
-/*
-            EMPLOYEE
-============
-*/
-// Employee List
+
+// Change Password
+router.put(
+  "/change-password",
+  verifyToken,
+  changepassword
+);
+
+// ======================================================
+// CUSTOMER BANK ACCOUNT ROUTES
+// ======================================================
+
+router.get(
+  "/bank-accounts",
+  verifyToken,
+  getCustomerBankAccounts
+);
+
+router.patch(
+  "/bank-accounts/:accountId",
+  verifyToken,
+  updateCustomerBankDetails
+);
+
+// Existing Bank Account Route
+router.post(
+  "/:id/bank-accounts",
+  addCustomerBankAccount
+);
+
+// ======================================================
+// EMPLOYEE MANAGEMENT
+// ADMIN + SUPER_ADMIN + HR_EXECUTIVE
+// ======================================================
+
+// GET ALL EMPLOYEES
 router.get(
   "/employees",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   getEmployees
 );
-/*
-            USER MANAGEMENT
-============
-*/
-// Create User / Employee
+
+// UPDATE EMPLOYEE STATUS
+router.put(
+  "/status/:id",
+  verifyToken,
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
+  updateEmployeeStatus
+);
+
+// ======================================================
+// USER / EMPLOYEE MANAGEMENT
+// ======================================================
+
+// CREATE EMPLOYEE
 router.post(
   "/",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   createUser
 );
-// Get All Users
+
+// GET ALL USERS
 router.get(
   "/",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   getUsers
 );
-// Get User By Id
+
+// GET USER BY ID
 router.get(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   getUserById
 );
-// Update User
+
+// UPDATE EMPLOYEE
 router.put(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   updateUser
 );
-// Delete User
+
+// DELETE EMPLOYEE
 router.delete(
   "/:id",
   verifyToken,
-  allowRoles("SUPER_ADMIN", "ADMIN"),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   deleteUser
 );
+
+// ======================================================
+// EMPLOYEE SALARY MANAGEMENT
+// ======================================================
+
+// UPDATE EMPLOYEE SALARY
 router.put(
   "/:id/salary",
   verifyToken,
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN"
-  ),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   updateSalary
 );
 
-// Add Salary Payment History
+// ADD SALARY PAYMENT HISTORY
 router.post(
   "/:id/salary-history",
   verifyToken,
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN"
-  ),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   addSalaryHistory
 );
 
-// Get Salary History
+// GET SALARY HISTORY
 router.get(
   "/:id/salary-history",
   verifyToken,
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN"
-  ),
+  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
   getSalaryHistory
 );
-router.post(
-  "/forgot-password",
-  forgotPassword
-);
-router.post(
-  "/reset-password/:token",
-  resetPassword
-);
-// Verify Email
-router.post(
-  "/verify-email",
-  verifyEmail
-);
-// Resend Email Verification OTP
-router.post(
-  "/resend-verification-otp",
-  resendEmailVerificationOtp
-);
-router.put("/change-password", verifyToken, changepassword);
-router.post("/:id/bank-accounts", addCustomerBankAccount);
-// router.get("/:id/bank-accounts", getCustomerBankAccounts)
-// router.get("/:id/bank-accounts/:accountId", getCustomerBankAccountById);
-// router.get("/bank-accounts", verifyToken, allowRoles("CUSTOMER"), getCustomerBankAccounts);
-// router.patch("/bank-accounts/:accountId", verifyToken, allowRoles("CUSTOMER"), updateCustomerBankDetails);
+
+// ======================================================
+// EXPORT
+// ======================================================
+
 export default router;
