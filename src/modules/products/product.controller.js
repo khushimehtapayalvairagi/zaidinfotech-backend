@@ -2,6 +2,7 @@ import {
     createProductService,
     getProductsService,
     getProductService,
+    getProductBySlugService,
     updateProductService,
     deleteProductService,
     searchProductService,
@@ -71,99 +72,99 @@ export const parseProductMultipartData = (
 
 
         // =================================================
-// REFURBISHED DETAILS
-// =================================================
-//
-// FormData mein refurbishedDetails JSON string
-// ke form mein aata hai.
-//
-// Example:
-//
-// '{"grade":"A+","batteryHealth":70,
-//   "warrantyMonths":6,"testingStatus":"TESTED"}'
-//
-// Joi ko object chahiye.
-// Isliye JSON.parse() kar rahe hain.
-// =================================================
+        // REFURBISHED DETAILS
+        // =================================================
+        //
+        // FormData mein refurbishedDetails JSON string
+        // ke form mein aata hai.
+        //
+        // Example:
+        //
+        // '{"grade":"A+","batteryHealth":70,
+        //   "warrantyMonths":6,"testingStatus":"TESTED"}'
+        //
+        // Joi ko object chahiye.
+        // Isliye JSON.parse() kar rahe hain.
+        // =================================================
 
-if (
-    typeof req.body.refurbishedDetails === "string"
-) {
+        if (
+            typeof req.body.refurbishedDetails === "string"
+        ) {
 
-    if (
-        req.body.refurbishedDetails.trim() === ""
-    ) {
+            if (
+                req.body.refurbishedDetails.trim() === ""
+            ) {
 
-        req.body.refurbishedDetails = {};
+                req.body.refurbishedDetails = {};
 
-    } else {
+            } else {
 
-        try {
+                try {
 
-            req.body.refurbishedDetails =
-                JSON.parse(
-                    req.body.refurbishedDetails
-                );
+                    req.body.refurbishedDetails =
+                        JSON.parse(
+                            req.body.refurbishedDetails
+                        );
 
-        } catch (error) {
+                } catch (error) {
 
-            return res.status(400).json({
+                    return res.status(400).json({
 
-                success: false,
+                        success: false,
 
-                message:
-                    "Invalid refurbishedDetails JSON",
+                        message:
+                            "Invalid refurbishedDetails JSON",
 
-                errors: [
-                    "refurbishedDetails must contain valid JSON"
-                ]
+                        errors: [
+                            "refurbishedDetails must contain valid JSON"
+                        ]
 
-            });
+                    });
 
-        }
+                }
 
-    }
-
-}
-       if (
-    typeof req.body.rental === "string"
-) {
-
-    if (
-        req.body.rental.trim() === ""
-    ) {
-
-        req.body.rental = {};
-
-    } else {
-
-        try {
-
-            req.body.rental =
-                JSON.parse(
-                    req.body.rental
-                );
-
-        } catch (error) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Invalid rental JSON",
-
-                errors: [
-                    "rental must contain valid JSON"
-                ]
-
-            });
+            }
 
         }
+        if (
+            typeof req.body.rental === "string"
+        ) {
 
-    }
+            if (
+                req.body.rental.trim() === ""
+            ) {
 
-}
+                req.body.rental = {};
+
+            } else {
+
+                try {
+
+                    req.body.rental =
+                        JSON.parse(
+                            req.body.rental
+                        );
+
+                } catch (error) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Invalid rental JSON",
+
+                        errors: [
+                            "rental must contain valid JSON"
+                        ]
+
+                    });
+
+                }
+
+            }
+
+        }
 
         // =================================================
         // SPECIFICATIONS
@@ -556,6 +557,67 @@ export const getProductById = async (
 
 
 // =====================================================
+// GET PRODUCT BY SLUG (NEW)
+// =====================================================
+//
+// Handles: GET /api/products/slug/:slug
+//
+// 1. Reads the slug from the URL (req.params.slug)
+// 2. Reads customerType from the logged in user
+//    (set by optionalAuth). Guests are treated as
+//    PERSONAL, so they see retail pricing.
+// 3. Calls the service to fetch the product
+//    together with offer + final price
+// 4. Returns 404 if the product is not found
+//
+// =====================================================
+
+export const getProductBySlug = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const customerType =
+            req.user?.customerType || "PERSONAL";
+
+        const product =
+            await getProductBySlugService(
+                req.params.slug,
+                customerType
+            );
+
+        return successResponse(
+
+            res,
+
+            200,
+
+            "Product fetched successfully",
+
+            product
+
+        );
+
+    } catch (error) {
+
+        return errorResponse(
+
+            res,
+
+            404,
+
+            error.message
+
+        );
+
+    }
+
+};
+
+
+// =====================================================
 // UPDATE PRODUCT
 // =====================================================
 
@@ -594,17 +656,17 @@ export const updateProduct = async (
 
         }
         if (
-    typeof req.body.rental === "string"
-) {
+            typeof req.body.rental === "string"
+        ) {
 
-    req.body.rental =
-        JSON.parse(
-            req.body.rental
-        );
+            req.body.rental =
+                JSON.parse(
+                    req.body.rental
+                );
 
-}
+        }
 
-              
+
         const product =
             await updateProductService(
 
@@ -793,7 +855,7 @@ export const getShopProducts = async (
 
     try {
 
-         console.log("LOGGED IN USER:", req.user);   // ADD THIS LINE
+        console.log("LOGGED IN USER:", req.user);   // ADD THIS LINE
 
         console.log(
             "======================================"
@@ -807,14 +869,14 @@ export const getShopProducts = async (
             "======================================"
         );
 
-const customerType =
-    req.user?.customerType || "PERSONAL";
+        const customerType =
+            req.user?.customerType || "PERSONAL";
 
-const products =
-    await getShopProductsService(
-        customerType
-    );
-        
+        const products =
+            await getShopProductsService(
+                customerType
+            );
+
 
 
         console.log(

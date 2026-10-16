@@ -4,6 +4,7 @@ import {
     createProduct,
     getProducts,
     getProductById,
+    getProductBySlug,
     updateProduct,
     deleteProduct,
     searchProduct,
@@ -83,11 +84,11 @@ router.post(
 
     verifyToken,
 
-    allowRoles(  "ADMIN",
-  "SUPER_ADMIN",
-  "SALES",
-  "RECEPTIONIST",
-  "ACCOUNTANT"),
+    allowRoles("ADMIN",
+        "SUPER_ADMIN",
+        "SALES",
+        "RECEPTIONIST",
+        "ACCOUNTANT"),
 
     productUpload.array(
         "images",
@@ -115,11 +116,11 @@ router.get(
     verifyToken,
 
     allowRoles(
-          "ADMIN",
-  "SUPER_ADMIN",
-  "SALES",
-  "RECEPTIONIST",
-  "ACCOUNTANT",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "SALES",
+        "RECEPTIONIST",
+        "ACCOUNTANT",
         "INVENTORY_MANAGER"
     ),
 
@@ -136,7 +137,7 @@ router.get(
 
     "/shop",
 
-     optionalAuth,      // ← ADD THIS LINE
+    optionalAuth,      // ← ADD THIS LINE
 
     getShopProducts
 
@@ -154,15 +155,41 @@ router.get(
     verifyToken,
 
     allowRoles(
-          "ADMIN",
-  "SUPER_ADMIN",
-  "SALES",
-  "RECEPTIONIST",
-  "ACCOUNTANT",
+        "ADMIN",
+        "SUPER_ADMIN",
+        "SALES",
+        "RECEPTIONIST",
+        "ACCOUNTANT",
         "INVENTORY_MANAGER"
     ),
 
     searchProduct
+
+);
+
+
+// =====================================================
+// GET SINGLE PRODUCT BY SLUG (NEW)
+// =====================================================
+// PUBLIC
+// Customer opens /product/asus-expertbook-0808
+// and the details page calls this route.
+//
+// - optionalAuth: guests can open it, and logged in
+//   business customers still get wholesale pricing
+//
+// IMPORTANT: keep this ABOVE "/:id".
+// Express matches routes top to bottom, so the more
+// specific route must come first.
+// =====================================================
+
+router.get(
+
+    "/slug/:slug",
+
+    optionalAuth,
+
+    getProductBySlug
 
 );
 
@@ -195,11 +222,11 @@ router.put(
 
     verifyToken,
 
-    allowRoles(  "ADMIN",
-  "SUPER_ADMIN",
-  "SALES",
-  "RECEPTIONIST",
-  "ACCOUNTANT"),
+    allowRoles("ADMIN",
+        "SUPER_ADMIN",
+        "SALES",
+        "RECEPTIONIST",
+        "ACCOUNTANT"),
 
     validate(
         updateProductValidation
@@ -220,11 +247,11 @@ router.delete(
 
     verifyToken,
 
-    allowRoles(  "ADMIN",
-  "SUPER_ADMIN",
-  "SALES",
-  "RECEPTIONIST",
-  "ACCOUNTANT"),
+    allowRoles("ADMIN",
+        "SUPER_ADMIN",
+        "SALES",
+        "RECEPTIONIST",
+        "ACCOUNTANT"),
 
     deleteProduct
 

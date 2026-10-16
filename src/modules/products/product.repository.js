@@ -3,8 +3,6 @@ import Inventory from "../inventory/inventory.model.js";
 import Offer from "../offer/offer.model.js";
 import mongoose from "mongoose";
 
-import RentalProduct from "../rental/rentalProduct.model.js";
-
 // Create Product
 
 export const createProductDB = async (data) => {
@@ -18,43 +16,6 @@ export const createProductDB = async (data) => {
 
 // Get All Products (Admin)
 
-// export const getProductsDB = async (query = {}) => {
-
-//     const products = await Product.find({
-//         isDeleted: false,
-//         ...query
-//     })
-//     .populate("category", "name slug")
-//     .populate("subcategory", "name slug parentCategory")
-//     .populate("brand", "name slug logo")
-//     .populate("createdBy", "name email")
-//     .sort({ createdAt: -1 });
-
-//     const productIds = products.map(p => p._id);
-
-//     const inventories = await Inventory.find({
-//         product: { $in: productIds }
-//     });
-
-//     const inventoryMap = {};
-
-//     inventories.forEach(inv => {
-//         inventoryMap[inv.product.toString()] = inv;
-//     });
-
-//     return products.map(product => ({
-//         ...product.toObject(),
-//         inventory: inventoryMap[product._id.toString()] || {
-//             currentStock: 0,
-//             reservedStock: 0,
-//             minimumStock: 0,
-//             maximumStock: 0
-//         }
-//     }));
-// };
-
-
-
 export const getProductsDB = async (query = {}) => {
 
     const products = await Product.find({
@@ -67,64 +28,27 @@ export const getProductsDB = async (query = {}) => {
         .populate("createdBy", "name email")
         .sort({ createdAt: -1 });
 
-    const productIds = products.map((p) => p._id);
+    const productIds = products.map(p => p._id);
 
-    const [inventories, rentalProducts] = await Promise.all([
-        Inventory.find({
-            product: { $in: productIds }
-        }).lean(),
-
-        RentalProduct.find({
-            productId: { $in: productIds }
-        }).lean()
-    ]);
-
-    const inventoryMap = new Map();
-    const rentalMap = new Map();
-
-    inventories.forEach((inventory) => {
-        inventoryMap.set(
-            String(inventory.product),
-            inventory
-        );
+    const inventories = await Inventory.find({
+        product: { $in: productIds }
     });
 
-    rentalProducts.forEach((rental) => {
-        rentalMap.set(
-            String(rental.productId),
-            rental
-        );
+    const inventoryMap = {};
+
+    inventories.forEach(inv => {
+        inventoryMap[inv.product.toString()] = inv;
     });
 
-    return products.map((product) => {
-
-        const productData = product.toObject();
-        const productId = String(product._id);
-
-        const rentalDetails = rentalMap.get(productId);
-
-        return {
-            ...productData,
-
-            inventory:
-                inventoryMap.get(productId) || {
-                    currentStock: 0,
-                    reservedStock: 0,
-                    minimumStock: 0,
-                    maximumStock: 0
-                },
-
-            rental: rentalDetails
-                ? {
-                    ...rentalDetails,
-                    isAvailableForRent:
-                        productData.rental?.isAvailableForRent ??
-                        rentalDetails.isAvailableForRent ??
-                        false
-                }
-                : productData.rental
-        };
-    });
+    return products.map(product => ({
+        ...product.toObject(),
+        inventory: inventoryMap[product._id.toString()] || {
+            currentStock: 0,
+            reservedStock: 0,
+            minimumStock: 0,
+            maximumStock: 0
+        }
+    }));
 };
 
 
@@ -146,32 +70,83 @@ export const getProductByIdDB = async (id) => {
         isDeleted: false
 
     })
-    .populate(
-        "category",
-        "name"
-    )
-    .populate(
-    "subcategory",
-    "name slug parentCategory"
-)
-    .populate(
-        "brand",
-        "name logo"
-    );
+        .populate(
+            "category",
+            "name"
+        )
+        .populate(
+            "subcategory",
+            "name slug parentCategory"
+        )
+        .populate(
+            "brand",
+            "name logo"
+        );
 
 };
 
 
+
+// =====================================================
+// GET PRODUCT BY SLUG
+// =====================================================
+//
+// Finds ONE product using its slug
+// (example: "asus-expertbook-0808").
+//
+// Used by the product details page, because the
+// URL now contains the slug instead of the Mongo _id.
+//
+// - isDeleted: false  -> soft deleted products are hidden
+// - populate(...)     -> same populates as getProductByIdDB,
+//                        so both lookups return the same shape
+// - returns null      -> if no product has this slug
+//
+// =====================================================
+
+export const getProductBySlugDB = async (slug) => {
+
+    return await Product.findOne({
+
+        slug,
+
+        isDeleted: false
+
+    })
+        .populate(
+            "category",
+            "name"
+        )
+        .populate(
+            "subcategory",
+            "name slug parentCategory"
+        )
+        .populate(
+            "brand",
+            "name logo"
+        );
+
+};
+
+
+
+
+
+
+
+
+
+
 // Get Product By SKU
 
-export const getProductBySKUDB = async(sku)=>{
+export const getProductBySKUDB = async (sku) => {
 
 
     return await Product.findOne({
 
         sku,
 
-        isDeleted:false
+        isDeleted: false
 
     });
 
@@ -183,14 +158,14 @@ export const getProductBySKUDB = async(sku)=>{
 
 // Get Product By Name
 
-export const getProductByNameDB = async(name)=>{
+export const getProductByNameDB = async (name) => {
 
 
     return await Product.findOne({
 
         name,
 
-        isDeleted:false
+        isDeleted: false
 
     });
 
@@ -202,10 +177,10 @@ export const getProductByNameDB = async(name)=>{
 
 // Update Product
 
-export const updateProductDB = async(
+export const updateProductDB = async (
     id,
     data
-)=>{
+) => {
 
 
     return await Product.findByIdAndUpdate(
@@ -215,7 +190,7 @@ export const updateProductDB = async(
         data,
 
         {
-            new:true
+            new: true
         }
 
     );
@@ -228,7 +203,7 @@ export const updateProductDB = async(
 
 // Soft Delete Product
 
-export const deleteProductDB = async(id)=>{
+export const deleteProductDB = async (id) => {
 
 
     return await Product.findByIdAndUpdate(
@@ -237,12 +212,12 @@ export const deleteProductDB = async(id)=>{
 
         {
 
-            isDeleted:true
+            isDeleted: true
 
         },
 
         {
-            new:true
+            new: true
         }
 
     );
@@ -255,28 +230,28 @@ export const deleteProductDB = async(id)=>{
 
 // Search Product
 
-export const searchProductsDB = async(keyword)=>{
+export const searchProductsDB = async (keyword) => {
 
 
     return await Product.find({
 
-        isDeleted:false,
+        isDeleted: false,
 
 
-        $or:[
+        $or: [
 
             {
-                name:{
-                    $regex:keyword,
-                    $options:"i"
+                name: {
+                    $regex: keyword,
+                    $options: "i"
                 }
             },
 
 
             {
-                sku:{
-                    $regex:keyword,
-                    $options:"i"
+                sku: {
+                    $regex: keyword,
+                    $options: "i"
                 }
             }
 
@@ -284,18 +259,18 @@ export const searchProductsDB = async(keyword)=>{
 
     })
 
-    .populate(
-        "category",
-        "name"
-    )
-     .populate(
-    "subcategory",
-    "name slug"
-)
-    .populate(
-        "brand",
-        "name"
-    );
+        .populate(
+            "category",
+            "name"
+        )
+        .populate(
+            "subcategory",
+            "name slug"
+        )
+        .populate(
+            "brand",
+            "name"
+        );
 
 
 };
@@ -330,23 +305,23 @@ export const getShopProductsDB = async () => {
 
     })
 
-    .populate(
-        "category",
-        "name slug"
-    )
-    .populate(
-    "subcategory",
-    "name slug"
-)
+        .populate(
+            "category",
+            "name slug"
+        )
+        .populate(
+            "subcategory",
+            "name slug"
+        )
 
-    .populate(
-        "brand",
-        "name slug logo"
-    )
+        .populate(
+            "brand",
+            "name slug logo"
+        )
 
-    .sort({
-        createdAt: -1
-    });
+        .sort({
+            createdAt: -1
+        });
 
 
     return products;
@@ -354,5 +329,5 @@ export const getShopProductsDB = async () => {
 };
 
 export const findProductsByReceptionist = async (receptionistId) => {
-  return await Product.find({ addedBy: receptionistId }).sort({ createdAt: -1 });
+    return await Product.find({ addedBy: receptionistId }).sort({ createdAt: -1 });
 };
