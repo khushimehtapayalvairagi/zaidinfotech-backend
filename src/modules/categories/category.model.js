@@ -1,80 +1,102 @@
 import mongoose from "mongoose";
 
+// ======================================================
+// CATEGORY SCHEMA
+// ======================================================
 
 const categorySchema = new mongoose.Schema(
-{
-    name:{
-        type:String,
-        required:true,
-        trim:true
+  {
+    // --------------------------------------------------
+    // CATEGORY NAME
+    // --------------------------------------------------
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-
-    slug:{
-        type:String,
-        unique:true,
-        lowercase:true,
-        trim:true
+    // --------------------------------------------------
+    // CATEGORY SLUG
+    // --------------------------------------------------
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
 
-
-    image:{
-        type:String,
-        default:""
+    // --------------------------------------------------
+    // CATEGORY IMAGE
+    // Store image path as STRING, not File object
+    // --------------------------------------------------
+    image: {
+      type: String,
+      default: "",
     },
 
-
-    description:{
-        type:String,
-        default:""
+    // --------------------------------------------------
+    // DESCRIPTION
+    // --------------------------------------------------
+    description: {
+      type: String,
+      default: "",
     },
 
-
-    parentCategory:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Category",
-        default:null
+    // --------------------------------------------------
+    // PARENT CATEGORY
+    // --------------------------------------------------
+    parentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
     },
 
-
-    status:{
-        type:String,
-        enum:["ACTIVE","INACTIVE"],
-        default:"ACTIVE"
+    // --------------------------------------------------
+    // CATEGORY STATUS
+    // --------------------------------------------------
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE"],
+      default: "ACTIVE",
     },
 
-
-    sortOrder:{
-        type:Number,
-        default:0
+    // --------------------------------------------------
+    // SORT ORDER
+    // --------------------------------------------------
+    sortOrder: {
+      type: Number,
+      default: 0,
     },
 
-
-    isDeleted:{
-        type:Boolean,
-        default:false
+    // --------------------------------------------------
+    // SOFT DELETE
+    // --------------------------------------------------
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
 
-
-    createdBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        default:null
-    }
-
-
-},
-{
-    timestamps:true
-}
+    // --------------------------------------------------
+    // CREATED BY
+    // --------------------------------------------------
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-
+// ======================================================
+// MODEL
+// ======================================================
 
 const Category = mongoose.model(
-    "Category",
-    categorySchema
+  "Category",
+  categorySchema
 );
-
 
 export default Category;
