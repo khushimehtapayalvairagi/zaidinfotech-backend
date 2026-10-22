@@ -12,30 +12,22 @@ import {
     findProductsByReceptionist
 } from "./product.repository.js";
 
-
 import Category from "../categories/category.model.js";
-
 
 import Brand from "../brands/brand.model.js";
 
-
 import RentalProduct from "../rental/rentalProduct.model.js";
-
 
 import Inventory from "../inventory/inventory.model.js";
 
-
 import generateSlug from "../../common/utils/generateSlug.js";
 
-
 import generateSKU from "../../common/utils/generateSKU.js";
-
 
 import {
     calculateDiscountedPrice,
     matchOfferToProduct
 } from "../../common/utils/offerCalculator.js";
-
 
 import {
     getActiveOffersDB
@@ -134,7 +126,6 @@ export const fetchProductsAddedByReceptionist = async (
             receptionistId
         );
 
-
     return products;
 
 };
@@ -156,12 +147,10 @@ export const createProductService = async (
             "========== CREATE PRODUCT SERVICE =========="
         );
 
-
         console.log(
             "Incoming Product Data:",
             data
         );
-
 
         console.log(
             "Files:",
@@ -177,7 +166,6 @@ export const createProductService = async (
             await getProductByNameDB(
                 data.name
             );
-
 
         if (existingProduct) {
 
@@ -199,7 +187,6 @@ export const createProductService = async (
                     data.barcode
                 );
 
-
             if (barcodeExists) {
 
                 throw new Error(
@@ -220,7 +207,6 @@ export const createProductService = async (
                 data.category
             );
 
-
         if (!category) {
 
             throw new Error(
@@ -228,7 +214,6 @@ export const createProductService = async (
             );
 
         }
-
 
         console.log(
             "PARENT CATEGORY:",
@@ -243,14 +228,12 @@ export const createProductService = async (
 
         let subcategory = null;
 
-
         if (data.subcategory) {
 
             subcategory =
                 await Category.findById(
                     data.subcategory
                 );
-
 
             if (!subcategory) {
 
@@ -259,7 +242,6 @@ export const createProductService = async (
                 );
 
             }
-
 
             console.log(
                 "SUBCATEGORY:",
@@ -278,7 +260,6 @@ export const createProductService = async (
             await Brand.findById(
                 data.brand
             );
-
 
         if (!brand) {
 
@@ -301,23 +282,20 @@ export const createProductService = async (
                     ?? 0
                 ),
 
-
             retailPrice:
                 Number(
                     data.pricing?.retailPrice
                     ?? 0
                 ),
 
-
             wholesalePrice:
                 data.pricing?.wholesalePrice !== null &&
-                    data.pricing?.wholesalePrice !== undefined &&
-                    data.pricing?.wholesalePrice !== ""
+                data.pricing?.wholesalePrice !== undefined &&
+                data.pricing?.wholesalePrice !== ""
                     ? Number(
                         data.pricing.wholesalePrice
                     )
                     : null,
-
 
             mrp:
                 Number(
@@ -325,13 +303,11 @@ export const createProductService = async (
                     ?? 0
                 ),
 
-
             discount:
                 Number(
                     data.pricing?.discount
                     ?? 0
                 ),
-
 
             gst:
                 Number(
@@ -359,16 +335,11 @@ export const createProductService = async (
         const products =
             await getProductsDB();
 
-
         const sku =
             generateSKU(
-
                 category.name,
-
                 brand.name,
-
                 products.length + 1
-
             );
 
 
@@ -377,7 +348,6 @@ export const createProductService = async (
         // =================================================
 
         let images = [];
-
 
         if (
             files &&
@@ -413,11 +383,9 @@ export const createProductService = async (
             // =============================================
             // HSN CODE
             //
-            // CHANGE: Added hsnCode field.
-            // Reason: productData is built field by field,
-            // so without this line the hsnCode sent from
-            // the AddProduct form would be silently dropped
-            // and never saved in the database.
+            // productData is built field by field, so
+            // without this the hsnCode sent from the
+            // AddProduct form would be silently dropped.
             // It is later copied into invoice items by
             // createInvoiceFromOrder (invoice.service.js).
             // Falls back to "" when not provided.
@@ -432,42 +400,32 @@ export const createProductService = async (
             category:
                 data.category,
 
-
             subcategory:
                 data.subcategory
                 || null,
-
 
             productType:
                 data.productType
                 || "NEW",
 
-
             brand:
                 data.brand,
-
 
             shortDescription:
                 data.shortDescription
                 || "",
 
-
             description:
                 data.description
                 || "",
 
-
             pricing,
-
 
             slug,
 
-
             sku,
 
-
             images,
-
 
             rental: {
 
@@ -476,7 +434,6 @@ export const createProductService = async (
                     === true
 
             },
-
 
             createdBy:
                 userId
@@ -499,7 +456,6 @@ export const createProductService = async (
                     data.refurbishedDetails?.grade
                     || null,
 
-
                 batteryHealth:
                     Number(
                         data.refurbishedDetails
@@ -507,14 +463,12 @@ export const createProductService = async (
                         ?? 0
                     ),
 
-
                 warrantyMonths:
                     Number(
                         data.refurbishedDetails
                             ?.warrantyMonths
                         ?? 0
                     ),
-
 
                 testingStatus:
                     data.refurbishedDetails
@@ -560,7 +514,6 @@ export const createProductService = async (
                 data.metaTitle;
 
         }
-
 
         if (data.metaDescription) {
 
@@ -626,16 +579,13 @@ export const createProductService = async (
                     ?? 0
                 );
 
-
             const rentalData = {
 
                 productId:
                     product._id,
 
-
                 isAvailableForRent:
                     true,
-
 
                 monthlyRent:
                     Number(
@@ -644,14 +594,12 @@ export const createProductService = async (
                         ?? 0
                     ),
 
-
                 securityDeposit:
                     Number(
                         data.rental
                             ?.securityDeposit
                         ?? 0
                     ),
-
 
                 minimumRentalMonths:
                     Math.max(
@@ -666,7 +614,6 @@ export const createProductService = async (
 
                     ),
 
-
                 gst:
                     Number(
                         data.rental
@@ -674,24 +621,19 @@ export const createProductService = async (
                         ?? 0
                     ),
 
-
                 totalQuantity:
                     rentalAvailableQuantity,
-
 
                 availableQuantity:
                     rentalAvailableQuantity,
 
-
                 rentedQuantity:
                     0,
-
 
                 basicSoftwareInstalled:
                     data.rental
                         ?.basicSoftwareInstalled
                     ?? true,
-
 
                 includedItems:
                     data.rental
@@ -711,22 +653,18 @@ export const createProductService = async (
 
                         ],
 
-
                 status:
                     "ACTIVE",
-
 
                 notes:
                     data.rental
                         ?.notes
                     ?? "",
 
-
                 createdBy:
                     userId
 
             };
-
 
             await RentalProduct.create(
                 rentalData
@@ -744,26 +682,20 @@ export const createProductService = async (
             product:
                 product._id,
 
-
             currentStock:
                 0,
-
 
             reservedStock:
                 0,
 
-
             minimumStock:
                 0,
-
 
             maximumStock:
                 0,
 
-
             warehouseLocation:
                 "",
-
 
             createdBy:
                 userId
@@ -784,7 +716,6 @@ export const createProductService = async (
             "CREATE PRODUCT SERVICE ERROR:",
             error
         );
-
 
         throw error;
 
@@ -817,7 +748,6 @@ export const getProductService = async (
         await getProductByIdDB(
             id
         );
-
 
     if (!product) {
 
@@ -900,21 +830,16 @@ export const getProductService = async (
 
         ...productData,
 
-
         pricing:
             safePricing,
 
-
         customerType,
 
-
         customerPrice,
-
 
         offer:
             offer
             || null,
-
 
         finalPrice
 
@@ -949,7 +874,6 @@ export const getProductBySlugService = async (
             slug
         );
 
-
     if (!product) {
 
         throw new Error(
@@ -1031,21 +955,16 @@ export const getProductBySlugService = async (
 
         ...productData,
 
-
         pricing:
             safePricing,
 
-
         customerType,
 
-
         customerPrice,
-
 
         offer:
             offer
             || null,
-
 
         finalPrice
 
@@ -1058,10 +977,12 @@ export const getProductBySlugService = async (
 // UPDATE PRODUCT
 // =====================================================
 //
-// NOTE (hsnCode): No change needed here.
-// `data` is passed straight to updateProductDB, so
-// hsnCode is saved automatically once the update
-// validation (product.validation.js) allows it.
+// - Flat pricing fields (retailPrice, mrp etc.) supported
+// - Only provided pricing fields are updated
+// - refurbishedDetails merged with existing values
+// - Rental details synced to RentalProduct collection
+// - hsnCode is trimmed and saved (validation in
+//   product.validation.js must allow it)
 //
 // =====================================================
 
@@ -1070,130 +991,266 @@ export const updateProductService = async (
     data
 ) => {
 
-    // =================================================
-    // HANDLE FLAT PRICING
-    // =================================================
+    // ==========================================
+    // FIND EXISTING PRODUCT
+    // ==========================================
 
-    const hasFlatPricing =
+    const existingProduct =
+        await getProductByIdDB(id);
 
-        data.purchasePrice !== undefined ||
+    if (!existingProduct) {
+        throw new Error("Product not found");
+    }
 
-        data.retailPrice !== undefined ||
+    const updateData = { ...data };
 
-        data.wholesalePrice !== undefined ||
 
-        data.sellingPrice !== undefined ||
+    // ==========================================
+    // HSN CODE
+    // ==========================================
 
-        data.mrp !== undefined ||
+    if (updateData.hsnCode !== undefined) {
+        updateData.hsnCode =
+            updateData.hsnCode === null
+                ? ""
+                : String(updateData.hsnCode).trim();
+    }
 
-        data.discount !== undefined ||
 
-        data.gst !== undefined;
+    // ==========================================
+    // FLAT PRICING SUPPORT
+    // ==========================================
 
+    const flatFields = [
+        "purchasePrice",
+        "retailPrice",
+        "wholesalePrice",
+        "sellingPrice",
+        "mrp",
+        "discount",
+        "gst"
+    ];
+
+    const hasFlatPricing = flatFields.some(
+        (field) => updateData[field] !== undefined
+    );
 
     if (hasFlatPricing) {
 
-        data.pricing = {
+        const flatPricing = {};
 
-            purchasePrice:
-                data.purchasePrice !== undefined
-                    ? Number(data.purchasePrice)
-                    : 0,
+        if (updateData.purchasePrice !== undefined) {
+            flatPricing.purchasePrice =
+                Number(updateData.purchasePrice);
+        }
 
+        if (updateData.retailPrice !== undefined) {
+            flatPricing.retailPrice =
+                Number(updateData.retailPrice);
+        } else if (updateData.sellingPrice !== undefined) {
+            flatPricing.retailPrice =
+                Number(updateData.sellingPrice);
+        }
 
-            // PERSONAL CUSTOMER PRICE
-            retailPrice:
-                data.retailPrice !== undefined
-                    ? Number(data.retailPrice)
-                    : (
-                        data.sellingPrice !== undefined
-                            ? Number(data.sellingPrice)
-                            : 0
-                    ),
+        if (updateData.wholesalePrice !== undefined) {
+            flatPricing.wholesalePrice =
+                updateData.wholesalePrice === null ||
+                updateData.wholesalePrice === ""
+                    ? null
+                    : Number(updateData.wholesalePrice);
+        }
 
+        if (updateData.mrp !== undefined) {
+            flatPricing.mrp = Number(updateData.mrp);
+        }
 
-            // BUSINESS CUSTOMER PRICE
-            wholesalePrice:
-                data.wholesalePrice !== undefined &&
-                    data.wholesalePrice !== null &&
-                    data.wholesalePrice !== ""
+        if (updateData.discount !== undefined) {
+            flatPricing.discount = Number(updateData.discount);
+        }
 
-                    ? Number(data.wholesalePrice)
+        if (updateData.gst !== undefined) {
+            flatPricing.gst = Number(updateData.gst);
+        }
 
-                    : null,
-
-
-            mrp:
-                data.mrp !== undefined
-                    ? Number(data.mrp)
-                    : 0,
-
-
-            discount:
-                data.discount !== undefined
-                    ? Number(data.discount)
-                    : 0,
-
-
-            gst:
-                data.gst !== undefined
-                    ? Number(data.gst)
-                    : 0
-
+        updateData.pricing = {
+            ...(updateData.pricing || {}),
+            ...flatPricing
         };
 
-
-        // Remove flat fields
-        delete data.purchasePrice;
-
-        delete data.retailPrice;
-
-        delete data.wholesalePrice;
-
-        delete data.sellingPrice;
-
-        delete data.mrp;
-
-        delete data.discount;
-
-        delete data.gst;
+        flatFields.forEach((field) => {
+            delete updateData[field];
+        });
 
     }
 
 
-    // =================================================
-    // SLUG
-    // =================================================
+    // ==========================================
+    // PRICING - UPDATE ONLY PROVIDED FIELDS
+    // ==========================================
 
-    if (data.name) {
+    if (updateData.pricing) {
 
-        data.slug =
-            generateSlug(
-                data.name
+        const currentPricing =
+            existingProduct.pricing?.toObject?.() ||
+            existingProduct.pricing ||
+            {};
+
+        const mergedPricing = {
+            ...currentPricing,
+            ...updateData.pricing
+        };
+
+        // Make sure numeric fields are real numbers
+        // (nested pricing may arrive as strings from forms)
+        [
+            "purchasePrice",
+            "retailPrice",
+            "mrp",
+            "discount",
+            "gst"
+        ].forEach((field) => {
+            if (
+                mergedPricing[field] !== undefined &&
+                mergedPricing[field] !== null &&
+                mergedPricing[field] !== ""
+            ) {
+                mergedPricing[field] =
+                    Number(mergedPricing[field]);
+            }
+        });
+
+        if (
+            mergedPricing.wholesalePrice === "" ||
+            mergedPricing.wholesalePrice === null
+        ) {
+            mergedPricing.wholesalePrice = null;
+        } else if (mergedPricing.wholesalePrice !== undefined) {
+            mergedPricing.wholesalePrice =
+                Number(mergedPricing.wholesalePrice);
+        }
+
+        updateData.pricing = mergedPricing;
+
+    }
+
+
+    // ==========================================
+    // REFURBISHED DETAILS
+    // ==========================================
+
+    if (updateData.refurbishedDetails) {
+
+        const currentDetails =
+            existingProduct.refurbishedDetails?.toObject?.() ||
+            existingProduct.refurbishedDetails ||
+            {};
+
+        const details = {
+            ...currentDetails,
+            ...updateData.refurbishedDetails
+        };
+
+        if (details.grade === "") {
+            details.grade = null;
+        }
+
+        if (details.testingStatus === "") {
+            details.testingStatus = null;
+        }
+
+        updateData.refurbishedDetails = details;
+
+    }
+
+
+    // ==========================================
+    // RENTAL DETAILS
+    // ==========================================
+
+    const rentalData = updateData.rental
+        ? { ...updateData.rental }
+        : null;
+
+    if (rentalData) {
+
+        // Product model stores only this flag.
+        updateData.rental = {
+            isAvailableForRent:
+                rentalData.isAvailableForRent ??
+                existingProduct.rental?.isAvailableForRent ??
+                false
+        };
+
+        const existingRental = await RentalProduct.findOne({
+            productId: id
+        });
+
+        if (existingRental) {
+
+            const allowedRentalFields = [
+                "isAvailableForRent",
+                "monthlyRent",
+                "securityDeposit",
+                "minimumRentalMonths",
+                "gst",
+                "basicSoftwareInstalled",
+                "includedItems",
+                "notes"
+            ];
+
+            const rentalUpdates = {};
+
+            allowedRentalFields.forEach((field) => {
+                if (rentalData[field] !== undefined) {
+                    rentalUpdates[field] = rentalData[field];
+                }
+            });
+
+            // Quantities intentionally excluded.
+            // They are controlled by rental allocation/return.
+
+            if (Object.keys(rentalUpdates).length > 0) {
+                await RentalProduct.findByIdAndUpdate(
+                    existingRental._id,
+                    { $set: rentalUpdates },
+                    { new: true, runValidators: true }
+                );
+            }
+
+        } else if (
+            rentalData.isAvailableForRent === true
+        ) {
+
+            throw new Error(
+                "Rental record not found. Configure rental details first."
             );
 
+        }
+
     }
 
 
-    // =================================================
+    // ==========================================
+    // SLUG
+    // ==========================================
+
+    if (updateData.name) {
+        updateData.slug = generateSlug(updateData.name);
+    }
+
+
+    // ==========================================
     // UPDATE PRODUCT
-    // =================================================
+    // ==========================================
 
-    const product =
-        await updateProductDB(
-            id,
-            data
-        );
-
+    const product = await updateProductDB(
+        id,
+        updateData
+    );
 
     if (!product) {
-
-        throw new Error(
-            "Product not found"
-        );
-
+        throw new Error("Product not found");
     }
-
 
     return product;
 
@@ -1213,7 +1270,6 @@ export const deleteProductService = async (
             id
         );
 
-
     if (!product) {
 
         throw new Error(
@@ -1221,7 +1277,6 @@ export const deleteProductService = async (
         );
 
     }
-
 
     return product;
 
@@ -1257,17 +1312,14 @@ export const getShopProductsService = async (
             "======================================"
         );
 
-
         console.log(
             "GET SHOP PRODUCTS SERVICE"
         );
-
 
         console.log(
             "CUSTOMER TYPE:",
             customerType
         );
-
 
         console.log(
             "======================================"
@@ -1281,7 +1333,6 @@ export const getShopProductsService = async (
         const products =
             await getShopProductsDB();
 
-
         console.log(
             "SHOP PRODUCTS COUNT:",
             products.length
@@ -1294,7 +1345,6 @@ export const getShopProductsService = async (
 
         const activeOffers =
             await getActiveOffersDB();
-
 
         console.log(
             "ACTIVE OFFERS COUNT:",
@@ -1310,45 +1360,30 @@ export const getShopProductsService = async (
             products.map(
                 (product) => {
 
-                    // -----------------------------------------
                     // MONGOOSE DOCUMENT -> OBJECT
-                    // -----------------------------------------
-
                     const productData =
                         typeof product.toObject
-                            === "function"
+                        === "function"
 
                             ? product.toObject()
 
                             : product;
 
-
-                    // -----------------------------------------
                     // FIND OFFER
-                    // -----------------------------------------
-
                     const offer =
                         matchOfferToProduct(
                             productData,
                             activeOffers
                         );
 
-
-                    // -----------------------------------------
                     // CUSTOMER PRICE
-                    // -----------------------------------------
-
                     const customerPrice =
                         getCustomerPrice(
                             productData,
                             customerType
                         );
 
-
-                    // -----------------------------------------
                     // FINAL PRICE
-                    // -----------------------------------------
-
                     const finalPrice =
                         customerPrice !== null
 
@@ -1359,41 +1394,28 @@ export const getShopProductsService = async (
 
                             : null;
 
-
-                    // -----------------------------------------
                     // SAFE PRICING
-                    // -----------------------------------------
-
                     const safePricing =
                         getSafePricing(
                             productData,
                             customerType
                         );
 
-
-                    // -----------------------------------------
                     // RETURN PRODUCT
-                    // -----------------------------------------
-
                     return {
 
                         ...productData,
 
-
                         pricing:
                             safePricing,
 
-
                         customerType,
 
-
                         customerPrice,
-
 
                         offer:
                             offer
                             || null,
-
 
                         finalPrice
 
@@ -1402,12 +1424,10 @@ export const getShopProductsService = async (
                 }
             );
 
-
         console.log(
             "FINAL SHOP PRODUCTS:",
             productsWithOffers.length
         );
-
 
         return productsWithOffers;
 
@@ -1418,7 +1438,6 @@ export const getShopProductsService = async (
             "GET SHOP PRODUCTS SERVICE ERROR:",
             error
         );
-
 
         throw error;
 
