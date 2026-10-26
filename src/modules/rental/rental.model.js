@@ -164,6 +164,47 @@ const rentalSchema = new mongoose.Schema(
             required: true,
             min: 0
         },
+        // =====================================================
+// RENTAL RENT PAYMENT SUMMARY
+// =====================================================
+
+rentSubtotal: {
+  type: Number,
+  default: 0,
+  min: 0
+},
+
+rentGstAmount: {
+  type: Number,
+  default: 0,
+  min: 0
+},
+
+rentTotalAmount: {
+  type: Number,
+  default: 0,
+  min: 0
+},
+
+rentPaidAmount: {
+  type: Number,
+  default: 0,
+  min: 0
+},
+
+rentBalanceAmount: {
+  type: Number,
+  default: 0,
+  min: 0
+},
+
+rentPaymentStatus: {
+  type: String,
+  enum: ["PENDING", "PARTIAL", "PAID"],
+  default: "PENDING"
+},
+
+        
 
         // =====================================================
         // RENTAL PERIOD
@@ -209,6 +250,21 @@ const rentalSchema = new mongoose.Schema(
             type: Date,
             default: null
         },
+        // =====================================================
+// RENTAL INSTALLMENT COUNTERS
+// =====================================================
+
+totalInstallments: {
+    type: Number,
+    default: 0,
+    min: 0
+},
+
+paidInstallments: {
+    type: Number,
+    default: 0,
+    min: 0
+},
 
         // =====================================================
         // RENTAL STATUS
