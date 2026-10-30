@@ -142,6 +142,80 @@ const rentalSchema = new mongoose.Schema(
                 uppercase: true
             }
         },
+// =====================================================
+// NEGOTIATED RENTAL PRICING
+// =====================================================
+
+originalMonthlyRent: {
+    type: Number,
+    default: 0,
+    min: 0
+},
+
+pricingType: {
+    type: String,
+    enum: ["STANDARD", "NEGOTIATED"],
+    default: "STANDARD"
+},
+
+billingType: {
+    type: String,
+    enum: ["GST", "NON_GST"],
+    default: "GST"
+},
+
+
+negotiationReason: {
+    type: String,
+    default: "",
+    trim: true
+},
+
+pricingUpdatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+},
+
+pricingUpdatedAt: {
+    type: Date,
+    default: null
+},
+
+pricingHistory: {
+    type: [
+        new mongoose.Schema(
+            {
+                oldMonthlyRent: Number,
+                newMonthlyRent: Number,
+
+                oldBillingType: String,
+                newBillingType: String,
+
+                oldGstPercentage: Number,
+                newGstPercentage: Number,
+
+                reason: {
+                    type: String,
+                    default: ""
+                },
+
+                changedBy: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    default: null
+                },
+
+                changedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            },
+            { _id: true }
+        )
+    ],
+    default: []
+},
 
         // =====================================================
         // RENTAL PRICING
@@ -502,6 +576,19 @@ paidInstallments: {
     }
 );
 
+
+// =====================================================
+// GST / NON-GST VALIDATION
+// =====================================================
+
+// NON_GST rental mein GST always 0 rahega.
+// GST rental mein configured GST percentage preserve hoga.
+
+rentalSchema.pre("validate", function () {
+    if (this.billingType === "NON_GST") {
+        this.gstPercentage = 0;
+    }
+});
 // =====================================================
 // INDEXES
 // =====================================================

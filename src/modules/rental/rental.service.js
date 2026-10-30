@@ -2,22 +2,14 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 
 import Payment from "../payments/payment.model.js";
-
-import {
-  notifyAdminsService
-} from "../notification/notification.service.js";
+import { notifyAdminsService } from "../notification/notification.service.js";
 
 import Rental from "./rental.model.js";
 import RentalProduct from "./rentalProduct.model.js";
 import RentalPayment from "./rentalPayment.model.js";
 
-import {
-  createPayment
-} from "../payments/payment.service.js";
-
-import {
-  PAYMENT_STATUS
-} from "../../common/constants/paymentStatus.js";
+import { createPayment } from "../payments/payment.service.js";
+import { PAYMENT_STATUS } from "../../common/constants/paymentStatus.js";
 
 import {
   getRentalByIdDB,
@@ -38,7 +30,6 @@ import {
 } from "../../common/constants/rental.constants.js";
 
 import {
-  addDays,
   addMonths,
   adjustRemainingInstallments,
   buildScheduleDefinitions,
@@ -52,23 +43,11 @@ import {
 // HELPERS
 // =====================================================
 
-const generateRentalNumber = () => {
-  const timestamp = Date.now().toString().slice(-8);
-  const random = crypto.randomBytes(2)
-    .toString("hex")
-    .toUpperCase();
+const generateRentalNumber = () =>
+  `RENT-${Date.now().toString().slice(-8)}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
 
-  return `RENT-${timestamp}-${random}`;
-};
-
-const generateOrderId = () => {
-  const timestamp = Date.now().toString().slice(-8);
-  const random = crypto.randomBytes(2)
-    .toString("hex")
-    .toUpperCase();
-
-  return `ORD-${timestamp}-${random}`;
-};
+const generateOrderId = () =>
+  `ORD-${Date.now().toString().slice(-8)}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
 
 const releaseStock = async (reserved) => {
   for (const item of reserved) {
@@ -125,10 +104,7 @@ const normalizeItems = (data) => {
       throw new Error("Invalid rental product");
     }
 
-    if (
-      !Number.isInteger(quantity) ||
-      quantity < 1
-    ) {
+    if (!Number.isInteger(quantity) || quantity < 1) {
       throw new Error(
         "Quantity must be a whole number of at least 1"
       );
@@ -148,10 +124,7 @@ const normalizeItems = (data) => {
   );
 };
 
-const buildCustomerDetails = (
-  customerType,
-  data
-) => {
+const buildCustomerDetails = (customerType, data) => {
   if (customerType === "INDIVIDUAL") {
     const d = data.individualDetails || {};
 
@@ -164,27 +137,19 @@ const buildCustomerDetails = (
     ).trim();
 
     if (!fullName) {
-      throw new Error(
-        "Customer full name is required"
-      );
+      throw new Error("Customer full name is required");
     }
 
     if (!phone) {
-      throw new Error(
-        "Customer phone number is required"
-      );
+      throw new Error("Customer phone number is required");
     }
 
     return {
       individualDetails: {
         fullName,
         phone,
-        email: String(
-          d.email || ""
-        ).trim().toLowerCase(),
-        address: String(
-          d.address || ""
-        ).trim()
+        email: String(d.email || "").trim().toLowerCase(),
+        address: String(d.address || "").trim()
       },
       companyDetails: undefined
     };
@@ -205,21 +170,15 @@ const buildCustomerDetails = (
   ).trim();
 
   if (!companyName) {
-    throw new Error(
-      "Company name is required"
-    );
+    throw new Error("Company name is required");
   }
 
   if (!contactPerson) {
-    throw new Error(
-      "Contact person is required"
-    );
+    throw new Error("Contact person is required");
   }
 
   if (!phone) {
-    throw new Error(
-      "Company phone number is required"
-    );
+    throw new Error("Company phone number is required");
   }
 
   return {
@@ -228,16 +187,128 @@ const buildCustomerDetails = (
       companyName,
       contactPerson,
       phone,
-      email: String(
-        d.email || ""
-      ).trim().toLowerCase(),
-      officeAddress: String(
-        d.officeAddress || ""
-      ).trim(),
-      gstNumber: String(
-        d.gstNumber || ""
-      ).trim().toUpperCase()
+      email: String(d.email || "").trim().toLowerCase(),
+      officeAddress: String(d.officeAddress || "").trim(),
+      gstNumber: String(d.gstNumber || "").trim().toUpperCase()
     }
+  };
+};
+
+// =====================================================
+// RENTAL PRICING
+// =====================================================
+
+const parseMoney = (value, label) => {
+  const amount = Number(value);
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    !Number.isFinite(amount) ||
+    amount < 0
+  ) {
+    throw new Error(
+      `${label} must be a valid non-negative amount`
+    );
+  }
+
+  return round2(amount);
+};
+
+const resolveRentalPricing = ({
+  rentalProduct,
+  pricing = {},
+  canNegotiate = false,
+  allowNonGst = false
+}) => {
+  const originalMonthlyRent = parseMoney(
+    rentalProduct.monthlyRent,
+    "Original monthly rent"
+  );
+
+  const requestedMonthlyRent =
+    pricing.monthlyRent === undefined ||
+    pricing.monthlyRent === null ||
+    pricing.monthlyRent === ""
+      ? originalMonthlyRent
+      : parseMoney(
+          pricing.monthlyRent,
+          "Requested monthly rent"
+        );
+
+  if (requestedMonthlyRent <= 0) {
+    throw new Error(
+      "Monthly rent must be greater than zero"
+    );
+  }
+
+  const pricingChanged =
+    requestedMonthlyRent !== originalMonthlyRent;
+
+  const negotiationReason = String(
+    pricing.negotiationReason || ""
+  ).trim();
+
+  if (pricingChanged && !canNegotiate) {
+    throw new Error(
+      "Only authorized users can negotiate rent"
+    );
+  }
+
+  if (pricingChanged && !negotiationReason) {
+    throw new Error(
+      "Negotiation reason is required when rent changes"
+    );
+  }
+
+  const billingType = String(
+    pricing.billingType ??
+    pricing.billingMode ??
+    "GST"
+  ).trim().toUpperCase();
+
+  if (!["GST", "NON_GST"].includes(billingType)) {
+    throw new Error(
+      "Invalid billing type. Use GST or NON_GST."
+    );
+  }
+
+  if (billingType === "NON_GST" && !allowNonGst) {
+    throw new Error(
+      "Non-GST billing is not authorized for this rental"
+    );
+  }
+
+  const configuredGst = Number(
+    rentalProduct.gst ?? 0
+  );
+
+  if (
+    !Number.isFinite(configuredGst) ||
+    configuredGst < 0 ||
+    configuredGst > 100
+  ) {
+    throw new Error("Invalid configured GST rate");
+  }
+
+  return {
+    originalMonthlyRent,
+    monthlyRent: requestedMonthlyRent,
+
+    pricingType: pricingChanged
+      ? "NEGOTIATED"
+      : "STANDARD",
+
+    negotiationReason: pricingChanged
+      ? negotiationReason
+      : "",
+
+    billingType,
+
+    gstPercentage: billingType === "NON_GST"
+      ? 0
+      : configuredGst
   };
 };
 
@@ -247,31 +318,20 @@ const buildCustomerDetails = (
 
 export const createWalkInRentalService = async (
   data,
-  createdBy
+  createdBy,
+  pricingPermissions = {}
 ) => {
   if (!data) {
-    throw new Error(
-      "Rental data is required"
-    );
+    throw new Error("Rental data is required");
   }
 
   const customerType = String(
     data.customerType || ""
   ).toUpperCase();
 
-  if (
-    !["INDIVIDUAL", "COMPANY"].includes(
-      customerType
-    )
-  ) {
-    throw new Error(
-      "Invalid customer type"
-    );
+  if (!["INDIVIDUAL", "COMPANY"].includes(customerType)) {
+    throw new Error("Invalid customer type");
   }
-
-  // =================================================
-  // VALIDATE ITEMS
-  // =================================================
 
   const items = normalizeItems(data);
 
@@ -301,62 +361,55 @@ export const createWalkInRentalService = async (
   const {
     individualDetails,
     companyDetails
-  } = buildCustomerDetails(
-    customerType,
-    data
-  );
+  } = buildCustomerDetails(customerType, data);
 
-  // =================================================
-  // LOAD RENTAL PRODUCTS
-  // =================================================
-
-  const rentalProducts =
-    await RentalProduct.find({
-      _id: {
-        $in: items.map(
-          (item) => item.rentalProductId
-        )
-      }
-    }).populate("productId");
+  // Load products
+  const rentalProducts = await RentalProduct.find({
+    _id: {
+      $in: items.map((item) => item.rentalProductId)
+    }
+  }).populate("productId");
 
   const productMap = new Map(
-    rentalProducts.map(
-      (product) => [
-        String(product._id),
-        product
-      ]
-    )
+    rentalProducts.map((product) => [
+      String(product._id),
+      product
+    ])
   );
+
+  const canNegotiate =
+    pricingPermissions.canNegotiate === true;
+
+  const allowNonGst =
+    pricingPermissions.allowNonGst === true;
+
+  const pricingByProduct =
+    data.pricingByProduct &&
+    typeof data.pricingByProduct === "object" &&
+    !Array.isArray(data.pricingByProduct)
+      ? data.pricingByProduct
+      : {};
 
   const lines = [];
 
   for (const item of items) {
-    const rentalProduct =
-      productMap.get(
-        item.rentalProductId
-      );
+    const rentalProduct = productMap.get(
+      item.rentalProductId
+    );
 
     if (!rentalProduct) {
-      throw new Error(
-        "Rental product not found"
-      );
+      throw new Error("Rental product not found");
     }
 
     const name =
       rentalProduct.productId?.name ||
       "Rental laptop";
 
-    if (
-      rentalProduct.status !== "ACTIVE"
-    ) {
-      throw new Error(
-        `${name} is inactive`
-      );
+    if (rentalProduct.status !== "ACTIVE") {
+      throw new Error(`${name} is inactive`);
     }
 
-    if (
-      rentalProduct.isAvailableForRent !== true
-    ) {
+    if (rentalProduct.isAvailableForRent !== true) {
       throw new Error(
         `${name} is not available for rent`
       );
@@ -374,27 +427,60 @@ export const createWalkInRentalService = async (
       );
     }
 
-    if (
-      Number(
-        rentalProduct.monthlyRent || 0
-      ) <= 0
-    ) {
+    if (Number(rentalProduct.monthlyRent || 0) <= 0) {
       throw new Error(
         `Monthly rent is not set for ${name}`
       );
     }
 
+    // Support both pricingByProduct and items[] pricing
+    const itemPayload = Array.isArray(data.items)
+      ? data.items.find(
+          (entry) =>
+            String(entry.rentalProductId) ===
+            String(rentalProduct._id)
+        )
+      : null;
+
+    const productPricing =
+      pricingByProduct[String(rentalProduct._id)] || {};
+
+    const requestedPricing = {
+      monthlyRent:
+        productPricing.monthlyRent ??
+        itemPayload?.monthlyRent ??
+        itemPayload?.negotiatedMonthlyRent ??
+        rentalProduct.monthlyRent,
+
+      negotiationReason:
+        productPricing.negotiationReason ??
+        itemPayload?.negotiationReason ??
+        "",
+
+      billingType:
+        productPricing.billingType ??
+        productPricing.billingMode ??
+        itemPayload?.billingType ??
+        data.billingType ??
+        (data.gstApplicable === false ? "NON_GST" : "GST")
+    };
+
+    const pricing = resolveRentalPricing({
+      rentalProduct,
+      pricing: requestedPricing,
+      canNegotiate,
+      allowNonGst
+    });
+
     lines.push({
       rentalProduct,
       quantity: item.quantity,
-      name
+      name,
+      pricing
     });
   }
 
-  // =================================================
-  // RENTAL DURATION
-  // =================================================
-
+  // Duration
   const rentalDurationType = String(
     data.rentalDurationType || ""
   ).toUpperCase();
@@ -403,77 +489,50 @@ export const createWalkInRentalService = async (
     data.rentalDuration || 0
   );
 
-  if (
-    !["DAYS", "MONTHS"].includes(
-      rentalDurationType
-    )
-  ) {
+  if (rentalDurationType !== "MONTHS") {
     throw new Error(
-      "Rental duration type must be DAYS or MONTHS"
+      "Rental duration must be in MONTHS. Minimum 3 months required."
     );
   }
 
   if (
     !Number.isInteger(rentalDuration) ||
-    rentalDuration < 1
+    rentalDuration < 3
   ) {
     throw new Error(
-      "Rental duration must be a whole number of at least 1"
+      "Minimum rental duration is 3 months."
     );
   }
 
   const productMinMonths = Math.max(
-    ...lines.map(
-      (line) =>
-        Number(
-          line.rentalProduct.minimumRentalMonths ||
-          COMPANY_MIN_MONTHS
-        )
-    ),
-    COMPANY_MIN_MONTHS
+    3,
+    ...lines.map((line) =>
+      Number(line.rentalProduct.minimumRentalMonths || 3)
+    )
   );
 
-  if (customerType === "COMPANY") {
-    if (
-      rentalDurationType !== "MONTHS"
-    ) {
-      throw new Error(
-        `Company rental must be for a minimum of ${COMPANY_MIN_MONTHS} months`
-      );
-    }
-
-    if (
-      rentalDuration < productMinMonths
-    ) {
-      throw new Error(
-        `Minimum rental period is ${productMinMonths} months`
-      );
-    }
-  } else if (
-    rentalDurationType === "MONTHS" &&
-    rentalDuration < productMinMonths
-  ) {
+  if (rentalDuration < productMinMonths) {
     throw new Error(
       `Minimum rental period is ${productMinMonths} months`
     );
   }
 
-  // =================================================
-  // SECURITY DEPOSIT
-  // =================================================
+  if (
+    customerType === "COMPANY" &&
+    rentalDuration < COMPANY_MIN_MONTHS
+  ) {
+    throw new Error(
+      `Company rental must be for a minimum of ${COMPANY_MIN_MONTHS} months`
+    );
+  }
 
+  // Deposit
   const unitDeposits = [];
 
   for (const line of lines) {
-    for (
-      let unit = 0;
-      unit < line.quantity;
-      unit++
-    ) {
+    for (let unit = 0; unit < line.quantity; unit++) {
       unitDeposits.push(
-        round2(
-          line.rentalProduct.securityDeposit || 0
-        )
+        round2(line.rentalProduct.securityDeposit || 0)
       );
     }
   }
@@ -485,22 +544,17 @@ export const createWalkInRentalService = async (
     )
   );
 
-  const depositPaidTotal = round2(
-    Math.max(
-      Number(data.depositAmountPaid || 0),
-      0
-    )
-  );
+  const depositPaidTotal =
+    data.depositAmountPaid === undefined ||
+    data.depositAmountPaid === null ||
+    data.depositAmountPaid === ""
+      ? 0
+      : parseMoney(
+          data.depositAmountPaid,
+          "Deposit paid"
+        );
 
-  if (!Number.isFinite(depositPaidTotal)) {
-    throw new Error(
-      "Invalid deposit paid amount"
-    );
-  }
-
-  if (
-    depositPaidTotal > totalDeposit + 0.005
-  ) {
+  if (depositPaidTotal > totalDeposit + 0.005) {
     throw new Error(
       `Deposit paid cannot be more than ₹${totalDeposit.toFixed(2)}`
     );
@@ -513,10 +567,9 @@ export const createWalkInRentalService = async (
   ).trim();
 
   if (depositPaidTotal > 0) {
-    depositPaymentMethod =
-      normalizePaymentMethod(
-        data.depositPaymentMethod
-      );
+    depositPaymentMethod = normalizePaymentMethod(
+      data.depositPaymentMethod
+    );
 
     if (
       !ALLOWED_PAYMENT_METHODS.includes(
@@ -529,17 +582,12 @@ export const createWalkInRentalService = async (
     }
   }
 
-  // =================================================
-  // RENT PAYMENT
-  // =================================================
+  // Rent payment
+  const rentPaidNow = data.rentPaidNow === true;
 
-  const rentPaidNow =
-    data.rentPaidNow === true;
-
-  const rentPaymentMethod =
-    normalizePaymentMethod(
-      data.rentPaymentMethod
-    );
+  const rentPaymentMethod = normalizePaymentMethod(
+    data.rentPaymentMethod
+  );
 
   const rentPaymentReference = String(
     data.rentPaymentReference || ""
@@ -566,58 +614,41 @@ export const createWalkInRentalService = async (
     }
   }
 
-  // =================================================
-  // DATES
-  // =================================================
-
   const startDate = new Date();
 
-  const expectedEndDate =
-    rentalDurationType === "MONTHS"
-      ? addMonths(
-          startDate,
-          rentalDuration
-        )
-      : addDays(
-          startDate,
-          rentalDuration
-        );
+  const expectedEndDate = addMonths(
+    startDate,
+    rentalDuration
+  );
 
-  // =================================================
-  // RESERVE STOCK
-  // =================================================
-
+  // Reserve stock
   const reserved = [];
 
   try {
     for (const line of lines) {
-      const updated =
-        await RentalProduct.findOneAndUpdate(
-          {
-            _id: line.rentalProduct._id,
-            status: "ACTIVE",
-            isAvailableForRent: true,
-            availableQuantity: {
-              $gte: line.quantity
-            }
-          },
-          {
-            $inc: {
-              availableQuantity:
-                -line.quantity,
-              rentedQuantity:
-                line.quantity
-            },
-            $set: {
-              updatedBy:
-                createdBy || null
-            }
-          },
-          {
-            new: true,
-            runValidators: true
+      const updated = await RentalProduct.findOneAndUpdate(
+        {
+          _id: line.rentalProduct._id,
+          status: "ACTIVE",
+          isAvailableForRent: true,
+          availableQuantity: {
+            $gte: line.quantity
           }
-        );
+        },
+        {
+          $inc: {
+            availableQuantity: -line.quantity,
+            rentedQuantity: line.quantity
+          },
+          $set: {
+            updatedBy: createdBy || null
+          }
+        },
+        {
+          new: true,
+          runValidators: true
+        }
+      );
 
       if (!updated) {
         throw new Error(
@@ -636,10 +667,6 @@ export const createWalkInRentalService = async (
     throw error;
   }
 
-  // =================================================
-  // CREATE RENTALS AND PAYMENT SCHEDULES
-  // =================================================
-
   const orderId = generateOrderId();
 
   let createdRentals = [];
@@ -649,160 +676,149 @@ export const createWalkInRentalService = async (
     const rentalDocs = [];
 
     let unitIndex = 0;
-    let remainingDeposit =
-      depositPaidTotal;
+    let remainingDeposit = depositPaidTotal;
 
     for (const line of lines) {
-      const rp =
-        line.rentalProduct;
+      const rp = line.rentalProduct;
 
-      const monthlyRent = Number(
-        rp.monthlyRent
+      const {
+        monthlyRent,
+        gstPercentage
+      } = line.pricing;
+
+      const unitRent = round2(
+        monthlyRent * rentalDuration
       );
 
-      const gstPercentage = Number(
-        rp.gst || 0
+      const monthlyGST = round2(
+        (monthlyRent * gstPercentage) / 100
       );
-
-      const unitRent =
-        rentalDurationType === "MONTHS"
-          ? round2(
-              monthlyRent * rentalDuration
-            )
-          : round2(
-              (monthlyRent / 30) *
-              rentalDuration
-            );
 
       const unitGst = round2(
-        (unitRent * gstPercentage) / 100
+        monthlyGST * rentalDuration
       );
 
       const unitRentTotal = round2(
         unitRent + unitGst
       );
 
-      for (
-        let unit = 0;
-        unit < line.quantity;
-        unit++
-      ) {
-        const unitDeposit =
-          unitDeposits[unitIndex++];
+      for (let unit = 0; unit < line.quantity; unit++) {
+        const unitDeposit = unitDeposits[unitIndex++];
 
-        const allocated =
-          unitDeposit > 0
-            ? round2(
-                Math.min(
-                  remainingDeposit,
-                  unitDeposit
-                )
+        const allocated = unitDeposit > 0
+          ? round2(
+              Math.min(
+                remainingDeposit,
+                unitDeposit
               )
-            : 0;
+            )
+          : 0;
 
         remainingDeposit = round2(
           remainingDeposit - allocated
         );
 
-        let depositStatus =
-          "UNPAID";
-
-        if (
-          unitDeposit <= 0 ||
-          allocated >= unitDeposit
-        ) {
-          depositStatus = "PAID";
-        } else if (allocated > 0) {
-          depositStatus = "PARTIAL";
-        }
+        const depositStatus =
+          unitDeposit <= 0 || allocated >= unitDeposit
+            ? "PAID"
+            : allocated > 0
+              ? "PARTIAL"
+              : "UNPAID";
 
         rentalDocs.push({
-          rentalNumber:
-            generateRentalNumber(),
-
+          rentalNumber: generateRentalNumber(),
           orderId,
 
           customerId: null,
 
           productId:
-            rp.productId?._id ||
-            rp.productId,
+            rp.productId?._id || rp.productId,
 
-          rentalProductId:
-            rp._id,
+          rentalProductId: rp._id,
 
-          rentalSource:
-            "WALK_IN",
-
+          rentalSource: "WALK_IN",
           customerType,
-
           individualDetails,
           companyDetails,
+
+          originalMonthlyRent:
+            line.pricing.originalMonthlyRent,
 
           monthlyRent,
           gstPercentage,
 
-          securityDeposit:
-            unitDeposit,
+          pricingType:
+            line.pricing.pricingType,
 
-          // ==============================
-          // RENT FINANCIAL SUMMARY
-          // ==============================
+          billingType:
+            line.pricing.billingType,
 
-          rentSubtotal:
-            unitRent,
+          negotiationReason:
+            line.pricing.negotiationReason,
 
-          rentGstAmount:
-            unitGst,
+          pricingUpdatedBy:
+            line.pricing.pricingType === "NEGOTIATED"
+              ? createdBy || null
+              : null,
 
-          rentTotalAmount:
-            unitRentTotal,
+          pricingUpdatedAt:
+            line.pricing.pricingType === "NEGOTIATED"
+              ? new Date()
+              : null,
 
-          rentPaidAmount:
-            0,
+          pricingHistory:
+            line.pricing.pricingType === "NEGOTIATED"
+              ? [{
+                  oldMonthlyRent:
+                    line.pricing.originalMonthlyRent,
 
-          rentBalanceAmount:
-            unitRentTotal,
+                  newMonthlyRent: monthlyRent,
 
-          rentPaymentStatus:
-            "PENDING",
+                  oldBillingType: "GST",
 
-          // ==============================
-          // RENTAL PERIOD
-          // ==============================
+                  newBillingType:
+                    line.pricing.billingType,
+
+                  oldGstPercentage:
+                    Number(rp.gst || 0),
+
+                  newGstPercentage: gstPercentage,
+
+                  reason:
+                    line.pricing.negotiationReason,
+
+                  changedBy: createdBy || null,
+                  changedAt: new Date()
+                }]
+              : [],
+
+          securityDeposit: unitDeposit,
+
+          rentSubtotal: unitRent,
+          rentGstAmount: unitGst,
+          rentTotalAmount: unitRentTotal,
+
+          rentPaidAmount: 0,
+          rentBalanceAmount: unitRentTotal,
+          rentPaymentStatus: "PENDING",
 
           rentalDurationType,
           rentalDuration,
-
           startDate,
           expectedEndDate,
 
           status: "ACTIVE",
-
-          allocatedAt:
-            new Date(),
-
-          allocatedBy:
-            createdBy || null,
+          allocatedAt: new Date(),
+          allocatedBy: createdBy || null,
 
           notes: String(
-            data.notes ||
-            data.handoverNotes ||
-            ""
+            data.notes || data.handoverNotes || ""
           ).trim(),
 
-          // ==============================
-          // SECURITY DEPOSIT
-          // ==============================
+          depositPaymentStatus: depositStatus,
+          depositPaid: depositStatus === "PAID",
 
-          depositPaymentStatus:
-            depositStatus,
-
-          depositPaid:
-            depositStatus === "PAID",
-
-          depositAmountPaid:
-            allocated,
+          depositAmountPaid: allocated,
 
           depositPaymentMethod:
             allocated > 0
@@ -828,129 +844,69 @@ export const createWalkInRentalService = async (
       );
     }
 
-    createdRentals =
-      await Rental.insertMany(
-        rentalDocs
-      );
-
-    console.log(
-      "INSERTED WALK-IN RENTALS:",
-      {
-        expectedOrderId: orderId,
-        count: createdRentals.length,
-        rentals: createdRentals.map(
-          (rental) => ({
-            id: String(rental._id),
-            orderId: rental.orderId,
-            rentalNumber:
-              rental.rentalNumber
-          })
-        )
-      }
+    createdRentals = await Rental.insertMany(
+      rentalDocs
     );
 
-    if (
-      createdRentals.length !==
-      rentalDocs.length
-    ) {
+    if (createdRentals.length !== rentalDocs.length) {
       throw new Error(
         "Not all rental records were inserted successfully"
       );
     }
 
-    // =================================================
-    // VERIFY SAVED RENTALS
-    // =================================================
-
-    const insertedIds =
-      createdRentals.map(
-        (rental) => rental._id
-      );
-
-    const persistedRentals =
-      await Rental.find({
-        _id: {
-          $in: insertedIds
-        }
-      }).lean();
-
-    console.log(
-      "PERSISTED WALK-IN RENTALS:",
-      {
-        expected:
-          insertedIds.length,
-
-        found:
-          persistedRentals.length,
-
-        orderIds:
-          persistedRentals.map(
-            (rental) => rental.orderId
-          )
-      }
+    const insertedIds = createdRentals.map(
+      (rental) => rental._id
     );
 
-    if (
-      persistedRentals.length !==
-      insertedIds.length
-    ) {
+    const persistedRentals = await Rental.find({
+      _id: {
+        $in: insertedIds
+      }
+    }).lean();
+
+    if (persistedRentals.length !== insertedIds.length) {
       throw new Error(
         "Rental records were inserted but could not be verified in the database"
       );
     }
 
-    const missingOrderId =
+    if (
       persistedRentals.some(
         (rental) =>
-          String(
-            rental.orderId || ""
-          ) !== orderId
-      );
-
-    if (missingOrderId) {
+          String(rental.orderId || "") !== orderId
+      )
+    ) {
       throw new Error(
         "Saved rentals are missing the correct orderId. Check rental.model.js and restart the backend."
       );
     }
 
-    // =================================================
-    // CREATE MONTH-WISE INSTALLMENT SCHEDULE
-    // =================================================
-
+    // Create installments
     const scheduleDocs = [];
 
     for (const rental of createdRentals) {
-      const definitions =
-        buildScheduleDefinitions({
-          startDate,
-          rentalDurationType,
-          rentalDuration,
-          monthlyRent:
-            rental.monthlyRent,
-          gstPercentage:
-            rental.gstPercentage
-        });
+      const definitions = buildScheduleDefinitions({
+        startDate,
+        rentalDurationType,
+        rentalDuration,
+        monthlyRent: rental.monthlyRent,
+        gstPercentage: rental.gstPercentage
+      });
 
       for (const definition of definitions) {
         scheduleDocs.push({
           ...definition,
-
-          rentalId:
-            rental._id,
-
-          rentalNumber:
-            rental.rentalNumber,
-
+          rentalId: rental._id,
+          rentalNumber: rental.rentalNumber,
           orderId
         });
       }
     }
 
     if (scheduleDocs.length) {
-      createdSchedules =
-        await RentalPayment.insertMany(
-          scheduleDocs
-        );
+      createdSchedules = await RentalPayment.insertMany(
+        scheduleDocs
+      );
     }
   } catch (error) {
     console.error(
@@ -959,13 +915,8 @@ export const createWalkInRentalService = async (
     );
 
     try {
-      await RentalPayment.deleteMany({
-        orderId
-      });
-
-      await Rental.deleteMany({
-        orderId
-      });
+      await RentalPayment.deleteMany({ orderId });
+      await Rental.deleteMany({ orderId });
     } catch (cleanupError) {
       console.error(
         "WALK-IN ROLLBACK CLEANUP ERROR:",
@@ -976,34 +927,25 @@ export const createWalkInRentalService = async (
     await releaseStock(reserved);
 
     throw new Error(
-      error?.message ||
-      "Failed to create walk-in rental"
+      error?.message || "Failed to create walk-in rental"
     );
   }
 
-  // =================================================
-  // FIRST INSTALLMENT PAYMENT
-  // =================================================
-
+  // First installment payment
   const warnings = [];
 
   if (rentPaidNow) {
-    const firstInstallments =
-      createdSchedules.filter(
-        (schedule) =>
-          schedule.installmentNumber === 1
-      );
+    const firstInstallments = createdSchedules.filter(
+      (schedule) => schedule.installmentNumber === 1
+    );
 
     for (const installment of firstInstallments) {
       try {
         await recordRentalInstallmentPaymentService(
           installment._id,
           {
-            paymentMethod:
-              rentPaymentMethod,
-
-            reference:
-              rentPaymentReference
+            paymentMethod: rentPaymentMethod,
+            reference: rentPaymentReference
           },
           createdBy
         );
@@ -1020,15 +962,10 @@ export const createWalkInRentalService = async (
     }
   }
 
-  // =================================================
-  // SYNC RENT PAYMENT SUMMARY
-  // =================================================
-
+  // Sync payment summary
   for (const rental of createdRentals) {
     try {
-      await syncRentalPaymentFields(
-        rental._id
-      );
+      await syncRentalPaymentFields(rental._id);
     } catch (error) {
       console.error(
         "RENTAL PAYMENT SYNC ERROR:",
@@ -1042,37 +979,26 @@ export const createWalkInRentalService = async (
     }
   }
 
-  // =================================================
-  // LOW STOCK NOTIFICATION
-  // =================================================
-
+  // Low stock notifications
   for (const item of reserved) {
-    if (
-      item.updated.availableQuantity <= 5
-    ) {
+    if (item.updated.availableQuantity <= 5) {
       try {
         const line = lines.find(
           (entry) =>
-            String(
-              entry.rentalProduct._id
-            ) === String(item.id)
+            String(entry.rentalProduct._id) ===
+            String(item.id)
         );
 
         await notifyAdminsService({
           type: "RENTAL_STOCK_LOW",
-
-          title:
-            "Rental Stock Low",
+          title: "Rental Stock Low",
 
           message:
             `${line?.name || "Rental product"} rental stock is low. ` +
             `Only ${item.updated.availableQuantity} unit(s) available.`,
 
-          relatedId:
-            item.updated._id,
-
-          relatedModel:
-            "RentalProduct"
+          relatedId: item.updated._id,
+          relatedModel: "RentalProduct"
         });
       } catch (error) {
         console.error(
@@ -1083,12 +1009,8 @@ export const createWalkInRentalService = async (
     }
   }
 
-  // =================================================
-  // FINAL RENTAL RESPONSE
-  // =================================================
-
-  let rentals = await Rental
-    .find({ orderId })
+  // Final response
+  let rentals = await Rental.find({ orderId })
     .populate({
       path: "productId",
       populate: [
@@ -1097,34 +1019,16 @@ export const createWalkInRentalService = async (
       ]
     })
     .populate("rentalProductId")
-    .sort({
-      createdAt: 1
-    });
+    .sort({ createdAt: 1 });
 
-  if (
-    !rentals.length &&
-    createdRentals.length
-  ) {
-    console.error(
-      "ORDER QUERY RETURNED ZERO RENTALS; TRYING INSERTED IDS",
-      {
-        orderId,
-        insertedIds:
-          createdRentals.map(
-            (rental) =>
-              String(rental._id)
-          )
+  if (!rentals.length && createdRentals.length) {
+    rentals = await Rental.find({
+      _id: {
+        $in: createdRentals.map(
+          (rental) => rental._id
+        )
       }
-    );
-
-    rentals = await Rental
-      .find({
-        _id: {
-          $in: createdRentals.map(
-            (rental) => rental._id
-          )
-        }
-      })
+    })
       .populate({
         path: "productId",
         populate: [
@@ -1133,31 +1037,8 @@ export const createWalkInRentalService = async (
         ]
       })
       .populate("rentalProductId")
-      .sort({
-        createdAt: 1
-      });
+      .sort({ createdAt: 1 });
   }
-
-  console.log(
-    "WALK-IN RENTAL FINAL QUERY:",
-    {
-      orderId,
-
-      insertedCount:
-        createdRentals.length,
-
-      rentalsCount:
-        rentals.length,
-
-      rentalIds:
-        rentals.map(
-          (rental) =>
-            String(rental._id)
-        ),
-
-      warnings
-    }
-  );
 
   if (!rentals.length) {
     throw new Error(
@@ -1181,29 +1062,22 @@ export const markRentalDepositReceivedService = async (
   data,
   userId
 ) => {
-  const rental =
-    await getRentalByIdDB(
-      rentalId
-    );
+  const rental = await getRentalByIdDB(rentalId);
 
   if (!rental) {
-    throw new Error(
-      "Rental not found"
-    );
+    throw new Error("Rental not found");
   }
 
   if (
-    String(
-      rental.rentalSource || ""
-    ).toUpperCase() !== "WALK_IN"
+    String(rental.rentalSource || "").toUpperCase() !==
+    "WALK_IN"
   ) {
     throw new Error(
       "Security deposit receipt is available only for walk-in rentals"
     );
   }
 
-  const receivedBy =
-    userId || null;
+  const receivedBy = userId || null;
 
   if (!receivedBy) {
     throw new Error(
@@ -1211,17 +1085,11 @@ export const markRentalDepositReceivedService = async (
     );
   }
 
-  const paymentMethod =
-    normalizePaymentMethod(
-      data?.paymentMethod ||
-      data?.depositPaymentMethod
-    );
+  const paymentMethod = normalizePaymentMethod(
+    data?.paymentMethod || data?.depositPaymentMethod
+  );
 
-  if (
-    !ALLOWED_PAYMENT_METHODS.includes(
-      paymentMethod
-    )
-  ) {
+  if (!ALLOWED_PAYMENT_METHODS.includes(paymentMethod)) {
     throw new Error(
       "Valid deposit payment method is required"
     );
@@ -1238,103 +1106,65 @@ export const markRentalDepositReceivedService = async (
   );
 
   if (
-    !Number.isFinite(
-      depositAmount
-    )
+    !Number.isFinite(depositAmount) ||
+    depositAmount < 0
   ) {
     throw new Error(
       "Invalid security deposit amount"
     );
   }
 
-  if (depositAmount < 0) {
-    throw new Error(
-      "Security deposit amount cannot be negative"
-    );
-  }
-
   if (
-    Number(
-      depositAmount.toFixed(2)
-    ) !==
-    Number(
-      securityDeposit.toFixed(2)
-    )
+    Number(depositAmount.toFixed(2)) !==
+    Number(securityDeposit.toFixed(2))
   ) {
     throw new Error(
       `Deposit amount must be ₹${securityDeposit.toFixed(2)}`
     );
   }
 
-  if (
-    rental.securityDepositPaymentId
-  ) {
+  if (rental.securityDepositPaymentId) {
     throw new Error(
       "Security deposit has already been received"
     );
   }
 
-  // Prevent receiving the same deposit twice.
   if (
     securityDeposit > 0 &&
-    Number(
-      rental.depositAmountPaid || 0
-    ) > 0
+    Number(rental.depositAmountPaid || 0) > 0
   ) {
     throw new Error(
       "Deposit already recorded (fully or partially). Reconcile the existing deposit before receiving it again."
     );
   }
 
-  // =================================================
-  // CHECK EXISTING PAYMENT
-  // =================================================
-
-  const existingDeposit =
-    await Payment.findOne({
-      paymentFor: "RENTAL",
-
-      referenceId:
-        rental._id,
-
-      paymentType:
-        "SECURITY_DEPOSIT",
-
-      paymentStatus:
-        PAYMENT_STATUS.SUCCESS,
-
-      isDeleted: false
-    });
+  const existingDeposit = await Payment.findOne({
+    paymentFor: "RENTAL",
+    referenceId: rental._id,
+    paymentType: "SECURITY_DEPOSIT",
+    paymentStatus: PAYMENT_STATUS.SUCCESS,
+    isDeleted: false
+  });
 
   if (existingDeposit) {
-    const updated =
-      await updateRentalDB(
-        rentalId,
-        {
-          securityDepositPaymentId:
-            existingDeposit._id,
+    const updated = await updateRentalDB(
+      rentalId,
+      {
+        securityDepositPaymentId: existingDeposit._id,
+        depositPaymentStatus: "PAID",
+        depositPaid: true,
+        depositAmountPaid: securityDeposit,
 
-          depositPaymentStatus:
-            "PAID",
+        depositPaidAt:
+          existingDeposit.paidAt || new Date(),
 
-          depositPaid:
-            true,
+        depositPaymentMethod:
+          existingDeposit.paymentMethod,
 
-          depositAmountPaid:
-            securityDeposit,
-
-          depositPaidAt:
-            existingDeposit.paidAt ||
-            new Date(),
-
-          depositPaymentMethod:
-            existingDeposit.paymentMethod,
-
-          depositPaymentReference:
-            existingDeposit.transactionId ||
-            ""
-        }
-      );
+        depositPaymentReference:
+          existingDeposit.transactionId || ""
+      }
+    );
 
     if (!updated) {
       throw new Error(
@@ -1342,39 +1172,21 @@ export const markRentalDepositReceivedService = async (
       );
     }
 
-    return await getRentalByIdDB(
-      rentalId
-    );
+    return await getRentalByIdDB(rentalId);
   }
 
-  // =================================================
-  // ZERO DEPOSIT
-  // =================================================
-
   if (depositAmount === 0) {
-    const updated =
-      await updateRentalDB(
-        rentalId,
-        {
-          depositPaymentStatus:
-            "PAID",
-
-          depositPaid:
-            true,
-
-          depositAmountPaid:
-            0,
-
-          depositPaidAt:
-            new Date(),
-
-          depositPaymentMethod:
-            paymentMethod,
-
-          securityDepositPaymentId:
-            null
-        }
-      );
+    const updated = await updateRentalDB(
+      rentalId,
+      {
+        depositPaymentStatus: "PAID",
+        depositPaid: true,
+        depositAmountPaid: 0,
+        depositPaidAt: new Date(),
+        depositPaymentMethod: paymentMethod,
+        securityDepositPaymentId: null
+      }
+    );
 
     if (!updated) {
       throw new Error(
@@ -1382,47 +1194,23 @@ export const markRentalDepositReceivedService = async (
       );
     }
 
-    return await getRentalByIdDB(
-      rentalId
-    );
+    return await getRentalByIdDB(rentalId);
   }
-
-  // =================================================
-  // CREATE SECURITY DEPOSIT PAYMENT
-  // =================================================
 
   let payment = null;
 
   try {
     payment = await createPayment({
-      user:
-        receivedBy,
-
-      paymentFor:
-        "RENTAL",
-
-      saleSource:
-        "WALK_IN",
-
-      paymentType:
-        "SECURITY_DEPOSIT",
-
-      referenceId:
-        rental._id,
-
-      amount:
-        depositAmount,
-
-      currency:
-        "INR",
-
+      user: receivedBy,
+      paymentFor: "RENTAL",
+      saleSource: "WALK_IN",
+      paymentType: "SECURITY_DEPOSIT",
+      referenceId: rental._id,
+      amount: depositAmount,
+      currency: "INR",
       paymentMethod,
-
-      paymentStatus:
-        PAYMENT_STATUS.SUCCESS,
-
-      gateway:
-        "OFFLINE",
+      paymentStatus: PAYMENT_STATUS.SUCCESS,
+      gateway: "OFFLINE",
 
       transactionId: String(
         data?.transactionId ||
@@ -1430,17 +1218,10 @@ export const markRentalDepositReceivedService = async (
         ""
       ).trim(),
 
-      gatewayPaymentId:
-        "",
-
-      gatewayResponse:
-        {},
-
-      paymentDate:
-        new Date(),
-
-      paidAt:
-        new Date()
+      gatewayPaymentId: "",
+      gatewayResponse: {},
+      paymentDate: new Date(),
+      paidAt: new Date()
     });
   } catch (error) {
     console.error(
@@ -1454,40 +1235,24 @@ export const markRentalDepositReceivedService = async (
     );
   }
 
-  // =================================================
-  // UPDATE RENTAL DEPOSIT FIELDS
-  // =================================================
-
   try {
-    const updated =
-      await updateRentalDB(
-        rentalId,
-        {
-          securityDepositPaymentId:
-            payment._id,
+    const updated = await updateRentalDB(
+      rentalId,
+      {
+        securityDepositPaymentId: payment._id,
+        depositPaymentStatus: "PAID",
+        depositPaid: true,
+        depositAmountPaid: depositAmount,
+        depositPaidAt: new Date(),
+        depositPaymentMethod: paymentMethod,
 
-          depositPaymentStatus:
-            "PAID",
-
-          depositPaid:
-            true,
-
-          depositAmountPaid:
-            depositAmount,
-
-          depositPaidAt:
-            new Date(),
-
-          depositPaymentMethod:
-            paymentMethod,
-
-          depositPaymentReference: String(
-            data?.transactionId ||
-            data?.referenceNumber ||
-            ""
-          ).trim()
-        }
-      );
+        depositPaymentReference: String(
+          data?.transactionId ||
+          data?.referenceNumber ||
+          ""
+        ).trim()
+      }
+    );
 
     if (!updated) {
       throw new Error(
@@ -1495,9 +1260,7 @@ export const markRentalDepositReceivedService = async (
       );
     }
 
-    return await getRentalByIdDB(
-      rentalId
-    );
+    return await getRentalByIdDB(rentalId);
   } catch (error) {
     console.error(
       "RENTAL DEPOSIT UPDATE ERROR:",
@@ -1506,9 +1269,7 @@ export const markRentalDepositReceivedService = async (
 
     if (payment?._id) {
       try {
-        await Payment.findByIdAndDelete(
-          payment._id
-        );
+        await Payment.findByIdAndDelete(payment._id);
       } catch (deleteError) {
         console.error(
           "DEPOSIT PAYMENT ROLLBACK ERROR:",
@@ -1525,56 +1286,29 @@ export const markRentalDepositReceivedService = async (
 };
 
 // =====================================================
-// GET MY RENTALS
+// GET RENTALS
 // =====================================================
 
-export const getMyRentalsService = async (
-  customerId
-) => {
-  return await getCustomerRentalsDB(
-    customerId
-  );
-};
+export const getMyRentalsService = async (customerId) =>
+  await getCustomerRentalsDB(customerId);
 
-// =====================================================
-// GET SINGLE RENTAL
-// =====================================================
-
-export const getRentalService = async (
-  rentalId
-) => {
-  const rental =
-    await getRentalByIdDB(
-      rentalId
-    );
+export const getRentalService = async (rentalId) => {
+  const rental = await getRentalByIdDB(rentalId);
 
   if (!rental) {
-    throw new Error(
-      "Rental not found"
-    );
+    throw new Error("Rental not found");
   }
 
   return rental;
 };
 
-// =====================================================
-// GET ALL RENTALS
-// =====================================================
-
-export const getAllRentalsService = async () => {
-  return await getAllRentalsDB();
-};
-
-// =====================================================
-// SEARCH RENTALS FOR RETURN
-// =====================================================
+export const getAllRentalsService = async () =>
+  await getAllRentalsDB();
 
 export const searchRentalsForReturnService = async (
   search
 ) => {
-  const value = String(
-    search || ""
-  ).trim();
+  const value = String(search || "").trim();
 
   if (!value) {
     throw new Error(
@@ -1582,9 +1316,7 @@ export const searchRentalsForReturnService = async (
     );
   }
 
-  return await searchActiveRentalsForReturnDB(
-    value
-  );
+  return await searchActiveRentalsForReturnDB(value);
 };
 
 // =====================================================
@@ -1595,20 +1327,13 @@ export const markRentalReturnedService = async (
   rentalId,
   data = {}
 ) => {
-  const rental =
-    await getRentalByIdDB(
-      rentalId
-    );
+  const rental = await getRentalByIdDB(rentalId);
 
   if (!rental) {
-    throw new Error(
-      "Rental not found"
-    );
+    throw new Error("Rental not found");
   }
 
-  if (
-    rental.status !== "ACTIVE"
-  ) {
+  if (rental.status !== "ACTIVE") {
     throw new Error(
       "Only active rental can be returned"
     );
@@ -1626,9 +1351,7 @@ export const markRentalReturnedService = async (
       "MISSING"
     ].includes(returnCondition)
   ) {
-    throw new Error(
-      "Invalid return condition"
-    );
+    throw new Error("Invalid return condition");
   }
 
   const enteredPendingRent = Number(
@@ -1648,27 +1371,19 @@ export const markRentalReturnedService = async (
     ["Damage charges", damageCharges],
     ["Other deductions", otherDeductions]
   ]) {
-    if (
-      !Number.isFinite(value) ||
-      value < 0
-    ) {
+    if (!Number.isFinite(value) || value < 0) {
       throw new Error(
         `${label} cannot be negative`
       );
     }
   }
 
-  // =================================================
-  // CALCULATE RENT DUES
-  // =================================================
-
   const returnDate = new Date();
 
-  const dues =
-    await calculateReturnDues(
-      rental,
-      returnDate
-    );
+  const dues = await calculateReturnDues(
+    rental,
+    returnDate
+  );
 
   const pendingRent = round2(
     Math.max(
@@ -1677,12 +1392,24 @@ export const markRentalReturnedService = async (
     )
   );
 
-  const gstPercentage = Number(
-    rental.gstPercentage || 0
+  const additionalRent = round2(
+    Math.max(
+      0,
+      pendingRent - dues.pendingRent
+    )
+  );
+
+  const gstPercentage =
+    rental.billingType === "NON_GST"
+      ? 0
+      : Number(rental.gstPercentage || 0);
+
+  const additionalGST = round2(
+    (additionalRent * gstPercentage) / 100
   );
 
   const pendingRentGST = round2(
-    (pendingRent * gstPercentage) / 100
+    dues.pendingRentGST + additionalGST
   );
 
   const totalPendingRent = round2(
@@ -1695,18 +1422,10 @@ export const markRentalReturnedService = async (
     otherDeductions
   );
 
-  // =================================================
-  // DEPOSIT REFUND CALCULATION
-  // =================================================
-
   const heldDeposit = round2(
     Math.min(
-      Number(
-        rental.depositAmountPaid || 0
-      ),
-      Number(
-        rental.securityDeposit || 0
-      )
+      Number(rental.depositAmountPaid || 0),
+      Number(rental.securityDeposit || 0)
     )
   );
 
@@ -1714,77 +1433,56 @@ export const markRentalReturnedService = async (
     heldDeposit - totalDeductions
   );
 
-  const depositRefundAmount =
-    Math.max(
-      depositBalance,
-      0
-    );
+  const depositRefundAmount = Math.max(
+    depositBalance,
+    0
+  );
 
-  const extraPayableAmount =
-    Math.max(
-      -depositBalance,
-      0
-    );
+  const extraPayableAmount = Math.max(
+    -depositBalance,
+    0
+  );
 
-  let depositRefundStatus =
-    "NOT_APPLICABLE";
-
-  let settlementStatus =
-    "PENDING";
+  let depositRefundStatus = "NOT_APPLICABLE";
+  let settlementStatus = "PENDING";
 
   if (depositRefundAmount > 0) {
-    depositRefundStatus =
-      "PENDING";
+    depositRefundStatus = "PENDING";
   } else if (extraPayableAmount > 0) {
-    settlementStatus =
-      "EXTRA_PAYMENT_PENDING";
+    settlementStatus = "EXTRA_PAYMENT_PENDING";
   }
 
-  // =================================================
-  // UPDATE RENTAL RETURN STATUS
-  // =================================================
+  const updated = await Rental.findOneAndUpdate(
+    {
+      _id: rentalId,
+      status: "ACTIVE"
+    },
+    {
+      $set: {
+        status: "SETTLEMENT_PENDING",
+        actualReturnDate: returnDate,
+        returnCondition,
+        damageCharges,
+        otherDeductions,
+        pendingRent,
+        pendingRentGST,
+        totalPendingRent,
+        totalDeductions,
+        depositRefundAmount,
+        extraPayableAmount,
+        depositRefundStatus,
+        settlementStatus,
 
-  const updated =
-    await Rental.findOneAndUpdate(
-      {
-        _id: rentalId,
-        status: "ACTIVE"
-      },
-      {
-        $set: {
-          status:
-            "SETTLEMENT_PENDING",
-
-          actualReturnDate:
-            returnDate,
-
-          returnCondition,
-
-          damageCharges,
-          otherDeductions,
-
-          pendingRent,
-          pendingRentGST,
-          totalPendingRent,
-
-          totalDeductions,
-
-          depositRefundAmount,
-          extraPayableAmount,
-
-          depositRefundStatus,
-          settlementStatus,
-
-          settlementNotes: String(
-            data.settlementNotes || ""
-          ).trim()
-        }
-      },
-      {
-        new: true,
-        runValidators: true
+        settlementNotes: String(
+          data.settlementNotes || ""
+        ).trim()
       }
-    );
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  );
 
   if (!updated) {
     throw new Error(
@@ -1792,41 +1490,27 @@ export const markRentalReturnedService = async (
     );
   }
 
-  // =================================================
-  // CANCEL FUTURE INSTALLMENTS
-  // =================================================
-
   await cancelInstallments(
     dues.cancelIds,
     "Cancelled - rental returned"
   );
 
-  await syncRentalPaymentFields(
-    rentalId
-  );
+  await syncRentalPaymentFields(rentalId);
 
   return {
-    rental:
-      await getRentalByIdDB(
-        rentalId
-      ),
+    rental: await getRentalByIdDB(rentalId),
 
     settlement: {
-      securityDeposit:
-        heldDeposit,
-
+      securityDeposit: heldDeposit,
       pendingRent,
       pendingRentGST,
       totalPendingRent,
-
       damageCharges,
       otherDeductions,
       totalDeductions,
-
       depositBalance,
       depositRefundAmount,
       extraPayableAmount,
-
       settlementStatus
     }
   };
@@ -1841,21 +1525,13 @@ export const completeRentalSettlementService = async (
   data = {},
   userId
 ) => {
-  const rental =
-    await getRentalByIdDB(
-      rentalId
-    );
+  const rental = await getRentalByIdDB(rentalId);
 
   if (!rental) {
-    throw new Error(
-      "Rental not found"
-    );
+    throw new Error("Rental not found");
   }
 
-  if (
-    rental.status !==
-    "SETTLEMENT_PENDING"
-  ) {
+  if (rental.status !== "SETTLEMENT_PENDING") {
     throw new Error(
       "Rental is not waiting for settlement"
     );
@@ -1874,9 +1550,7 @@ export const completeRentalSettlementService = async (
   );
 
   if (
-    !Number.isFinite(
-      settlementAmountReceived
-    ) ||
+    !Number.isFinite(settlementAmountReceived) ||
     settlementAmountReceived < 0
   ) {
     throw new Error(
@@ -1886,8 +1560,7 @@ export const completeRentalSettlementService = async (
 
   if (
     extraPayableAmount > 0 &&
-    settlementAmountReceived <
-      extraPayableAmount
+    settlementAmountReceived < extraPayableAmount
   ) {
     throw new Error(
       `Customer must pay ₹${extraPayableAmount.toFixed(2)} before completing settlement`
@@ -1895,8 +1568,7 @@ export const completeRentalSettlementService = async (
   }
 
   const paymentMethod = String(
-    data.settlementPaymentMethod ||
-    "NONE"
+    data.settlementPaymentMethod || "NONE"
   ).trim().toUpperCase();
 
   if (
@@ -1910,54 +1582,41 @@ export const completeRentalSettlementService = async (
     );
   }
 
-  // =================================================
-  // CLAIM RENTAL SETTLEMENT
-  // =================================================
+  const claimed = await Rental.findOneAndUpdate(
+    {
+      _id: rentalId,
+      status: "SETTLEMENT_PENDING"
+    },
+    {
+      $set: {
+        status: "COMPLETED",
+        settlementStatus: "SETTLED",
+        settlementPaymentMethod: paymentMethod,
+        settlementAmountReceived,
 
-  const claimed =
-    await Rental.findOneAndUpdate(
-      {
-        _id: rentalId,
-        status: "SETTLEMENT_PENDING"
-      },
-      {
-        $set: {
-          status: "COMPLETED",
+        settlementReference: String(
+          data.settlementReference || ""
+        ).trim(),
 
-          settlementStatus:
-            "SETTLED",
+        settlementNotes: String(
+          data.settlementNotes ||
+          rental.settlementNotes ||
+          ""
+        ).trim(),
 
-          settlementPaymentMethod:
-            paymentMethod,
+        settledAt: new Date(),
+        settledBy: userId || null,
 
-          settlementAmountReceived,
-
-          settlementReference: String(
-            data.settlementReference || ""
-          ).trim(),
-
-          settlementNotes: String(
-            data.settlementNotes ||
-            rental.settlementNotes ||
-            ""
-          ).trim(),
-
-          settledAt:
-            new Date(),
-
-          settledBy:
-            userId || null,
-
-          depositRefundStatus:
-            refundAmount > 0
-              ? "REFUNDED"
-              : "NOT_APPLICABLE"
-        }
-      },
-      {
-        new: true
+        depositRefundStatus:
+          refundAmount > 0
+            ? "REFUNDED"
+            : "NOT_APPLICABLE"
       }
-    );
+    },
+    {
+      new: true
+    }
+  );
 
   if (!claimed) {
     throw new Error(
@@ -1965,14 +1624,9 @@ export const completeRentalSettlementService = async (
     );
   }
 
-  // =================================================
-  // UPDATE INVENTORY
-  // =================================================
-
-  const writeOff =
-    WRITE_OFF_CONDITIONS.includes(
-      rental.returnCondition
-    );
+  const writeOff = WRITE_OFF_CONDITIONS.includes(
+    rental.returnCondition
+  );
 
   const stockFilter = {
     _id:
@@ -2008,9 +1662,7 @@ export const completeRentalSettlementService = async (
             }
           },
 
-      {
-        new: true
-      }
+      { new: true }
     );
 
   if (!updatedRentalProduct) {
@@ -2018,18 +1670,13 @@ export const completeRentalSettlementService = async (
       rentalId,
       {
         $set: {
-          status:
-            "SETTLEMENT_PENDING",
+          status: "SETTLEMENT_PENDING",
 
           settlementStatus:
-            rental.settlementStatus ||
-            "PENDING",
+            rental.settlementStatus || "PENDING",
 
-          settledAt:
-            null,
-
-          settledBy:
-            null,
+          settledAt: null,
+          settledBy: null,
 
           depositRefundStatus:
             rental.depositRefundStatus
@@ -2042,59 +1689,34 @@ export const completeRentalSettlementService = async (
     );
   }
 
-  // =================================================
-  // ADJUST REMAINING INSTALLMENTS
-  // =================================================
-
-  await adjustRemainingInstallments(
-    rentalId
-  );
-
-  await syncRentalPaymentFields(
-    rentalId
-  );
-
-  // =================================================
-  // ADMIN NOTIFICATIONS
-  // =================================================
+  await adjustRemainingInstallments(rentalId);
+  await syncRentalPaymentFields(rentalId);
 
   try {
     if (writeOff) {
       await notifyAdminsService({
-        type:
-          "RENTAL_STOCK_LOW",
-
-        title:
-          "Rental Laptop Written Off",
+        type: "RENTAL_STOCK_LOW",
+        title: "Rental Laptop Written Off",
 
         message:
           `Rental ${rental.rentalNumber} returned as ${rental.returnCondition}. ` +
           `1 unit removed from rental inventory (total now ${updatedRentalProduct.totalQuantity}).`,
 
-        relatedId:
-          updatedRentalProduct._id,
-
-        relatedModel:
-          "RentalProduct"
+        relatedId: updatedRentalProduct._id,
+        relatedModel: "RentalProduct"
       });
     } else if (
       updatedRentalProduct.availableQuantity <= 5
     ) {
       await notifyAdminsService({
-        type:
-          "RENTAL_STOCK_LOW",
-
-        title:
-          "Rental Stock Low",
+        type: "RENTAL_STOCK_LOW",
+        title: "Rental Stock Low",
 
         message:
           `Rental stock is low. Only ${updatedRentalProduct.availableQuantity} unit(s) available.`,
 
-        relatedId:
-          updatedRentalProduct._id,
-
-        relatedModel:
-          "RentalProduct"
+        relatedId: updatedRentalProduct._id,
+        relatedModel: "RentalProduct"
       });
     }
   } catch (error) {
@@ -2104,7 +1726,301 @@ export const completeRentalSettlementService = async (
     );
   }
 
-  return await getRentalByIdDB(
-    rentalId
-  );
+  return await getRentalByIdDB(rentalId);
+};
+
+// =====================================================
+// UPDATE RENTAL PRICING
+// Requires MongoDB transaction support
+// =====================================================
+
+export const updateRentalPricingService = async (
+  rentalId,
+  data = {},
+  userId,
+  permissions = {}
+) => {
+  if (!mongoose.isValidObjectId(rentalId)) {
+    throw new Error("Invalid rental ID");
+  }
+
+  if (
+    !userId ||
+    permissions.canNegotiate !== true
+  ) {
+    throw new Error(
+      "You are not authorized to update rental pricing"
+    );
+  }
+
+  const reason = String(
+    data.negotiationReason || ""
+  ).trim();
+
+  if (!reason) {
+    throw new Error(
+      "Reason for pricing update is required"
+    );
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    let updatedRental;
+
+    await session.withTransaction(async () => {
+      const rental = await Rental.findById(
+        rentalId
+      ).session(session);
+
+      if (!rental) {
+        throw new Error("Rental not found");
+      }
+
+      if (rental.status !== "ACTIVE") {
+        throw new Error(
+          "Pricing can be edited only for active rentals"
+        );
+      }
+
+      const installments = await RentalPayment.find({
+        rentalId
+      }).session(session);
+
+      if (!installments.length) {
+        throw new Error(
+          "Rental payment schedule not found"
+        );
+      }
+
+      const hasRentPayment = installments.some(
+        (inst) =>
+          Number(inst.paidAmount || 0) > 0 ||
+          (inst.payments || []).length > 0 ||
+          !["PENDING", "PARTIAL"].includes(inst.status)
+      );
+
+      if (hasRentPayment) {
+        throw new Error(
+          "Rent payment or installment adjustment already exists. Use a separate approved financial adjustment instead of editing the original price."
+        );
+      }
+
+      const rentalProduct = await RentalProduct.findById(
+        rental.rentalProductId
+      ).session(session);
+
+      if (!rentalProduct) {
+        throw new Error(
+          "Rental product configuration not found"
+        );
+      }
+
+      const oldMonthlyRent = Number(
+        rental.monthlyRent || 0
+      );
+
+      const oldBillingType =
+        rental.billingType || "GST";
+
+      const oldGstPercentage = Number(
+        rental.gstPercentage || 0
+      );
+
+      const pricing = resolveRentalPricing({
+        rentalProduct,
+
+        pricing: {
+          monthlyRent:
+            data.monthlyRent ?? rental.monthlyRent,
+
+          billingType:
+            data.billingType ??
+            rental.billingType ??
+            "GST",
+
+          negotiationReason: reason
+        },
+
+        canNegotiate:
+          permissions.canNegotiate === true,
+
+        allowNonGst:
+          permissions.allowNonGst === true
+      });
+
+      const definitions = buildScheduleDefinitions({
+        startDate: rental.startDate,
+
+        rentalDurationType:
+          rental.rentalDurationType,
+
+        rentalDuration:
+          rental.rentalDuration,
+
+        monthlyRent:
+          pricing.monthlyRent,
+
+        gstPercentage:
+          pricing.gstPercentage
+      });
+
+      if (definitions.length !== installments.length) {
+        throw new Error(
+          "Installment count mismatch. Pricing update cancelled."
+        );
+      }
+
+      const definitionMap = new Map(
+        definitions.map((definition) => [
+          definition.installmentNumber,
+          definition
+        ])
+      );
+
+      for (const installment of installments) {
+        const definition = definitionMap.get(
+          installment.installmentNumber
+        );
+
+        if (!definition) {
+          throw new Error(
+            "Installment schedule mismatch"
+          );
+        }
+
+        const result = await RentalPayment.updateOne(
+          {
+            _id: installment._id,
+            status: "PENDING",
+            paidAmount: 0,
+            "payments.0": {
+              $exists: false
+            }
+          },
+          {
+            $set: {
+              rentAmount:
+                definition.rentAmount,
+
+              gstAmount:
+                definition.gstAmount,
+
+              totalAmount:
+                definition.totalAmount
+            }
+          },
+          { session }
+        );
+
+        if (result.matchedCount !== 1) {
+          throw new Error(
+            "An installment changed during pricing update. Please retry."
+          );
+        }
+      }
+
+      const rentSubtotal = round2(
+        definitions.reduce(
+          (sum, item) => sum + item.rentAmount,
+          0
+        )
+      );
+
+      const rentGstAmount = round2(
+        definitions.reduce(
+          (sum, item) => sum + item.gstAmount,
+          0
+        )
+      );
+
+      const rentTotalAmount = round2(
+        definitions.reduce(
+          (sum, item) => sum + item.totalAmount,
+          0
+        )
+      );
+
+      const updated = await Rental.findOneAndUpdate(
+        {
+          _id: rentalId,
+          status: "ACTIVE",
+          monthlyRent: oldMonthlyRent,
+          gstPercentage: oldGstPercentage
+        },
+        {
+          $set: {
+            originalMonthlyRent:
+              rental.originalMonthlyRent ??
+              Number(rentalProduct.monthlyRent),
+
+            monthlyRent:
+              pricing.monthlyRent,
+
+            pricingType:
+              pricing.pricingType,
+
+            billingType:
+              pricing.billingType,
+
+            gstPercentage:
+              pricing.gstPercentage,
+
+            negotiationReason: reason,
+
+            pricingUpdatedBy: userId,
+            pricingUpdatedAt: new Date(),
+
+            rentSubtotal,
+            rentGstAmount,
+            rentTotalAmount,
+
+            rentPaidAmount: 0,
+            rentBalanceAmount: rentTotalAmount,
+            rentPaymentStatus: "PENDING"
+          },
+
+          $push: {
+            pricingHistory: {
+              oldMonthlyRent,
+
+              newMonthlyRent:
+                pricing.monthlyRent,
+
+              oldBillingType,
+
+              newBillingType:
+                pricing.billingType,
+
+              oldGstPercentage,
+
+              newGstPercentage:
+                pricing.gstPercentage,
+
+              reason,
+              changedBy: userId,
+              changedAt: new Date()
+            }
+          }
+        },
+        {
+          new: true,
+          runValidators: true,
+          session
+        }
+      );
+
+      if (!updated) {
+        throw new Error(
+          "Rental changed during pricing update"
+        );
+      }
+
+      updatedRental = updated;
+    });
+
+    return updatedRental;
+  } finally {
+    await session.endSession();
+  }
 };

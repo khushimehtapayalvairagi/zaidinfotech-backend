@@ -235,21 +235,39 @@ export const uploadRentalDocumentController = async (
         // SERVICE
         // =============================================
 
-        const document =
-            await uploadRentalDocumentService(
+        // const document =
+        //     await uploadRentalDocumentService(
 
-                rentalId,
+        //         rentalId,
 
-                req.user._id,
+        //         req.user._id,
 
-                {
-                    documentType:
-                        normalizedDocumentType
-                },
+        //         {
+        //             documentType:
+        //                 normalizedDocumentType
+        //         },
 
-                req.file
+        //         req.file
 
-            );
+        //     );
+
+        
+const document = await uploadRentalDocumentService(
+    rentalId,
+    req.user._id,
+    {
+        documentType: normalizedDocumentType,
+
+        // NEW: Front / Back / Full Image
+        imageSide: req.body.imageSide
+            ? String(req.body.imageSide)
+                .trim()
+                .toUpperCase()
+            : undefined
+    },
+    req.file
+);
+
 
 
         // =============================================
@@ -277,15 +295,24 @@ export const uploadRentalDocumentController = async (
         );
 
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message:
-                error.message ||
-                "Failed to upload rental document"
+        //     message:
+        //         error.message ||
+        //         "Failed to upload rental document"
 
-        });
+        // });
+
+        
+return res.status(error.statusCode || 500).json({
+    success: false,
+    message:
+        error.message ||
+        "Failed to upload rental document"
+});
+
 
     }
 

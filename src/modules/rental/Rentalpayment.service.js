@@ -99,7 +99,9 @@ export const buildScheduleDefinitions = ({
     monthlyRent,
     gstPercentage
 }) => {
-    const gst = Number(gstPercentage || 0);
+    // const gst = Number(gstPercentage || 0);
+
+    const gst = Number(gstPercentage ?? 0);
     const duration = Number(rentalDuration);
     const rent = Number(monthlyRent);
 
@@ -110,14 +112,15 @@ export const buildScheduleDefinitions = ({
         throw new Error("Valid rental start date is required");
     }
 
-    if (
-        !Number.isInteger(duration) ||
-        duration < 1
-    ) {
-        throw new Error(
-            "Rental duration must be a positive whole number"
-        );
-    }
+ if (
+    rentalDurationType !== "MONTHS" ||
+    !Number.isInteger(duration) ||
+    duration < 3
+) {
+    throw new Error(
+        "Rental must be in MONTHS with minimum 3 months"
+    );
+}
 
     if (
         !Number.isFinite(rent) ||
@@ -558,6 +561,12 @@ export const getRentalPaymentScheduleService =
                     "rentalDuration",
                     "monthlyRent",
                     "gstPercentage",
+
+                    "originalMonthlyRent",
+                    "pricingType",
+                    "billingType",
+                    "negotiationReason",
+                    
                     "startDate",
                     "expectedEndDate",
                     "status",
@@ -1014,27 +1023,103 @@ export const getDueInstallmentsService =
 // Future installments may be cancelled.
 // =====================================================
 
+// export const calculateReturnDues = async (
+//     rental,
+//     returnDate = new Date()
+// ) => {
+//     const open =
+//         await RentalPayment
+//             .find({
+//                 rentalId: rental._id,
+
+//                 status: {
+//                     $in: OPEN_STATUSES
+//                 }
+//             })
+//             .sort({
+//                 installmentNumber: 1
+//             });
+
+//     const isCompany =
+//         rental.customerType === "COMPANY";
+
+//     let pendingRent = 0;
+
+//     const collectIds = [];
+//     const cancelIds = [];
+
+//     for (const inst of open) {
+//         const compulsory =
+//             isCompany &&
+//             inst.installmentNumber <=
+//                 COMPANY_MIN_MONTHS;
+
+//         const isDue =
+//             new Date(inst.dueDate) <=
+//             new Date(returnDate);
+
+//         if (compulsory || isDue) {
+//             const unpaidTotal = Math.max(
+//                 0,
+//                 toAmount(inst.totalAmount) -
+//                     toAmount(inst.paidAmount)
+//             );
+
+//             const ratio =
+//                 inst.totalAmount > 0
+//                     ? unpaidTotal /
+//                       inst.totalAmount
+//                     : 0;
+
+//             pendingRent +=
+//                 toAmount(inst.rentAmount) *
+//                 ratio;
+
+//             collectIds.push(
+//                 inst._id
+//             );
+//         } else {
+//             cancelIds.push(
+//                 inst._id
+//             );
+//         }
+//     }
+
+//     return {
+//         pendingRent: round2(
+//             pendingRent
+//         ),
+
+//         collectIds,
+//         cancelIds
+//     };
+// };
+
+
+// =====================================================
+// CALCULATE RETURN DUES
+// GST and rent calculated separately.
+// Paid amounts are never counted twice.
+// =====================================================
+
 export const calculateReturnDues = async (
     rental,
     returnDate = new Date()
 ) => {
-    const open =
-        await RentalPayment
-            .find({
-                rentalId: rental._id,
-
-                status: {
-                    $in: OPEN_STATUSES
-                }
-            })
-            .sort({
-                installmentNumber: 1
-            });
+    const open = await RentalPayment.find({
+        rentalId: rental._id,
+        status: {
+            $in: OPEN_STATUSES
+        }
+    }).sort({
+        installmentNumber: 1
+    });
 
     const isCompany =
         rental.customerType === "COMPANY";
 
     let pendingRent = 0;
+    let pendingRentGST = 0;
 
     const collectIds = [];
     const cancelIds = [];
@@ -1042,50 +1127,79 @@ export const calculateReturnDues = async (
     for (const inst of open) {
         const compulsory =
             isCompany &&
-            inst.installmentNumber <=
-                COMPANY_MIN_MONTHS;
+            inst.installmentNumber <= COMPANY_MIN_MONTHS;
 
         const isDue =
-            new Date(inst.dueDate) <=
-            new Date(returnDate);
+            new Date(inst.dueDate) <= new Date(returnDate);
 
-        if (compulsory || isDue) {
-            const unpaidTotal = Math.max(
-                0,
-                toAmount(inst.totalAmount) -
-                    toAmount(inst.paidAmount)
+        if (!compulsory && !isDue) {
+            cancelIds.push(inst._id);
+            continue;
+        }
+
+        const totalAmount =
+            toAmount(inst.totalAmount);
+
+        const paidAmount =
+            toAmount(inst.paidAmount);
+
+        const unpaidAmount = round2(
+            Math.max(0, totalAmount - paidAmount)
+        );
+
+        if (unpaidAmount <= PAYMENT_TOLERANCE) {
+            continue;
+        }
+
+        // Split outstanding total into rent and GST
+        // proportionally, including partial payments.
+        const rentAmount =
+            toAmount(inst.rentAmount);
+
+        const gstAmount =
+            toAmount(inst.gstAmount);
+
+        let unpaidRent = 0;
+        let unpaidGst = 0;
+
+        if (totalAmount > 0) {
+            unpaidRent = round2(
+                unpaidAmount *
+                (rentAmount / totalAmount)
             );
 
-            const ratio =
-                inst.totalAmount > 0
-                    ? unpaidTotal /
-                      inst.totalAmount
-                    : 0;
-
-            pendingRent +=
-                toAmount(inst.rentAmount) *
-                ratio;
-
-            collectIds.push(
-                inst._id
-            );
-        } else {
-            cancelIds.push(
-                inst._id
+            // Remainder assigned to GST so totals match.
+            unpaidGst = round2(
+                unpaidAmount - unpaidRent
             );
         }
+
+        pendingRent = round2(
+            pendingRent + unpaidRent
+        );
+
+        pendingRentGST = round2(
+            pendingRentGST + unpaidGst
+        );
+
+        collectIds.push(inst._id);
     }
 
     return {
-        pendingRent: round2(
-            pendingRent
+        pendingRent: round2(pendingRent),
+
+        pendingRentGST: round2(
+            pendingRentGST
+        ),
+
+        totalPendingRent: round2(
+            pendingRent + pendingRentGST
         ),
 
         collectIds,
         cancelIds
     };
 };
-
 // =====================================================
 // CANCEL INSTALLMENTS
 // =====================================================
@@ -1215,6 +1329,12 @@ export const getReturnPreviewService =
         return {
             pendingRent:
                 dues.pendingRent,
+
+                pendingRentGST:
+    dues.pendingRentGST,
+
+totalPendingRent:
+    dues.totalPendingRent,
 
             heldDeposit,
 
