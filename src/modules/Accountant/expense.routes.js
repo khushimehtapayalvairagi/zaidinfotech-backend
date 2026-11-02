@@ -34,7 +34,8 @@ router.post(
     verifyToken,
     allowRoles(
         ROLES.ADMIN,
-        ROLES.SALES
+        ROLES.SALES,
+        ROLES.ACCOUNTANT
     ),
     createExpenseController
 );
@@ -49,7 +50,8 @@ router.get(
     verifyToken,
     allowRoles(
         ROLES.ADMIN,
-        ROLES.SALES
+        ROLES.SALES,
+        ROLES.ACCOUNTANT
     ),
     getAllExpensesController
 );
@@ -64,7 +66,8 @@ router.get(
     verifyToken,
     allowRoles(
         ROLES.ADMIN,
-        ROLES.SALES
+        ROLES.SALES,
+        ROLES.ACCOUNTANT
     ),
     getExpenseController
 );
@@ -79,7 +82,8 @@ router.put(
     verifyToken,
     allowRoles(
         ROLES.ADMIN,
-        ROLES.SALES
+        ROLES.SALES,
+        ROLES.ACCOUNTANT
     ),
     updateExpenseController
 );
@@ -95,6 +99,7 @@ router.delete(
     allowRoles(
         ROLES.ADMIN,
         ROLES.SALES,
+        ROLES.ACCOUNTANT
     ),
     deleteExpenseController
 );

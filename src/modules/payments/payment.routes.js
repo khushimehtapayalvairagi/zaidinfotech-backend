@@ -1,182 +1,51 @@
-// import express from "express";
-
-// import {
-//     createPayment,
-//     getPaymentById,
-//     getMyPayments,
-//     getAllPayments,
-//     paymentSuccess,
-//     paymentFailed,
-//     refundPayment,
-//     createRazorpayOrder,
-//     verifyRazorpayPaymentController,
-// } from "./payment.controller.js";
-
-// import {
-//     createPaymentValidation,
-//     paymentSuccessValidation,
-//     paymentFailedValidation,
-//     refundPaymentValidation,
-// } from "./payment.validation.js";
-
-// import { validate } from "../../common/middleware/validate.middleware.js";
-// import { verifyToken } from "../../common/middleware/auth.middleware.js";
-
-// const router = express.Router();
-
-
-// // =====================================================
-// // RAZORPAY
-// // =====================================================
-
-// // CREATE RAZORPAY ORDER
-// router.post(
-//     "/razorpay/order",
-//     verifyToken,
-//     createRazorpayOrder
-// );
-
-
-// // VERIFY RAZORPAY PAYMENT
-// router.post(
-//     "/razorpay/verify",
-//     verifyToken,
-//     verifyRazorpayPaymentController
-// );
-
-
-// // =====================================================
-// // CREATE PAYMENT
-// // =====================================================
-
-// router.post(
-//     "/",
-//     verifyToken,
-//     validate(createPaymentValidation),
-//     createPayment
-// );
-
-
-// // =====================================================
-// // GET ALL PAYMENTS
-// // Accountant / Admin / Sales
-// //
-// // IMPORTANT:
-// // This must come BEFORE /:id
-// // =====================================================
-
-// router.get(
-//     "/",
-//     verifyToken,
-//     getAllPayments
-// );
-
-
-// // =====================================================
-// // GET MY PAYMENTS
-// // =====================================================
-
-// router.get(
-//     "/my",
-//     verifyToken,
-//     getMyPayments
-// );
-
-
-// // =====================================================
-// // GET PAYMENT BY ID
-// // =====================================================
-
-// router.get(
-//     "/:id",
-//     verifyToken,
-//     getPaymentById
-// );
-
-
-// // =====================================================
-// // PAYMENT SUCCESS
-// // =====================================================
-
-// router.patch(
-//     "/:id/success",
-//     verifyToken,
-//     validate(paymentSuccessValidation),
-//     paymentSuccess
-// );
-
-
-// // =====================================================
-// // PAYMENT FAILED
-// // =====================================================
-
-// router.patch(
-//     "/:id/failed",
-//     verifyToken,
-//     validate(paymentFailedValidation),
-//     paymentFailed
-// );
-
-
-// // =====================================================
-// // REFUND
-// // =====================================================
-
-// router.patch(
-//     "/:id/refund",
-//     verifyToken,
-//     validate(refundPaymentValidation),
-//     refundPayment
-// );
-
-
-// export default router;
-
-
-
 import express from "express";
 
 import {
-    createPayment,
-    getPaymentById,
-    getMyPayments,
-    getAllPayments,
-    paymentSuccess,
-    paymentFailed,
-    refundPayment,
-    createRazorpayOrder,
-    verifyRazorpayPaymentController,
+  createPayment,
+  getPaymentById,
+  getMyPayments,
+  getAllPayments,
+  paymentSuccess,
+  paymentFailed,
+  refundPayment,
+  createRazorpayOrder,
+  verifyRazorpayPaymentController,
 } from "./payment.controller.js";
 
 import {
-    createPaymentValidation,
-    paymentSuccessValidation,
-    paymentFailedValidation,
-    refundPaymentValidation,
+  createPaymentValidation,
+  paymentSuccessValidation,
+  paymentFailedValidation,
+  refundPaymentValidation,
 } from "./payment.validation.js";
 
 import { validate } from "../../common/middleware/validate.middleware.js";
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
+import { allowRoles } from "../../common/middleware/role.middleware.js";
 
 const router = express.Router();
 
+// =====================================================
+// ROLE CONFIGURATION
+// =====================================================
+
+const PAYMENT_VIEW_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "ACCOUNTANT",
+  "SALES",
+];
 
 // =====================================================
-// RAZORPAY
-// =====================================================
-
-
-// =====================================================
-// CREATE RAZORPAY ORDER
+// RAZORPAY ORDER
 // POST /api/payments/razorpay/order
 // =====================================================
 
 router.post(
-    "/razorpay/order",
-    verifyToken,
-    createRazorpayOrder
+  "/razorpay/order",
+  verifyToken,
+  createRazorpayOrder
 );
-
 
 // =====================================================
 // VERIFY RAZORPAY PAYMENT
@@ -184,11 +53,10 @@ router.post(
 // =====================================================
 
 router.post(
-    "/razorpay/verify",
-    verifyToken,
-    verifyRazorpayPaymentController
+  "/razorpay/verify",
+  verifyToken,
+  verifyRazorpayPaymentController
 );
-
 
 // =====================================================
 // CREATE PAYMENT
@@ -196,26 +64,24 @@ router.post(
 // =====================================================
 
 router.post(
-    "/",
-    verifyToken,
-    validate(createPaymentValidation),
-    createPayment
+  "/",
+  verifyToken,
+  validate(createPaymentValidation),
+  createPayment
 );
-
 
 // =====================================================
 // GET ALL PAYMENTS
 // GET /api/payments
-//
-// Accountant / Admin / Sales etc.
+// Accountant can view all payment records.
 // =====================================================
 
 router.get(
-    "/",
-    verifyToken,
-    getAllPayments
+  "/",
+  verifyToken,
+  allowRoles(...PAYMENT_VIEW_ROLES),
+  getAllPayments
 );
-
 
 // =====================================================
 // GET MY PAYMENTS
@@ -223,11 +89,10 @@ router.get(
 // =====================================================
 
 router.get(
-    "/my",
-    verifyToken,
-    getMyPayments
+  "/my",
+  verifyToken,
+  getMyPayments
 );
-
 
 // =====================================================
 // PAYMENT SUCCESS
@@ -235,12 +100,11 @@ router.get(
 // =====================================================
 
 router.patch(
-    "/:id/success",
-    verifyToken,
-    validate(paymentSuccessValidation),
-    paymentSuccess
+  "/:id/success",
+  verifyToken,
+  validate(paymentSuccessValidation),
+  paymentSuccess
 );
-
 
 // =====================================================
 // PAYMENT FAILED
@@ -248,12 +112,11 @@ router.patch(
 // =====================================================
 
 router.patch(
-    "/:id/failed",
-    verifyToken,
-    validate(paymentFailedValidation),
-    paymentFailed
+  "/:id/failed",
+  verifyToken,
+  validate(paymentFailedValidation),
+  paymentFailed
 );
-
 
 // =====================================================
 // REFUND PAYMENT
@@ -261,26 +124,22 @@ router.patch(
 // =====================================================
 
 router.patch(
-    "/:id/refund",
-    verifyToken,
-    validate(refundPaymentValidation),
-    refundPayment
+  "/:id/refund",
+  verifyToken,
+  validate(refundPaymentValidation),
+  refundPayment
 );
-
 
 // =====================================================
 // GET PAYMENT BY ID
 // GET /api/payments/:id
-//
-// IMPORTANT:
-// Keep this AFTER /my and the action routes.
 // =====================================================
 
 router.get(
-    "/:id",
-    verifyToken,
-    getPaymentById
+  "/:id",
+  verifyToken,
+  allowRoles(...PAYMENT_VIEW_ROLES),
+  getPaymentById
 );
-
 
 export default router;
