@@ -1,6 +1,26 @@
 import mongoose from "mongoose";
 
 // ======================================================
+// CUSTOMER SOURCE KEYS
+// "How did you come to know about ZAID Infotech?"
+// Must match the values used in the frontend dropdowns
+// (Checkout.jsx and CustomerTicket.jsx).
+// ======================================================
+
+export const CUSTOMER_SOURCE_VALUES = [
+  "GOOGLE",
+  "INSTAGRAM_FACEBOOK",
+  "YOUTUBE",
+  "REFERRAL",
+  "EXISTING_CUSTOMER",
+  "SHOP_BOARD",
+  "ONLINE_AD",
+  "INFLUENCER",
+  "WHATSAPP",
+  "OTHER",
+];
+
+// ======================================================
 // REPAIR PART USED SUB-DOCUMENT
 // ======================================================
 
@@ -82,6 +102,33 @@ const repairSchema = new mongoose.Schema(
     },
 
     // ==================================================
+    // CUSTOMER SOURCE
+    // How did the customer come to know about
+    // ZAID Infotech?
+    //
+    // customerSource      = one of CUSTOMER_SOURCE_VALUES
+    // customerSourceOther = free text, only filled
+    //                       when customerSource is OTHER
+    //
+    // "" is allowed so older repair tickets (created
+    // before this field existed) stay valid.
+    // ==================================================
+
+    customerSource: {
+      type: String,
+      enum: [...CUSTOMER_SOURCE_VALUES, ""],
+      trim: true,
+      default: "",
+    },
+
+    customerSourceOther: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: "",
+    },
+
+    // ==================================================
     // DEVICE
     // ==================================================
 
@@ -91,42 +138,35 @@ const repairSchema = new mongoose.Schema(
       default: null,
     },
 
-    // deviceModel: {
-    //   type: String,
-    //   required: [true, "Device model is required"],
-    //   trim: true,
-    // },
+    // ==================================================
+    // JOB DATE
+    // ==================================================
 
+    jobDate: {
+      type: Date,
+      default: Date.now,
+    },
 
     // ==================================================
-// JOB DATE
-// ==================================================
+    // DEVICE TYPE
+    // ==================================================
 
-jobDate: {
-  type: Date,
-  default: Date.now,
-},
+    deviceType: {
+      type: String,
+      trim: true,
+      default: "",
+    },
 
-// ==================================================
-// DEVICE TYPE
-// ==================================================
+    // ==================================================
+    // HARDWARE MODEL
+    // Existing deviceModel field is preserved
+    // ==================================================
 
-deviceType: {
-  type: String,
-  trim: true,
-  default: "",
-},
-
-// ==================================================
-// HARDWARE MODEL
-// Existing deviceModel field is preserved
-// ==================================================
-
-deviceModel: {
-  type: String,
-  required: [true, "Hardware model is required"],
-  trim: true,
-},
+    deviceModel: {
+      type: String,
+      required: [true, "Hardware model is required"],
+      trim: true,
+    },
 
     serialNumber: {
       type: String,

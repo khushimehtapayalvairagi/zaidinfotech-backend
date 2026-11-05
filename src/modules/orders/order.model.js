@@ -4,6 +4,12 @@ import {
   ORDER_STATUS
 } from "../../common/constants/orderStatus.js";
 
+// NEW: valid customer source keys (GOOGLE, INSTAGRAM_FACEBOOK, ... OTHER)
+// used for the enum of the customerSource field below
+import {
+  CUSTOMER_SOURCE_KEYS
+} from "../../common/constants/customerSource.js";
+
 
 // ======================================================
 // ORDER SCHEMA
@@ -364,6 +370,30 @@ orderSource: {
 
     default: "ONLINE",
 
+},
+
+
+// ====================================================
+// CUSTOMER SOURCE TRACKING (NEW)
+// "How did you come to know about ZAID Infotech?"
+// ====================================================
+
+// NEW: the key of the option the customer selected at checkout
+// (e.g. GOOGLE, REFERRAL, OTHER). Empty string "" is allowed so
+// old orders and walk-in orders without this answer stay valid.
+customerSource: {
+  type: String,
+  enum: [...CUSTOMER_SOURCE_KEYS, ""],
+  default: "",
+},
+
+// NEW: free text, only filled when customerSource is "OTHER"
+// (the customer types how they found us)
+customerSourceOther: {
+  type: String,
+  default: "",
+  trim: true,
+  maxlength: 200,
 },
 
 

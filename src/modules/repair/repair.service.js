@@ -6,8 +6,9 @@ import * as inventoryService
 import Product
   from "../products/product.model.js";
 
-import Repair
-  from "./repair.model.js";
+import Repair, {
+  CUSTOMER_SOURCE_VALUES,
+} from "./repair.model.js";
 
 import {
   createNotificationService,
@@ -108,6 +109,8 @@ export const createRepair = async (repairData) => {
     customerName,
     customerPhone,
     customerEmail,
+    customerSource,
+    customerSourceOther,
     deviceModel,
     jobDate,
     deviceType,
@@ -132,19 +135,21 @@ export const createRepair = async (repairData) => {
 
   const normalizedPhone =
     String(customerPhone || "").trim();
-const normalizedDeviceType =
-  String(deviceType || "").trim();
 
-const normalizedJobDate =
-  jobDate
-    ? new Date(jobDate)
-    : new Date();
+  const normalizedDeviceType =
+    String(deviceType || "").trim();
 
-if (
-  Number.isNaN(normalizedJobDate.getTime())
-) {
-  throw new Error("Invalid job date.");
-}
+  const normalizedJobDate =
+    jobDate
+      ? new Date(jobDate)
+      : new Date();
+
+  if (
+    Number.isNaN(normalizedJobDate.getTime())
+  ) {
+    throw new Error("Invalid job date.");
+  }
+
   // ==================================================
   // CUSTOMER EMAIL IS OPTIONAL
   // ==================================================
@@ -162,6 +167,39 @@ if (
   const normalizedEmail =
     typeof customerEmail === "string"
       ? customerEmail.trim().toLowerCase()
+      : "";
+
+  // ==================================================
+  // CUSTOMER SOURCE (OPTIONAL)
+  // "How did you come to know about ZAID Infotech?"
+  //
+  // - customerSource is optional. Empty/missing is saved
+  //   as an empty string.
+  // - When provided, it must be one of the known keys.
+  // - customerSourceOther is only kept when
+  //   customerSource is OTHER, and it is optional too.
+  // ==================================================
+
+  const normalizedCustomerSource =
+    typeof customerSource === "string"
+      ? customerSource.trim().toUpperCase()
+      : "";
+
+  if (
+    normalizedCustomerSource &&
+    !CUSTOMER_SOURCE_VALUES.includes(
+      normalizedCustomerSource
+    )
+  ) {
+    throw new Error(
+      "Invalid customer source."
+    );
+  }
+
+  const normalizedCustomerSourceOther =
+    normalizedCustomerSource === "OTHER" &&
+    typeof customerSourceOther === "string"
+      ? customerSourceOther.trim()
       : "";
 
   const normalizedDeviceModel =
@@ -254,9 +292,19 @@ if (
       customerEmail:
         normalizedEmail,
 
+      // =================================================
+      // CUSTOMER SOURCE (OPTIONAL)
+      // =================================================
+
+      customerSource:
+        normalizedCustomerSource,
+
+      customerSourceOther:
+        normalizedCustomerSourceOther,
+
       jobDate: normalizedJobDate,
 
-      deviceType: normalizedDeviceType,  
+      deviceType: normalizedDeviceType,
 
       deviceModel:
         normalizedDeviceModel,

@@ -1,5 +1,9 @@
 import Joi from "joi";
 
+import {
+  CUSTOMER_SOURCE_VALUES,
+} from "./repair.model.js";
+
 // ======================================================
 // CREATE REPAIR VALIDATION
 // ======================================================
@@ -37,24 +41,53 @@ export const createRepairValidation = Joi.object({
       "any.required": "Customer phone is required.",
     }),
 
-customerEmail: Joi.string()
-  .trim()
-  .email()
-  .allow("")
-  .optional()
-  .messages({
-    "string.email": "Please provide a valid customer email.",
-  }),
+  customerEmail: Joi.string()
+    .trim()
+    .email()
+    .allow("")
+    .optional()
+    .messages({
+      "string.email": "Please provide a valid customer email.",
+    }),
+
+  // ====================================================
+  // CUSTOMER SOURCE (OPTIONAL)
+  // "How did you come to know about ZAID Infotech?"
+  //
+  // Both fields are optional. If customerSource is sent,
+  // it must be one of the known keys (or empty).
+  // ====================================================
+
+  customerSource: Joi.string()
+    .trim()
+    .uppercase()
+    .valid(...CUSTOMER_SOURCE_VALUES, "")
+    .allow(null)
+    .optional()
+    .messages({
+      "any.only": "Invalid customer source.",
+    }),
+
+  customerSourceOther: Joi.string()
+    .trim()
+    .allow("", null)
+    .max(200)
+    .optional()
+    .messages({
+      "string.max":
+        "Customer source details cannot exceed 200 characters.",
+    }),
 
   jobDate: Joi.date()
-  .allow(null, "")
-  .optional(),
+    .allow(null, "")
+    .optional(),
 
-deviceType: Joi.string()
-  .trim()
-  .max(100)
-  .allow("", null)
-  .optional(),
+  deviceType: Joi.string()
+    .trim()
+    .max(100)
+    .allow("", null)
+    .optional(),
+
   // IMPORTANT:
   // Repair model says required, so Joi must also say required.
   deviceModel: Joi.string()
@@ -247,6 +280,22 @@ export const updateRepairValidation = Joi.object({
   customerEmail: Joi.string()
     .trim()
     .email()
+    .optional(),
+
+  // Optional on update: lets the source be corrected later.
+  customerSource: Joi.string()
+    .trim()
+    .uppercase()
+    .valid(...CUSTOMER_SOURCE_VALUES, "")
+    .optional()
+    .messages({
+      "any.only": "Invalid customer source.",
+    }),
+
+  customerSourceOther: Joi.string()
+    .trim()
+    .allow("", null)
+    .max(200)
     .optional(),
 
   remarks: Joi.string()

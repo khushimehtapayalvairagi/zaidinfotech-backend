@@ -39,6 +39,7 @@ import ItSupportSettingsRoutes from './modules/itSupport/itsupport.routes.js'
 import vendorRoutes from "./modules/Procurementt/vendor.routes.js";
 import purchaseOrderRoutes from "./modules/Procurementt/purchaseOrder.routes.js";
 import legalRoutes from "./modules/legal/legal.routes.js";
+import branchRoutes from "./modules/branches/branch.routes.js";
 const app = express();
 
 app.use(cors({
@@ -125,4 +126,5 @@ app.use("/api/procurement/vendors", vendorRoutes);
 app.use("/api/procurement/purchase-orders", purchaseOrderRoutes);
 
 app.use("/api/legal", legalRoutes);
+app.use("/api/branches", branchRoutes);
 export default app;

@@ -4,6 +4,12 @@ import {
   ORDER_STATUS,
 } from "../../common/constants/orderStatus.js";
 
+// NEW: valid customer source keys (GOOGLE, INSTAGRAM_FACEBOOK, ... OTHER)
+// used to validate the customerSource field in the create order request
+import {
+  CUSTOMER_SOURCE_KEYS,
+} from "../../common/constants/customerSource.js";
+
 
 
 // ======================================================
@@ -214,6 +220,50 @@ export const createOrderValidation = Joi.object({
       "WALK_IN"
     )
     .default("ONLINE"),
+
+
+  // ====================================================
+  // CUSTOMER SOURCE TRACKING (NEW)
+  // "How did you come to know about ZAID Infotech?"
+  // ====================================================
+
+  // NEW: the key of the selected option. Must be one of the keys in
+  // customerSource.js. Empty/null is allowed so the field stays
+  // optional here (walk-in orders and old clients don't send it).
+  // The "required" rule for online checkout is handled in Checkout.jsx.
+  customerSource: Joi.string()
+    .valid(...CUSTOMER_SOURCE_KEYS)
+    .allow("", null)
+    .default(""),
+
+
+  // NEW: free text, mandatory only when customerSource is "OTHER".
+  // For every other option it is optional and defaults to "".
+  customerSourceOther: Joi.when("customerSource", {
+
+    is: "OTHER",
+
+    then: Joi.string()
+      .trim()
+      .min(2)
+      .max(200)
+      .required()
+      .messages({
+        "any.required":
+          "Please tell us how you came to know about us",
+
+        "string.empty":
+          "Please tell us how you came to know about us",
+
+        "string.min":
+          "Please tell us how you came to know about us",
+      }),
+
+    otherwise: Joi.string()
+      .allow("", null)
+      .default(""),
+
+  }),
 
 });
 

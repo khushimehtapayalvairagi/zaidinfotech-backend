@@ -147,6 +147,23 @@ export const createOrder = async (
       orderSource,
 
 
+      // NEW: customer source tracking
+      // "How did you come to know about ZAID Infotech?"
+      // Key of the option selected at checkout (e.g. GOOGLE, REFERRAL).
+      // Falls back to "" when the request doesn't send it
+      // (walk-in orders, old clients).
+      customerSource:
+        req.body.customerSource || "",
+
+
+      // NEW: free text, saved only when the selected source is "OTHER".
+      // For every other option it is forced to "" so no stale text is stored.
+      customerSourceOther:
+        req.body.customerSource === "OTHER"
+          ? (req.body.customerSourceOther || "").trim()
+          : "",
+
+
       user:
         userId,
 

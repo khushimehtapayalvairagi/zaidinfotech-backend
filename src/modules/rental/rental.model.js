@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import { CUSTOMER_SOURCE_KEYS } from "../../common/constants/customerSource.js";
+
 const rentalSchema = new mongoose.Schema(
     {
         // =====================================================
@@ -66,6 +68,33 @@ const rentalSchema = new mongoose.Schema(
             enum: ["ONLINE", "WALK_IN"],
             default: "ONLINE",
             index: true
+        },
+
+        // =====================================================
+        // CUSTOMER SOURCE (OPTIONAL)
+        // "How did you come to know about ZAID Infotech?"
+        //
+        // customerSource      -> key from CUSTOMER_SOURCES
+        //                        (e.g. GOOGLE, REFERRAL, OTHER)
+        //                        null when not selected
+        // customerSourceOther -> free text, used only when
+        //                        customerSource is OTHER
+        //
+        // Old rentals have null (field did not exist before).
+        // =====================================================
+
+        customerSource: {
+            type: String,
+            enum: [...CUSTOMER_SOURCE_KEYS, null],
+            default: null,
+            index: true
+        },
+
+        customerSourceOther: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 200
         },
 
         // =====================================================

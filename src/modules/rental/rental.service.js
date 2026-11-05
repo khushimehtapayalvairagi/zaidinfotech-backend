@@ -29,6 +29,8 @@ import {
   round2
 } from "../../common/constants/rental.constants.js";
 
+import { CUSTOMER_SOURCE_KEYS } from "../../common/constants/customerSource.js";
+
 import {
   addMonths,
   adjustRemainingInstallments,
@@ -362,6 +364,38 @@ export const createWalkInRentalService = async (
     individualDetails,
     companyDetails
   } = buildCustomerDetails(customerType, data);
+
+  // =====================================================
+  // CUSTOMER SOURCE (OPTIONAL)
+  // "How did you come to know about ZAID Infotech?"
+  //
+  // - Empty / missing  -> saved as null
+  // - Provided         -> must be a valid key
+  // - OTHER            -> free text is optional
+  // =====================================================
+
+  const rawCustomerSource = String(
+    data.customerSource || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  if (
+    rawCustomerSource &&
+    !CUSTOMER_SOURCE_KEYS.includes(rawCustomerSource)
+  ) {
+    throw new Error("Invalid customer source selected");
+  }
+
+  const customerSource = rawCustomerSource || null;
+
+  // Free text is kept only when the source is OTHER.
+  const customerSourceOther =
+    customerSource === "OTHER"
+      ? String(data.customerSourceOther || "")
+          .trim()
+          .slice(0, 200)
+      : "";
 
   // Load products
   const rentalProducts = await RentalProduct.find({
@@ -737,6 +771,11 @@ export const createWalkInRentalService = async (
           rentalProductId: rp._id,
 
           rentalSource: "WALK_IN",
+
+          // How did the customer come to know about us (optional)
+          customerSource,
+          customerSourceOther,
+
           customerType,
           individualDetails,
           companyDetails,
