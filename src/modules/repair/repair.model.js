@@ -2,9 +2,6 @@ import mongoose from "mongoose";
 
 // ======================================================
 // CUSTOMER SOURCE KEYS
-// "How did you come to know about ZAID Infotech?"
-// Must match the values used in the frontend dropdowns
-// (Checkout.jsx and CustomerTicket.jsx).
 // ======================================================
 
 export const CUSTOMER_SOURCE_VALUES = [
@@ -83,17 +80,6 @@ const repairSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ==================================================
-    // CUSTOMER EMAIL - OPTIONAL
-    // ==================================================
-    //
-    // Email can be provided OR left empty.
-    // Do NOT add required:true here.
-    // Do NOT add unique:true here.
-    //
-    // Same customer can have multiple repair tickets.
-    // ==================================================
-
     customerEmail: {
       type: String,
       trim: true,
@@ -102,16 +88,28 @@ const repairSchema = new mongoose.Schema(
     },
 
     // ==================================================
+    // BRANCH MANAGEMENT
+    // New Job Cards require a branch.
+    // Old Job Cards without branch remain compatible.
+    // ==================================================
+
+    branchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch",
+
+      required: [
+        function () {
+          return this.isNew;
+        },
+        "Branch selection is required for new Job Cards",
+      ],
+
+      default: null,
+      index: true,
+    },
+
+    // ==================================================
     // CUSTOMER SOURCE
-    // How did the customer come to know about
-    // ZAID Infotech?
-    //
-    // customerSource      = one of CUSTOMER_SOURCE_VALUES
-    // customerSourceOther = free text, only filled
-    //                       when customerSource is OTHER
-    //
-    // "" is allowed so older repair tickets (created
-    // before this field existed) stay valid.
     // ==================================================
 
     customerSource: {
@@ -159,7 +157,6 @@ const repairSchema = new mongoose.Schema(
 
     // ==================================================
     // HARDWARE MODEL
-    // Existing deviceModel field is preserved
     // ==================================================
 
     deviceModel: {
@@ -341,6 +338,22 @@ const repairSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ==================================================
+    // SOFT DELETE
+    // Historical Job Cards remain in database.
+    // ==================================================
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -348,9 +361,50 @@ const repairSchema = new mongoose.Schema(
 );
 
 // ======================================================
+// INDEXES
+// ======================================================
+
+// Branch-wise Job Card filtering
+repairSchema.index({
+  branchId: 1,
+  createdAt: -1,
+});
+
+// Status-wise filtering
+repairSchema.index({
+  status: 1,
+});
+
+// Customer search
+repairSchema.index({
+  customerPhone: 1,
+});
+
+// Soft-delete filtering
+repairSchema.index({
+  isDeleted: 1,
+  createdAt: -1,
+});
+
+// Customer source reporting
+repairSchema.index({
+  customerSource: 1,
+  createdAt: -1,
+});
+
+// Technician-wise filtering
+repairSchema.index({
+  assignedTechnician: 1,
+  status: 1,
+});
+
+// ======================================================
 // MODEL
 // ======================================================
 
-const Repair = mongoose.model("Repair", repairSchema);
+// Prevent OverwriteModelError during hot reload
+const Repair =
+  mongoose.models.Repair ||
+  mongoose.model("Repair", repairSchema);
 
 export default Repair;
