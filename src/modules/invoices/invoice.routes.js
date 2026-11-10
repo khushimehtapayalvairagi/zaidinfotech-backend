@@ -6,11 +6,26 @@ import {
   getInvoiceByOrderId,
   getAllInvoices,
   getMyInvoices,
+  updateInvoice,
+  deleteInvoice,
 } from "./invoice.controller.js";
 
 import { verifyToken } from "../../common/middleware/auth.middleware.js";
+import { allowRoles } from "../../common/middleware/role.middleware.js";
 
 const router = express.Router();
+
+const INVOICE_EDIT_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "ACCOUNTANT",
+  "SALES",
+];
+
+const INVOICE_DELETE_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+];
 
 // ==========================================
 // CREATE INVOICE
@@ -25,6 +40,7 @@ router.post(
 // ==========================================
 // GET ALL
 // GET /api/invoices
+// Optional: ?invoiceType=GST  ya  ?invoiceType=NON_GST
 // ==========================================
 
 router.get(
@@ -64,6 +80,30 @@ router.get(
 router.get(
   "/:id",
   getInvoiceById
+);
+
+// ==========================================
+// UPDATE INVOICE
+// PUT /api/invoices/:id
+// ==========================================
+
+router.put(
+  "/:id",
+  verifyToken,
+  allowRoles(...INVOICE_EDIT_ROLES),
+  updateInvoice
+);
+
+// ==========================================
+// DELETE INVOICE (soft delete)
+// DELETE /api/invoices/:id
+// ==========================================
+
+router.delete(
+  "/:id",
+  verifyToken,
+  allowRoles(...INVOICE_DELETE_ROLES),
+  deleteInvoice
 );
 
 export default router;

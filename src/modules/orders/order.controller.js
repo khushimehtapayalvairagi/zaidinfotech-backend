@@ -1,5 +1,4 @@
-import * as orderService
-  from "./order.service.js";
+import * as orderService from "./order.service.js";
 
 
 // ======================================================
@@ -7,10 +6,7 @@ import * as orderService
 // ONLINE + WALK_IN
 // ======================================================
 
-export const createOrder = async (
-  req,
-  res
-) => {
+export const createOrder = async (req, res) => {
 
   try {
 
@@ -18,11 +14,8 @@ export const createOrder = async (
     // USER
     // ================================================
 
-    const userId =
-      req.user._id;
-
-    const createdBy =
-      req.user._id;
+    const userId = req.user._id;
+    const createdBy = req.user._id;
 
 
     // ================================================
@@ -41,15 +34,13 @@ export const createOrder = async (
 
     const shippingAddress = {
 
-      ...req.body.shippingAddress,
+      ...(req.body.shippingAddress || {}),
 
       country:
-        req.body.shippingAddress?.country ||
-        "India",
+        req.body.shippingAddress?.country || "India",
 
       landmark:
-        req.body.shippingAddress?.landmark ||
-        "",
+        req.body.shippingAddress?.landmark || "",
 
     };
 
@@ -58,157 +49,128 @@ export const createOrder = async (
     // NORMALIZE ORDER ITEMS
     // ================================================
 
-    const orderItems =
-      req.body.orderItems.map(
-        (item) => ({
+    const orderItems = (req.body.orderItems || []).map(
+      (item) => ({
 
-          product:
-            item.product,
+        product: item.product,
 
-          title:
-            item.title,
-          //      couponCode:
-          // req.body.couponCode || "",  
+        title: item.title,
 
-          quantity:
-            Number(item.quantity),
+        quantity: Number(item.quantity),
 
-          originalPrice:
-            Number(item.originalPrice),
+        originalPrice: Number(item.originalPrice),
 
-          discountAmount:
-            Number(item.discountAmount || 0),
+        discountAmount: Number(item.discountAmount || 0),
 
-          price:
-            Number(item.price),
+        price: Number(item.price),
 
-          offer:
-            item.offer || null,
+        offer: item.offer || null,
 
-          imageUrl:
-            item.imageUrl || "",
+        imageUrl: item.imageUrl || "",
 
-        })
-      );
+      })
+    );
 
 
-    // // ================================================
-    // // ORDER DATA
-    // // ================================================
+    // ================================================
+    // BRANCH INFORMATION
+    // ================================================
 
-    // const orderData = {
+    const branchId =
+      req.body.branchId || null;
 
-    //   orderItems,
 
-    //   shippingAddress,
+    // ================================================
+    // CUSTOMER SOURCE INFORMATION
+    // ================================================
 
-    //   totalAmount:
-    //     Number(req.body.totalAmount),
+    const customerSource =
+      req.body.customerSource || "";
 
-    //   orderSource,
+    const customerSourceOther =
+      req.body.customerSourceOther || "";
 
-    //   user:
-    //     userId,
 
-    //   soldBy:
-    //     orderSource === "WALK_IN"
-    //       ? userId
-    //       : null,
-
-    // };
-
+    // ================================================
+    // ORDER DATA
+    // ================================================
 
     const orderData = {
 
+      // Products
       orderItems,
 
+      // Address
       shippingAddress,
 
-      totalAmount:
-        Number(req.body.totalAmount),
+      // Total
+      totalAmount: Number(req.body.totalAmount),
 
-      couponCode:
-        req.body.couponCode || "",
+      // Coupon
+      couponCode: req.body.couponCode || "",
 
-
+      // Payment method
       paymentMethod:
         req.body.paymentMethod || "CASH",
 
-
-      // CHANGE: online orders start unpaid. Only walk-in (counter) orders
-      // are saved as paid and confirmed. Verify sets PAID for online orders.
+      // Payment status
       paymentStatus:
-        orderSource === "WALK_IN" ? "PAID" : "PENDING",
+        orderSource === "WALK_IN"
+          ? "PAID"
+          : "PENDING",
 
+      // Order status
       orderStatus:
-        orderSource === "WALK_IN" ? "CONFIRMED" : "PENDING",
+        orderSource === "WALK_IN"
+          ? "CONFIRMED"
+          : "PENDING",
 
-
+      // Order source
       orderSource,
 
+      // Customer
+      user: userId,
 
-      // NEW: customer source tracking
-      // "How did you come to know about ZAID Infotech?"
-      // Key of the option selected at checkout (e.g. GOOGLE, REFERRAL).
-      // Falls back to "" when the request doesn't send it
-      // (walk-in orders, old clients).
-      customerSource:
-        req.body.customerSource || "",
-
-
-      // NEW: free text, saved only when the selected source is "OTHER".
-      // For every other option it is forced to "" so no stale text is stored.
-      customerSourceOther:
-        req.body.customerSource === "OTHER"
-          ? (req.body.customerSourceOther || "").trim()
-          : "",
-
-
-      user:
-        userId,
-
-
+      // Salesperson
       soldBy:
         orderSource === "WALK_IN"
           ? userId
-          : null
+          : null,
+
+      // Branch
+      branchId,
+
+      // Customer source
+      customerSource,
+
+      customerSourceOther,
 
     };
 
 
-    console.log(
-      "================================="
-    );
+    // ================================================
+    // DEBUG LOG
+    // ================================================
+
+    console.log("=================================");
+
+    console.log("FINAL BACKEND ORDER DATA:");
 
     console.log(
-      "FINAL BACKEND ORDER DATA:"
+      JSON.stringify(orderData, null, 2)
     );
 
-    console.log(
-      JSON.stringify(
-        orderData,
-        null,
-        2
-      )
-    );
-
-    console.log(
-      "================================="
-    );
+    console.log("=================================");
 
 
     // ================================================
     // CREATE ORDER
     // ================================================
 
-    const order =
-      await orderService.createOrder(
-
-        orderData,
-
-        createdBy
-
-      );
+    const order = await orderService.createOrder(
+      orderData,
+      createdBy
+    );
 
 
     // ================================================
@@ -219,8 +181,7 @@ export const createOrder = async (
 
       success: true,
 
-      message:
-        "Order created successfully",
+      message: "Order created successfully",
 
       order,
 
@@ -230,21 +191,14 @@ export const createOrder = async (
 
   catch (error) {
 
-    console.error(
-      "CREATE ORDER ERROR:"
-    );
-
-    console.error(
-      error
-    );
-
+    console.error("CREATE ORDER ERROR:");
+    console.error(error);
 
     return res.status(400).json({
 
       success: false,
 
-      message:
-        error.message,
+      message: error.message,
 
       errors:
         error.details ||
@@ -262,18 +216,13 @@ export const createOrder = async (
 // GET MY ORDERS
 // ======================================================
 
-export const getMyOrders = async (
-  req,
-  res
-) => {
+export const getMyOrders = async (req, res) => {
 
   try {
 
-    const orders =
-      await orderService.getUserOrders(
-        req.user._id
-      );
-
+    const orders = await orderService.getUserOrders(
+      req.user._id
+    );
 
     return res.status(200).json({
 
@@ -287,12 +236,13 @@ export const getMyOrders = async (
 
   catch (error) {
 
+    console.error("GET MY ORDERS ERROR:", error);
+
     return res.status(400).json({
 
       success: false,
 
-      message:
-        error.message,
+      message: error.message,
 
     });
 
@@ -305,18 +255,13 @@ export const getMyOrders = async (
 // GET SINGLE ORDER
 // ======================================================
 
-export const getOrderById = async (
-  req,
-  res
-) => {
+export const getOrderById = async (req, res) => {
 
   try {
 
-    const order =
-      await orderService.getOrderById(
-        req.params.id
-      );
-
+    const order = await orderService.getOrderById(
+      req.params.id
+    );
 
     return res.status(200).json({
 
@@ -330,12 +275,13 @@ export const getOrderById = async (
 
   catch (error) {
 
+    console.error("GET ORDER BY ID ERROR:", error);
+
     return res.status(404).json({
 
       success: false,
 
-      message:
-        error.message,
+      message: error.message,
 
     });
 
@@ -348,156 +294,130 @@ export const getOrderById = async (
 // UPDATE ORDER STATUS
 // ======================================================
 
-export const updateOrderStatus =
-  async (
-    req,
-    res
-  ) => {
+export const updateOrderStatus = async (req, res) => {
 
-    try {
+  try {
 
-      // const order =
-      //   await orderService.updateOrderStatus(
+    const order = await orderService.updateOrderStatus(
 
-      //     req.params.id,
+      req.params.id,
 
-      //     req.body.status
+      req.body.status,
 
-      //   );
+      req.user?._id || null,
 
+      req.body.message || ""
 
-      const order =
-        await orderService.updateOrderStatus(
+    );
 
-          req.params.id,
+    return res.status(200).json({
 
-          req.body.status,
+      success: true,
 
-          req.user?._id || null,
+      message: "Order status updated",
 
-          req.body.message || ""
+      order,
 
-        );
+    });
 
-      return res.status(200).json({
+  }
 
-        success: true,
+  catch (error) {
 
-        message:
-          "Order status updated",
+    console.error("UPDATE ORDER STATUS ERROR:", error);
 
-        order,
+    return res.status(400).json({
 
-      });
+      success: false,
 
-    }
+      message: error.message,
 
-    catch (error) {
+    });
 
-      return res.status(400).json({
+  }
 
-        success: false,
-
-        message:
-          error.message,
-
-      });
-
-    }
-
-  };
+};
 
 
 // ======================================================
 // UPDATE PAYMENT STATUS
 // ======================================================
 
-export const updatePaymentStatus =
-  async (
-    req,
-    res
-  ) => {
+export const updatePaymentStatus = async (req, res) => {
 
-    try {
+  try {
 
-      const order =
-        await orderService.updatePaymentStatus(
+    const order = await orderService.updatePaymentStatus(
 
-          req.params.id,
+      req.params.id,
 
-          req.body.paymentStatus,
+      req.body.paymentStatus,
 
-          req.body.paymentId
+      req.body.paymentId
 
-        );
+    );
 
+    return res.status(200).json({
 
-      return res.status(200).json({
+      success: true,
 
-        success: true,
+      message: "Payment status updated",
 
-        message:
-          "Payment status updated",
+      order,
 
-        order,
+    });
 
-      });
+  }
 
-    }
+  catch (error) {
 
-    catch (error) {
+    console.error("UPDATE PAYMENT STATUS ERROR:", error);
 
-      return res.status(400).json({
+    return res.status(400).json({
 
-        success: false,
+      success: false,
 
-        message:
-          error.message,
+      message: error.message,
 
-      });
+    });
 
-    }
+  }
 
-  };
+};
 
 
 // ======================================================
 // GET ALL ORDERS
 // ======================================================
 
-export const getAllOrders =
-  async (
-    req,
-    res
-  ) => {
+export const getAllOrders = async (req, res) => {
 
-    try {
+  try {
 
-      const orders =
-        await orderService.getAllOrders();
+    const orders = await orderService.getAllOrders();
 
+    return res.status(200).json({
 
-      return res.status(200).json({
+      success: true,
 
-        success: true,
+      orders,
 
-        orders,
+    });
 
-      });
+  }
 
-    }
+  catch (error) {
 
-    catch (error) {
+    console.error("GET ALL ORDERS ERROR:", error);
 
-      return res.status(400).json({
+    return res.status(400).json({
 
-        success: false,
+      success: false,
 
-        message:
-          error.message,
+      message: error.message,
 
-      });
+    });
 
-    }
+  }
 
-  };
+};

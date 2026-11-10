@@ -203,6 +203,17 @@ const invoiceSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+        // =========================================
+    // INVOICE TYPE
+    // GST / NON_GST
+    // =========================================
+
+    invoiceType: {
+      type: String,
+      enum: ["GST", "NON_GST"],
+      default: "GST",
+      index: true,
+    },
 
     // =========================================
     // GST

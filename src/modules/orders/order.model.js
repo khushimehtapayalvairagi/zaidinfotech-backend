@@ -4,12 +4,6 @@ import {
   ORDER_STATUS
 } from "../../common/constants/orderStatus.js";
 
-// NEW: valid customer source keys (GOOGLE, INSTAGRAM_FACEBOOK, ... OTHER)
-// used for the enum of the customerSource field below
-import {
-  CUSTOMER_SOURCE_KEYS
-} from "../../common/constants/customerSource.js";
-
 
 // ======================================================
 // ORDER SCHEMA
@@ -38,6 +32,40 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
+    },
+
+
+    // ====================================================
+    // BRANCH INFORMATION
+    // ====================================================
+
+    branchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch",
+      default: null,
+      index: true,
+    },
+
+
+    // ====================================================
+    // CUSTOMER SOURCE
+    // ====================================================
+
+    customerSource: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+
+    // ====================================================
+    // CUSTOMER SOURCE OTHER
+    // ====================================================
+
+    customerSourceOther: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
 
@@ -94,30 +122,34 @@ const orderSchema = new mongoose.Schema(
         },
 
 
-      appliedOffer: {
+        // ====================================================
+        // APPLIED OFFER
+        // ====================================================
 
-    offerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Offer",
-        default: null
-    },
+        appliedOffer: {
 
-    title: {
-        type: String,
-        default: ""
-    },
+          offerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Offer",
+            default: null,
+          },
 
-    discountType: {
-        type: String,
-        default: ""
-    },
+          title: {
+            type: String,
+            default: "",
+          },
 
-    discountValue: {
-        type: Number,
-        default: 0
-    }
+          discountType: {
+            type: String,
+            default: "",
+          },
 
-},
+          discountValue: {
+            type: Number,
+            default: 0,
+          },
+
+        },
 
 
         // Product image
@@ -202,93 +234,88 @@ const orderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-   
+
+
     // ====================================================
-// COUPON (NEW)
-// ====================================================
+    // COUPON
+    // ====================================================
 
-coupon: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Coupon",
-  default: null,
-},
-
-couponCode: {
-  type: String,
-  default: "",
-  trim: true,
-},
-
-couponDiscount: {
-  type: Number,
-  default: 0,
-  min: 0,
-},
-
-finalAmount: {
-  type: Number,
-  required: true,
-  min: 0,
-},
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
+    },
 
 
-// ====================================================
-// PRICE BREAKDOWN (NEW)
-// ====================================================
+    couponCode: {
+      type: String,
+      default: "",
+      trim: true,
+    },
 
-subtotal: {
-  type: Number,
-  min: 0,
-},
 
-offerDiscount: {
-  type: Number,
-  min: 0,
-},
+    couponDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
-taxableAmount: {
-  type: Number,
-  min: 0,
-},
 
-gstPercentage: {
-  type: Number,
-  min: 0,
-},
+    finalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-// NOTE: gstAmount par default MAT lagana.
-// Purane orders me ye undefined rahega, isi se
-// ViewOrder purane/naye order ko pehchanta hai.
-gstAmount: {
-  type: Number,
-  min: 0,
-},
 
-shippingCharge: {
-  type: Number,
-  min: 0,
-},
+    // ====================================================
+    // PRICE BREAKDOWN
+    // ====================================================
 
-otherCharges: {
-  type: Number,
-  min: 0,
-},
-// ====================================================
-// COUPON (NEW)
-// ====================================================
+    subtotal: {
+      type: Number,
+      min: 0,
+    },
 
-// coupon: {
-//   type: mongoose.Schema.Types.ObjectId,
-//   ref: "Coupon",
-//   default: null,
-// },
 
-// couponCode: {
-//   type: String,
-//   default: "",
-//   trim: true,
-// },
+    offerDiscount: {
+      type: Number,
+      min: 0,
+    },
 
+
+    taxableAmount: {
+      type: Number,
+      min: 0,
+    },
+
+
+    gstPercentage: {
+      type: Number,
+      min: 0,
+    },
+
+
+    // NOTE:
+    // gstAmount par default MAT lagana.
+    // Purane orders me ye undefined rahega.
+
+    gstAmount: {
+      type: Number,
+      min: 0,
+    },
+
+
+    shippingCharge: {
+      type: Number,
+      min: 0,
+    },
+
+
+    otherCharges: {
+      type: Number,
+      min: 0,
+    },
 
 
     // ====================================================
@@ -302,8 +329,7 @@ otherCharges: {
         ORDER_STATUS
       ),
 
-      default:
-        ORDER_STATUS.PENDING,
+      default: ORDER_STATUS.PENDING,
     },
 
 
@@ -326,17 +352,22 @@ otherCharges: {
 
     },
 
-//new
+
+    // ====================================================
+    // PAID AMOUNT
+    // ====================================================
 
     paidAmount: {
-    type: Number,
-    default: 0,
-    min: 0,
-},
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
 
+    // ====================================================
+    // RAZORPAY PAYMENT ID
+    // ====================================================
 
-    // Razorpay payment ID
     paymentId: {
       type: String,
       default: "",
@@ -344,57 +375,33 @@ otherCharges: {
     },
 
 
- 
     // ====================================================
-// ORDER TYPE
-// ====================================================
+    // ORDER TYPE
+    // ====================================================
 
-orderType: {
-  type: String,
-  enum: ["B2C", "B2B"],
-  required: true,
-},
+    orderType: {
+      type: String,
+      enum: ["B2C", "B2B"],
+      required: true,
+    },
 
-// ====================================================
-// ORDER SOURCE
-// ====================================================
 
-orderSource: {
+    // ====================================================
+    // ORDER SOURCE
+    // ====================================================
 
-    type: String,
+    orderSource: {
 
-    enum: [
+      type: String,
+
+      enum: [
         "ONLINE",
         "WALK_IN",
-    ],
+      ],
 
-    default: "ONLINE",
+      default: "ONLINE",
 
-},
-
-
-// ====================================================
-// CUSTOMER SOURCE TRACKING (NEW)
-// "How did you come to know about ZAID Infotech?"
-// ====================================================
-
-// NEW: the key of the option the customer selected at checkout
-// (e.g. GOOGLE, REFERRAL, OTHER). Empty string "" is allowed so
-// old orders and walk-in orders without this answer stay valid.
-customerSource: {
-  type: String,
-  enum: [...CUSTOMER_SOURCE_KEYS, ""],
-  default: "",
-},
-
-// NEW: free text, only filled when customerSource is "OTHER"
-// (the customer types how they found us)
-customerSourceOther: {
-  type: String,
-  default: "",
-  trim: true,
-  maxlength: 200,
-},
+    },
 
 
     // ====================================================
@@ -408,65 +415,72 @@ customerSourceOther: {
 
 
     // ====================================================
-// ORDER TRACKING
-// ====================================================
+    // ORDER TRACKING
+    // ====================================================
 
-tracking: {
+    tracking: {
 
-  history: [
+      history: [
 
-    {
+        {
 
-      status: {
-        type: String,
-        required: true,
-      },
+          status: {
+            type: String,
+            required: true,
+          },
 
-      message: {
+
+          message: {
+            type: String,
+            default: "",
+            trim: true,
+          },
+
+
+          updatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+          },
+
+
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+
+        },
+
+      ],
+
+
+      courierName: {
         type: String,
         default: "",
         trim: true,
       },
 
-      updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+
+      trackingNumber: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+
+      trackingUrl: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+
+      expectedDeliveryDate: {
+        type: Date,
         default: null,
       },
 
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-
     },
-
-  ],
-
-  courierName: {
-    type: String,
-    default: "",
-    trim: true,
-  },
-
-  trackingNumber: {
-    type: String,
-    default: "",
-    trim: true,
-  },
-
-  trackingUrl: {
-    type: String,
-    default: "",
-    trim: true,
-  },
-
-  expectedDeliveryDate: {
-    type: Date,
-    default: null,
-  },
-
-},
 
   },
 
@@ -475,6 +489,21 @@ tracking: {
   }
 
 );
+
+
+// ======================================================
+// INDEXES
+// ======================================================
+
+orderSchema.index({
+  branchId: 1,
+  createdAt: -1,
+});
+
+orderSchema.index({
+  orderSource: 1,
+  createdAt: -1,
+});
 
 
 // ======================================================

@@ -338,11 +338,19 @@ export const createPayment = async (
             "ONLINE";
     }
 
+        
+    // ---------------------------------------
+    // INVOICE TYPE (GST / NON_GST)
+    // ---------------------------------------
 
+    paymentData.invoiceType =
+        await resolveInvoiceType(paymentData);
     // ---------------------------------------
     // RECEIPT NUMBER
     // ---------------------------------------
 
+
+    
     paymentData.receiptNumber =
         await generateReceiptNumber();
 
@@ -479,11 +487,15 @@ export const getUserPayments = async (
 // GET ALL PAYMENTS
 // =======================================
 
-export const getAllPayments = async () => {
+// export const getAllPayments = async () => {
 
-    return await paymentRepository.getAllPayments();
+//     return await paymentRepository.getAllPayments();
+// };
+
+export const getAllPayments = async (filters = {}) => {
+
+    return await paymentRepository.getAllPayments(filters);
 };
-
 
 // =======================================
 // MARK PAYMENT SUCCESS
@@ -702,4 +714,125 @@ const determineSaleSource = async (
     // -------------------------------------------------
 
     return "ONLINE";
+};
+
+
+// =====================================================
+// RESOLVE INVOICE TYPE (GST / NON_GST)
+//
+// Priority:
+// 1. Order me jo type saved hai (ORDER payments)
+// 2. Request body ka invoiceType
+// 3. Default: GST
+// =====================================================
+
+const normalizeInvoiceType = (value) => {
+
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return null;
+    }
+
+    const text =
+        String(value)
+            .trim()
+            .toUpperCase()
+            .replace(/[\s-]+/g, "_");
+
+    if (
+        [
+            "NON_GST",
+            "NONGST",
+            "WITHOUT_GST",
+            "NO_GST"
+        ].includes(text)
+    ) {
+        return "NON_GST";
+    }
+
+    if (
+        [
+            "GST",
+            "WITH_GST",
+            "TAX_INVOICE"
+        ].includes(text)
+    ) {
+        return "GST";
+    }
+
+    return null;
+};
+
+
+const invoiceTypeFromOrder = (order) => {
+
+    if (!order) {
+        return null;
+    }
+
+    const fromField =
+        normalizeInvoiceType(
+            order.invoiceType ??
+            order.gstType ??
+            order.billType
+        );
+
+    if (fromField) {
+        return fromField;
+    }
+
+    if (
+        order.isNonGst === true ||
+        order.isNonGST === true ||
+        order.nonGst === true ||
+        order.isGst === false ||
+        order.isGST === false ||
+        order.gstApplicable === false
+    ) {
+        return "NON_GST";
+    }
+
+    return null;
+};
+
+
+const resolveInvoiceType = async (paymentData) => {
+
+    let fromOrder = null;
+
+    if (paymentData.paymentFor === "ORDER") {
+
+        try {
+
+            const order =
+                await Order.findById(
+                    paymentData.referenceId
+                ).lean();
+
+            fromOrder =
+                invoiceTypeFromOrder(order);
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "INVOICE TYPE DETECTION ERROR:",
+                error
+            );
+
+        }
+
+    }
+
+    return (
+        fromOrder ||
+        normalizeInvoiceType(
+            paymentData.invoiceType
+        ) ||
+        "GST"
+    );
 };

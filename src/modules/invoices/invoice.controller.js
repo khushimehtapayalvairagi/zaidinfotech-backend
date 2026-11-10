@@ -28,10 +28,20 @@ export const createInvoice = async (
 
     }
 
+    // const invoice =
+    //   await invoiceService
+    //     .createInvoiceFromOrder(
+    //       orderId
+    //     );
+
     const invoice =
       await invoiceService
         .createInvoiceFromOrder(
-          orderId
+          orderId,
+          {
+            invoiceType:
+              req.body.invoiceType,
+          }
         );
 
     return res.status(201).json({
@@ -147,9 +157,21 @@ async (req, res) => {
 
   try {
 
+    // const invoices =
+    //   await invoiceService
+    //     .getAllInvoices();
+
+    const invoiceType =
+      String(req.query.invoiceType || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[\s-]+/g, "_");
+
     const invoices =
       await invoiceService
-        .getAllInvoices();
+        .getAllInvoices({
+          invoiceType,
+        });
 
     return res.status(200).json({
 
@@ -226,6 +248,101 @@ async (req, res) => {
         error.message,
 
     });
+
+  }
+};
+
+
+
+// ==========================================
+// UPDATE INVOICE
+// PUT /api/invoices/:id
+// ==========================================
+
+export const updateInvoice =
+async (req, res) => {
+
+  try {
+
+    const invoice =
+      await invoiceService
+        .updateInvoice(
+          req.params.id,
+          req.body
+        );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Invoice updated successfully",
+
+      data: invoice,
+
+    });
+
+  } catch (error) {
+
+    return res
+      .status(
+        error.message === "Invoice not found"
+          ? 404
+          : 400
+      )
+      .json({
+
+        success: false,
+
+        message:
+          error.message,
+
+      });
+
+  }
+};
+
+
+// ==========================================
+// DELETE INVOICE
+// DELETE /api/invoices/:id
+// ==========================================
+
+export const deleteInvoice =
+async (req, res) => {
+
+  try {
+
+    await invoiceService
+      .deleteInvoice(
+        req.params.id
+      );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Invoice deleted successfully",
+
+    });
+
+  } catch (error) {
+
+    return res
+      .status(
+        error.message === "Invoice not found"
+          ? 404
+          : 400
+      )
+      .json({
+
+        success: false,
+
+        message:
+          error.message,
+
+      });
 
   }
 };

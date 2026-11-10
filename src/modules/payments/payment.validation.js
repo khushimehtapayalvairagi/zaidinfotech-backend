@@ -258,6 +258,25 @@ export const createPaymentValidation = Joi.object({
             ),
 
 
+
+    // -------------------------------------------------
+    // OPTIONAL INVOICE TYPE
+    // -------------------------------------------------
+
+    invoiceType:
+        Joi.string()
+            .trim()
+            .uppercase()
+            .valid(
+                "GST",
+                "NON_GST"
+            )
+            .messages({
+
+                "any.only":
+                    "Invalid invoice type. Allowed values: GST, NON_GST"
+
+            }),
     // -------------------------------------------------
     // OPTIONAL RECEIPT NUMBER
     // -------------------------------------------------

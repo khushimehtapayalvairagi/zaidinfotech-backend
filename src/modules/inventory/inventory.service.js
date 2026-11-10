@@ -20,7 +20,7 @@ import Inventory from "./inventory.model.js";
 // CALCULATE INVENTORY STATUS
 // ======================================================
 
-const calculateStatus = (
+export const calculateStatus = (
     currentStock,
     minimumStock
 ) => {
@@ -54,8 +54,7 @@ const calculateStatus = (
 // ADMIN + INVENTORY
 // ======================================================
 
-const sendInventoryNotification = async ({
-    productId,
+export const sendInventoryNotification = async ({    productId,
     currentStock,
     minimumStock
 }) => {
@@ -222,8 +221,7 @@ const sendInventoryNotification = async ({
 // CUSTOMER PRODUCT RESTOCK NOTIFICATION
 // ======================================================
 
-const sendProductRestockedNotification = async ({
-    productId
+export const sendProductRestockedNotification = async ({    productId
 }) => {
 
     try {

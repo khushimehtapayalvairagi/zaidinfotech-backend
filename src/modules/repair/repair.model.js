@@ -53,6 +53,75 @@ const repairPartSchema = new mongoose.Schema(
 );
 
 // ======================================================
+// TECHNICIAN TRANSFER HISTORY SUB-DOCUMENT
+// ======================================================
+
+const transferHistorySchema = new mongoose.Schema(
+  {
+    fromTechnician: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    toTechnician: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    reason: {
+      type: String,
+      enum: ["HALF_DAY", "LEAVE", "PERSONAL", "OTHER"],
+      required: true,
+    },
+
+    note: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
+
+    transferredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    transferredAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    _id: true,
+  }
+);
+
+// ======================================================
+// SERVICES SUB-DOCUMENT (Technician billing breakdown)
+// ======================================================
+
+const repairServiceSchema = new mongoose.Schema(
+  {
+    serviceId: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    serviceName: { type: String, trim: true, default: "" },
+    category: { type: String, trim: true, default: "" },
+    partCost: { type: Number, default: 0, min: 0 },
+    laborCost: { type: Number, default: 0, min: 0 },
+    totalCost: { type: Number, default: 0, min: 0 },
+    isCustom: { type: Boolean, default: false },
+  },
+  {
+    _id: false,
+  }
+);
+
+// ======================================================
 // REPAIR SCHEMA
 // ======================================================
 
@@ -309,7 +378,109 @@ const repairSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // ==================================================
+    // SEQUENTIAL JOB NUMBER
+    // 001, 002, 003 ... (mobile number se nahi banta)
+    // ==================================================
 
+    jobSerial: {
+      type: Number,
+      default: undefined,
+      index: true,
+    },
+
+    repairNumber: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+      default: undefined,
+    },
+
+    // ==================================================
+    // DEVICE WARRANTY TRACKING
+    // ==================================================
+
+    warrantyStatus: {
+      type: String,
+      enum: [
+        "IN_WARRANTY",
+        "OUT_OF_WARRANTY",
+        "NOT_SPECIFIED",
+      ],
+      default: "NOT_SPECIFIED",
+    },
+
+    warrantyProvider: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+
+    warrantyExpiryDate: {
+      type: Date,
+      default: null,
+    },
+
+    warrantyDetails: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
+
+    // ==================================================
+    // SALESPERSON
+    // ==================================================
+
+    salespersonName: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+
+    // ==================================================
+    // TECHNICIAN NOTES
+    // (observations, diagnosis, repair actions)
+    // ==================================================
+
+    technicianNotes: {
+      type: String,
+      trim: true,
+      maxlength: 3000,
+      default: "",
+    },
+
+    technicianNotesUpdatedAt: {
+      type: Date,
+      default: null,
+    },
+
+    technicianNotesUpdatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    // ==================================================
+    // TECHNICIAN TRANSFER HISTORY
+    // ==================================================
+
+    transferHistory: {
+      type: [transferHistorySchema],
+      default: [],
+    },
+
+    // ==================================================
+    // SERVICES (billing breakdown from technician)
+    // ==================================================
+
+    services: {
+      type: [repairServiceSchema],
+      default: [],
+    },
     // ==================================================
     // SPARE PARTS
     // ==================================================

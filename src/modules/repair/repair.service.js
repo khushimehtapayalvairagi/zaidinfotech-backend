@@ -8,6 +8,9 @@ import Repair, {
 
 import Branch from "../branches/branch.model.js";
 
+import User from "../users/user.model.js";
+import JobCounter from "./services/jobCounter.model.js";
+
 import {
   notifyAdminsService,
   notifyUserService,
@@ -117,6 +120,117 @@ const validateCost = (value, fieldName) => {
 
   return cost;
 };
+
+// ======================================================
+// JOB NUMBER (SEQUENTIAL)
+//
+// 001, 002, 003 ... 999, 1000, 1001 ...
+// MongoDB atomic $inc se banta hai, isliye 2 log ek
+// saath job banayein tab bhi duplicate nahi hoga.
+// Prefix chahiye (jaise "JC-") to neeche badlo.
+// ======================================================
+
+const JOB_NUMBER_PREFIX = "";
+const JOB_NUMBER_PADDING = 3;
+
+const generateJobNumber = async () => {
+  const counter = await JobCounter.findOneAndUpdate(
+    { _id: "repairJob" },
+    { $inc: { seq: 1 } },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+    }
+  );
+
+  return {
+    jobSerial: counter.seq,
+    repairNumber: `${JOB_NUMBER_PREFIX}${String(
+      counter.seq
+    ).padStart(JOB_NUMBER_PADDING, "0")}`,
+  };
+};
+
+// ======================================================
+// WARRANTY / SALESPERSON / TECHNICIAN NOTES HELPERS
+// ======================================================
+
+const WARRANTY_STATUSES = [
+  "IN_WARRANTY",
+  "OUT_OF_WARRANTY",
+  "NOT_SPECIFIED",
+];
+
+const TRANSFER_REASONS = [
+  "HALF_DAY",
+  "LEAVE",
+  "PERSONAL",
+  "OTHER",
+];
+
+// Sirf wahi keys return hoti hain jo input me di gayi hain
+const normalizeWarrantyFields = (input = {}) => {
+  const result = {};
+
+  if (input.warrantyStatus !== undefined) {
+    const status =
+      String(input.warrantyStatus || "")
+        .trim()
+        .toUpperCase() || "NOT_SPECIFIED";
+
+    if (!WARRANTY_STATUSES.includes(status)) {
+      throw new Error("Invalid warranty status.");
+    }
+
+    result.warrantyStatus = status;
+  }
+
+  if (input.warrantyProvider !== undefined) {
+    result.warrantyProvider = String(
+      input.warrantyProvider || ""
+    )
+      .trim()
+      .slice(0, 100);
+  }
+
+  if (input.warrantyDetails !== undefined) {
+    result.warrantyDetails = String(
+      input.warrantyDetails || ""
+    )
+      .trim()
+      .slice(0, 500);
+  }
+
+  if (input.warrantyExpiryDate !== undefined) {
+    if (
+      input.warrantyExpiryDate === null ||
+      input.warrantyExpiryDate === ""
+    ) {
+      result.warrantyExpiryDate = null;
+    } else {
+      const expiry = new Date(input.warrantyExpiryDate);
+
+      if (Number.isNaN(expiry.getTime())) {
+        throw new Error("Invalid warranty expiry date.");
+      }
+
+      result.warrantyExpiryDate = expiry;
+    }
+  }
+
+  return result;
+};
+
+const normalizeSalesperson = (value) =>
+  String(value || "")
+    .trim()
+    .slice(0, 100);
+
+const normalizeTechnicianNotes = (value) =>
+  String(value || "")
+    .trim()
+    .slice(0, 3000);
 
 // ======================================================
 // ADD SPARE PART TO REPAIR
@@ -359,9 +473,33 @@ export const createRepair = async (repairData) => {
   // ==================================================
   // CREATE REPAIR / JOB CARD
   // ==================================================
+  // ==================================================
+  // SEQUENTIAL JOB NUMBER + NEW FIELDS
+  // Saari validation upar ho chuki hai, isliye number
+  // yahin generate hota hai (gaps kam se kam).
+  // ==================================================
+
+  const jobNumber = await generateJobNumber();
+
+  const warrantyFields =
+    normalizeWarrantyFields(repairData);
 
   const repair =
     await repairRepository.createRepair({
+      jobSerial: jobNumber.jobSerial,
+
+      repairNumber: jobNumber.repairNumber,
+
+      ...warrantyFields,
+
+      salespersonName: normalizeSalesperson(
+        repairData.salespersonName
+      ),
+
+      technicianNotes: normalizeTechnicianNotes(
+        repairData.technicianNotes
+      ),
+
       user: user || null,
 
       product: product || null,
@@ -559,7 +697,8 @@ export const getRepairsByProduct = async (
 
 export const updateRepair = async (
   id,
-  data
+  data,
+  actor = {}
 ) => {
   validateObjectId(
     id,
@@ -810,12 +949,56 @@ export const updateRepair = async (
   // UPDATE REPAIR
   // ==================================================
 
+   // ==================================================
+  // PROTECTED FIELDS (PUT se badle nahi ja sakte)
+  // Job number aur transfer history sirf system badalta hai
+  // ==================================================
+
+  delete updateData.repairNumber;
+  delete updateData.jobSerial;
+  delete updateData.transferHistory;
+
+  // ==================================================
+  // WARRANTY
+  // ==================================================
+
+  Object.assign(
+    updateData,
+    normalizeWarrantyFields(updateData)
+  );
+
+  // ==================================================
+  // SALESPERSON
+  // ==================================================
+
+  if (updateData.salespersonName !== undefined) {
+    updateData.salespersonName = normalizeSalesperson(
+      updateData.salespersonName
+    );
+  }
+
+  // ==================================================
+  // TECHNICIAN NOTES
+  // ==================================================
+
+  if (updateData.technicianNotes !== undefined) {
+    updateData.technicianNotes =
+      normalizeTechnicianNotes(
+        updateData.technicianNotes
+      );
+
+    updateData.technicianNotesUpdatedAt = new Date();
+
+    if (actor?.id) {
+      updateData.technicianNotesUpdatedBy = actor.id;
+    }
+  }
+
   const repair =
     await repairRepository.updateRepair(
       id,
       updateData
     );
-
   if (!repair) {
     throw new Error(
       "Unable to update Job Card."
@@ -1213,4 +1396,210 @@ export const updateRepairPayment = async (
   await repair.save();
 
   return repair;
+};
+
+
+// ======================================================
+// TRANSFER / REASSIGN JOB TO ANOTHER TECHNICIAN
+//
+// Allowed roles (route me check hota hai):
+// SUPER_ADMIN, ADMIN, IT_SUPPORT, TECHNICIAN
+//
+// TECHNICIAN sirf apne assigned jobs transfer kar sakta hai.
+// Admin / IT Support kisi bhi job ko kisi bhi technician
+// ko assign kar sakte hain.
+// ======================================================
+
+export const transferRepair = async (
+  repairId,
+  { toTechnicianId, reason, note } = {},
+  actor = {}
+) => {
+  validateObjectId(
+    repairId,
+    "Invalid Job Card ID."
+  );
+
+  validateObjectId(
+    toTechnicianId,
+    "Invalid technician selected."
+  );
+
+  const cleanReason = String(reason || "")
+    .trim()
+    .toUpperCase();
+
+  if (!TRANSFER_REASONS.includes(cleanReason)) {
+    throw new Error("Invalid transfer reason.");
+  }
+
+  const cleanNote = String(note || "").trim();
+
+  if (cleanNote.length < 3) {
+    throw new Error(
+      "Please write a transfer note (at least 3 characters)."
+    );
+  }
+
+  const repair = await Repair.findOne({
+    _id: repairId,
+    isDeleted: { $ne: true },
+  });
+
+  if (!repair) {
+    throw new Error("Repair request not found.");
+  }
+
+  if (
+    ["Delivered", "Cancelled"].includes(repair.status)
+  ) {
+    throw new Error(
+      `Cannot transfer a ${repair.status.toLowerCase()} job.`
+    );
+  }
+
+  const actorId = String(actor?.id || "");
+  const actorRole = String(
+    actor?.role || ""
+  ).toUpperCase();
+
+  const currentTechId = repair.assignedTechnician
+    ? String(repair.assignedTechnician)
+    : "";
+
+  if (
+    actorRole === "TECHNICIAN" &&
+    currentTechId !== actorId
+  ) {
+    throw new Error(
+      "You can only transfer jobs that are assigned to you."
+    );
+  }
+
+  if (currentTechId === String(toTechnicianId)) {
+    throw new Error(
+      "This job is already assigned to the selected technician."
+    );
+  }
+
+  const newTechnician = await User.findOne({
+    _id: toTechnicianId,
+    role: "TECHNICIAN",
+    isDeleted: { $ne: true },
+  });
+
+  if (!newTechnician) {
+    throw new Error("Selected technician not found.");
+  }
+
+  if (
+    String(newTechnician.status || "ACTIVE") !==
+    "ACTIVE"
+  ) {
+    throw new Error(
+      "Selected technician is not active."
+    );
+  }
+
+  const newTechnicianName =
+    `${newTechnician.firstName || ""} ${
+      newTechnician.lastName || ""
+    }`.trim() ||
+    newTechnician.email ||
+    "Technician";
+
+  const update = {
+    $set: {
+      assignedTechnician: newTechnician._id,
+      technicianName: newTechnicianName,
+    },
+
+    $push: {
+      transferHistory: {
+        fromTechnician:
+          repair.assignedTechnician || null,
+        toTechnician: newTechnician._id,
+        reason: cleanReason,
+        note: cleanNote,
+        transferredBy: actorId || null,
+        transferredAt: new Date(),
+      },
+    },
+  };
+
+  if (repair.status === "Received") {
+    update.$set.status = "Assigned";
+  }
+
+  await Repair.updateOne(
+    { _id: repair._id },
+    update
+  );
+
+  // ==================================================
+  // NOTIFICATIONS (fail hone par transfer fail nahi hoga)
+  // ==================================================
+
+  const jobLabel =
+    repair.repairNumber ||
+    String(repair._id).slice(-6).toUpperCase();
+
+  try {
+    await notifyUserService({
+      userId: newTechnician._id,
+
+      type: "REPAIR_ASSIGNED",
+
+      title: "Repair Job Transferred To You",
+
+      message:
+        `Job ${jobLabel} (${repair.deviceModel || "device"}) has been transferred to you. Note: ${cleanNote}`,
+
+      relatedId: repair._id,
+
+      relatedModel: "Repair",
+    });
+
+    if (
+      currentTechId &&
+      currentTechId !== actorId
+    ) {
+      await notifyUserService({
+        userId: currentTechId,
+
+        type: "GENERAL",
+
+        title: "Repair Job Transferred",
+
+        message:
+          `Job ${jobLabel} has been transferred to ${newTechnicianName}.`,
+
+        relatedId: repair._id,
+
+        relatedModel: "Repair",
+      });
+    }
+
+    await notifyAdminsService({
+      type: "GENERAL",
+
+      title: "Repair Job Transferred",
+
+      message:
+        `Job ${jobLabel} transferred to ${newTechnicianName} (${cleanReason.replace("_", " ")}).`,
+
+      relatedId: repair._id,
+
+      relatedModel: "Repair",
+    });
+  } catch (notificationError) {
+    console.error(
+      "REPAIR TRANSFER NOTIFICATION ERROR:",
+      notificationError
+    );
+  }
+
+  return await repairRepository.getRepairById(
+    repair._id
+  );
 };

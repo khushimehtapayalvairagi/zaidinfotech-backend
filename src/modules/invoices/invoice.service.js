@@ -4,6 +4,78 @@ import * as invoiceRepository from "./invoice.repository.js";
 import Order from "../orders/order.model.js";
 import Payment from "../payments/payment.model.js";
 
+
+
+// ==========================================
+// INVOICE TYPE HELPERS (GST / NON_GST)
+// ==========================================
+
+const round2 = (value) =>
+  Number(Number(value || 0).toFixed(2));
+
+const normalizeInvoiceType = (value) => {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const text = String(value)
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+
+  if (
+    ["NON_GST", "NONGST", "WITHOUT_GST", "NO_GST"].includes(text)
+  ) {
+    return "NON_GST";
+  }
+
+  if (
+    ["GST", "WITH_GST", "TAX_INVOICE"].includes(text)
+  ) {
+    return "GST";
+  }
+
+  return null;
+};
+
+const invoiceTypeFromOrder = (order) => {
+  if (!order) {
+    return null;
+  }
+
+  const fromField = normalizeInvoiceType(
+    order.invoiceType ??
+      order.gstType ??
+      order.billType
+  );
+
+  if (fromField) {
+    return fromField;
+  }
+
+  if (
+    order.isNonGst === true ||
+    order.isNonGST === true ||
+    order.nonGst === true ||
+    order.isGst === false ||
+    order.isGST === false ||
+    order.gstApplicable === false
+  ) {
+    return "NON_GST";
+  }
+
+  return null;
+};
+
+// Priority: order > request body > GST
+const resolveInvoiceType = (order, requested) =>
+  invoiceTypeFromOrder(order) ||
+  normalizeInvoiceType(requested) ||
+  "GST";
 // ==========================================
 // GENERATE INVOICE NUMBER
 // ==========================================
@@ -22,8 +94,11 @@ const generateInvoiceNumber = async () => {
 // CREATE INVOICE FROM ORDER
 // ==========================================
 
-export const createInvoiceFromOrder = async (orderId) => {
-  console.log("=================================");
+export const createInvoiceFromOrder = async (
+  orderId,
+  options = {}
+) => {
+    console.log("=================================");
   console.log("CREATE INVOICE STARTED");
   console.log("ORDER ID:", orderId);
 
@@ -43,6 +118,27 @@ export const createInvoiceFromOrder = async (orderId) => {
     return existingInvoice;
   }
 
+  
+  // ==========================================
+  // 1A. DELETED INVOICE EXISTS? -> RESTORE
+  // (order pe unique index hai, naya nahi ban sakta)
+  // ==========================================
+
+  const deletedInvoice =
+    await invoiceRepository.findDeletedInvoiceByOrderId(
+      orderId
+    );
+
+  if (deletedInvoice) {
+    console.log(
+      "DELETED INVOICE RESTORED:",
+      deletedInvoice.invoiceNumber
+    );
+
+    return await invoiceRepository.restoreInvoice(
+      deletedInvoice._id
+    );
+  }
   // ==========================================
   // 2. FIND ORDER
   // ==========================================
@@ -273,20 +369,44 @@ export const createInvoiceFromOrder = async (orderId) => {
       )
     );
 
-  const gstPercentage =
-    Number(
-      order.gstPercentage ??
-      18
-    );
+  // const gstPercentage =
+  //   Number(
+  //     order.gstPercentage ??
+  //     18
+  //   );
 
-  const gstAmount =
-    Number(
-      order.gstAmount ??
-      (
-        taxableAmount *
-        gstPercentage
-      ) / 100
-    );
+  // const gstAmount =
+  //   Number(
+  //     order.gstAmount ??
+  //     (
+  //       taxableAmount *
+  //       gstPercentage
+  //     ) / 100
+  //   );
+
+    const invoiceType = resolveInvoiceType(
+    order,
+    options.invoiceType
+  );
+
+  const isNonGst = invoiceType === "NON_GST";
+
+  const gstPercentage = isNonGst
+    ? 0
+    : Number(
+        order.gstPercentage ??
+        18
+      );
+
+  const gstAmount = isNonGst
+    ? 0
+    : Number(
+        order.gstAmount ??
+        (
+          taxableAmount *
+          gstPercentage
+        ) / 100
+      );
 
   const shippingCharge =
     Number(
@@ -472,6 +592,8 @@ export const createInvoiceFromOrder = async (orderId) => {
     taxableAmount:
       taxableAmount,
 
+      invoiceType,
+
     // GST
     gstPercentage:
       gstPercentage,
@@ -587,8 +709,12 @@ export const getInvoiceByOrderId = async (
 // GET ALL
 // ==========================================
 
-export const getAllInvoices = async () => {
-  return await invoiceRepository.findAllInvoices();
+// export const getAllInvoices = async () => {
+//   return await invoiceRepository.findAllInvoices();
+// };
+
+export const getAllInvoices = async (filters = {}) => {
+  return await invoiceRepository.findAllInvoices(filters);
 };
 
 // ==========================================
@@ -598,4 +724,224 @@ export const getAllInvoices = async () => {
 
 export const getMyInvoices = async (userId) => {
   return await invoiceRepository.findInvoicesByUser(userId);
+};
+
+
+// ==========================================
+// UPDATE INVOICE
+//
+// Allowed: invoiceType, gstPercentage,
+// shippingCharge, otherCharges, notes,
+// invoiceDate, paymentMethod, billingAddress
+// ==========================================
+
+export const updateInvoice = async (
+  invoiceId,
+  data = {}
+) => {
+  const invoice = await Invoice.findOne({
+    _id: invoiceId,
+    isDeleted: false,
+  });
+
+  if (!invoice) {
+    throw new Error("Invoice not found");
+  }
+
+  const toAmount = (value, label) => {
+    const number = Number(value);
+
+    if (!Number.isFinite(number) || number < 0) {
+      throw new Error(
+        `${label} must be a valid number (0 or more)`
+      );
+    }
+
+    return round2(number);
+  };
+
+  // -------------------------------------------
+  // SIMPLE FIELDS
+  // -------------------------------------------
+
+  if (data.notes !== undefined) {
+    invoice.notes = String(data.notes);
+  }
+
+  if (data.paymentMethod !== undefined) {
+    invoice.paymentMethod = String(
+      data.paymentMethod
+    ).trim();
+  }
+
+  if (data.invoiceDate !== undefined) {
+    const date = new Date(data.invoiceDate);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error("Invalid invoice date");
+    }
+
+    invoice.invoiceDate = date;
+  }
+
+  if (
+    data.billingAddress &&
+    typeof data.billingAddress === "object"
+  ) {
+    [
+      "fullName",
+      "phone",
+      "addressLine",
+      "city",
+      "state",
+      "pincode",
+      "country",
+      "landmark",
+    ].forEach((key) => {
+      if (data.billingAddress[key] !== undefined) {
+        invoice.billingAddress[key] = String(
+          data.billingAddress[key]
+        );
+      }
+    });
+  }
+
+  // -------------------------------------------
+  // GST / NON-GST + AMOUNTS
+  // -------------------------------------------
+
+  let moneyChanged = false;
+
+  let newType = null;
+
+  if (data.invoiceType !== undefined) {
+    newType = normalizeInvoiceType(
+      data.invoiceType
+    );
+
+    if (!newType) {
+      throw new Error(
+        "Invalid invoice type. Use GST or NON_GST"
+      );
+    }
+
+    invoice.invoiceType = newType;
+
+    moneyChanged = true;
+  }
+
+  if (data.gstPercentage !== undefined) {
+    invoice.gstPercentage = toAmount(
+      data.gstPercentage,
+      "GST percentage"
+    );
+
+    moneyChanged = true;
+  }
+
+  if (data.shippingCharge !== undefined) {
+    invoice.shippingCharge = toAmount(
+      data.shippingCharge,
+      "Shipping charge"
+    );
+
+    moneyChanged = true;
+  }
+
+  if (data.otherCharges !== undefined) {
+    invoice.otherCharges = toAmount(
+      data.otherCharges,
+      "Other charges"
+    );
+
+    moneyChanged = true;
+  }
+
+  if (moneyChanged) {
+    const taxable = Number(
+      invoice.taxableAmount || 0
+    );
+
+    if (invoice.invoiceType === "NON_GST") {
+      invoice.gstPercentage = 0;
+      invoice.gstAmount = 0;
+    } else {
+      // NON_GST se GST me wapas aaye aur % 0 hai -> 18
+      if (
+        newType === "GST" &&
+        data.gstPercentage === undefined &&
+        !(Number(invoice.gstPercentage) > 0)
+      ) {
+        invoice.gstPercentage = 18;
+      }
+
+      invoice.gstAmount = round2(
+        (taxable *
+          Number(invoice.gstPercentage || 0)) /
+          100
+      );
+    }
+
+    const finalAmount = round2(
+      taxable +
+        Number(invoice.gstAmount || 0) +
+        Number(invoice.shippingCharge || 0) +
+        Number(invoice.otherCharges || 0)
+    );
+
+    const paid = Number(invoice.paidAmount || 0);
+
+    invoice.finalAmount = finalAmount;
+    invoice.totalAmount = finalAmount;
+    invoice.balanceAmount = Math.max(
+      round2(finalAmount - paid),
+      0
+    );
+
+    if (
+      ["PENDING", "PAID", "PARTIAL"].includes(
+        invoice.paymentStatus
+      )
+    ) {
+      if (paid >= finalAmount) {
+        invoice.paymentStatus = "PAID";
+      } else if (paid > 0) {
+        invoice.paymentStatus = "PARTIAL";
+      } else {
+        invoice.paymentStatus = "PENDING";
+      }
+    }
+  }
+
+  await invoice.save();
+
+  // Payment record me bhi type same rakho
+  if (newType && invoice.payment) {
+    await Payment.updateOne(
+      { _id: invoice.payment },
+      { invoiceType: newType }
+    );
+  }
+
+  return await invoiceRepository.findInvoiceById(
+    invoice._id
+  );
+};
+
+
+// ==========================================
+// DELETE INVOICE (SOFT DELETE)
+// ==========================================
+
+export const deleteInvoice = async (invoiceId) => {
+  const invoice =
+    await invoiceRepository.softDeleteInvoice(
+      invoiceId
+    );
+
+  if (!invoice) {
+    throw new Error("Invoice not found");
+  }
+
+  return invoice;
 };

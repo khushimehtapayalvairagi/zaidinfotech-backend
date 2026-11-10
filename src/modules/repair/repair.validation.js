@@ -273,6 +273,85 @@ export const createRepairValidation = Joi.object({
       "any.only": "Invalid repair status.",
     }),
 
+      // ==================================================
+  // WARRANTY
+  // ==================================================
+
+  warrantyStatus: Joi.string()
+    .valid("IN_WARRANTY", "OUT_OF_WARRANTY", "NOT_SPECIFIED")
+    .allow("", null)
+    .optional()
+    .messages({
+      "any.only": "Invalid warranty status.",
+    }),
+
+  warrantyProvider: Joi.string()
+    .trim()
+    .max(100)
+    .allow("", null)
+    .optional(),
+
+  warrantyExpiryDate: Joi.date()
+    .allow(null, "")
+    .optional()
+    .messages({
+      "date.base": "Invalid warranty expiry date.",
+    }),
+
+  warrantyDetails: Joi.string()
+    .trim()
+    .max(500)
+    .allow("", null)
+    .optional(),
+
+  // ==================================================
+  // SALESPERSON + TECHNICIAN NOTES
+  // ==================================================
+
+  salespersonName: Joi.string()
+    .trim()
+    .max(100)
+    .allow("", null)
+    .optional(),
+  technicianNotes: Joi.string()
+    .trim()
+    .max(3000)
+    .allow("", null)
+    .optional(),
+
+  warrantyStatus: Joi.string()
+    .valid("IN_WARRANTY", "OUT_OF_WARRANTY", "NOT_SPECIFIED")
+    .allow("", null)
+    .optional()
+    .messages({
+      "any.only": "Invalid warranty status.",
+    }),
+
+  warrantyProvider: Joi.string()
+    .trim()
+    .max(100)
+    .allow("", null)
+    .optional(),
+
+  warrantyExpiryDate: Joi.date()
+    .allow(null, "")
+    .optional()
+    .messages({
+      "date.base": "Invalid warranty expiry date.",
+    }),
+
+  warrantyDetails: Joi.string()
+    .trim()
+    .max(500)
+    .allow("", null)
+    .optional(),
+
+  salespersonName: Joi.string()
+    .trim()
+    .max(100)
+    .allow("", null)
+    .optional(),
+
 });
 
 // ======================================================
@@ -603,5 +682,41 @@ export const addRepairPartValidation = Joi.object({
     .max(500)
     .allow("")
     .optional(),
+
+});
+
+// ======================================================
+// TRANSFER JOB TO ANOTHER TECHNICIAN
+// ======================================================
+
+export const transferRepairValidation = Joi.object({
+
+  toTechnicianId: objectId
+    .required()
+    .messages({
+      "string.hex": "Invalid technician selected.",
+      "string.length": "Invalid technician selected.",
+      "any.required": "Please select a technician.",
+    }),
+
+  reason: Joi.string()
+    .valid("HALF_DAY", "LEAVE", "PERSONAL", "OTHER")
+    .required()
+    .messages({
+      "any.only": "Invalid transfer reason.",
+      "any.required": "Transfer reason is required.",
+    }),
+
+  note: Joi.string()
+    .trim()
+    .min(3)
+    .max(500)
+    .required()
+    .messages({
+      "string.empty": "Transfer note is required.",
+      "string.min": "Transfer note must be at least 3 characters.",
+      "string.max": "Transfer note cannot exceed 500 characters.",
+      "any.required": "Transfer note is required.",
+    }),
 
 });

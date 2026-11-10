@@ -32,6 +32,16 @@ const paymentSchema = new mongoose.Schema(
             default: "ONLINE",
             index: true
         },
+                // =====================================================
+        // INVOICE TYPE
+        // GST / NON_GST
+        // =====================================================
+        invoiceType: {
+            type: String,
+            enum: ["GST", "NON_GST"],
+            default: "GST",
+            index: true
+        },
 
         // Payment Type
         paymentType: {

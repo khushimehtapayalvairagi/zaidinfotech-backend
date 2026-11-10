@@ -600,8 +600,20 @@ export const getAllPayments = async (
 
     try {
 
+        // const payments =
+        //     await paymentService.getAllPayments();
+
+                const invoiceType =
+            String(req.query.invoiceType || "")
+                .trim()
+                .toUpperCase()
+                .replace(/[\s-]+/g, "_");
+
         const payments =
-            await paymentService.getAllPayments();
+            await paymentService.getAllPayments({
+                invoiceType
+            });
+            
 
         return res.status(200).json({
 

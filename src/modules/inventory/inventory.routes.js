@@ -1,38 +1,28 @@
-
-
 import express from "express";
 
 import {
-
     createInventory,
-
     getAllInventory,
-
     getInventoryById,
-
     updateInventory,
-
     deleteInventory,
-
     addStock,
-
     removeStock,
-
     reserveStock,
-
     releaseReservedStock,
-
     returnStock,
-
     getShopInventory
-
 } from "./inventory.controller.js";
 
+import {
+    transferStock,
+    addWarehouseStock,
+    getTransferHistory
+} from "./inventoryLocation.controller.js";
 
 import {
     verifyToken
 } from "../../common/middleware/auth.middleware.js";
-
 
 import {
     allowRoles
@@ -43,30 +33,22 @@ const router = express.Router();
 
 
 const inventoryRoles = [
-
     "ADMIN",
-
     "INVENTORY",
-
     "SALES"
+];
 
+const warehouseRoles = [
+    "ADMIN",
+    "INVENTORY"
 ];
 
 
-// ======================================================
 // PUBLIC SHOP INVENTORY
-// ======================================================
-
-router.get(
-    "/shop",
-    getShopInventory
-);
+router.get("/shop", getShopInventory);
 
 
-// ======================================================
 // CREATE
-// ======================================================
-
 router.post(
     "/",
     verifyToken,
@@ -76,9 +58,32 @@ router.post(
 
 
 // ======================================================
-// RETURN STOCK
+// NEW: STORE / WAREHOUSE
 // ======================================================
 
+router.patch(
+    "/transfer-stock",
+    verifyToken,
+    allowRoles(...warehouseRoles),
+    transferStock
+);
+
+router.patch(
+    "/add-warehouse-stock",
+    verifyToken,
+    allowRoles(...warehouseRoles),
+    addWarehouseStock
+);
+
+router.get(
+    "/transfers",
+    verifyToken,
+    allowRoles(...warehouseRoles),
+    getTransferHistory
+);
+
+
+// RETURN STOCK
 router.patch(
     "/return-stock",
     verifyToken,
@@ -86,11 +91,7 @@ router.patch(
     returnStock
 );
 
-
-// ======================================================
 // ADD STOCK
-// ======================================================
-
 router.patch(
     "/add-stock",
     verifyToken,
@@ -98,11 +99,7 @@ router.patch(
     addStock
 );
 
-
-// ======================================================
 // REMOVE STOCK
-// ======================================================
-
 router.patch(
     "/remove-stock",
     verifyToken,
@@ -110,11 +107,7 @@ router.patch(
     removeStock
 );
 
-
-// ======================================================
 // RESERVE STOCK
-// ======================================================
-
 router.patch(
     "/reserve-stock",
     verifyToken,
@@ -122,11 +115,7 @@ router.patch(
     reserveStock
 );
 
-
-// ======================================================
 // RELEASE RESERVED STOCK
-// ======================================================
-
 router.patch(
     "/release-stock",
     verifyToken,
@@ -134,11 +123,7 @@ router.patch(
     releaseReservedStock
 );
 
-
-// ======================================================
 // GET ALL
-// ======================================================
-
 router.get(
     "/",
     verifyToken,
@@ -146,11 +131,7 @@ router.get(
     getAllInventory
 );
 
-
-// ======================================================
 // GET BY ID
-// ======================================================
-
 router.get(
     "/:id",
     verifyToken,
@@ -158,11 +139,7 @@ router.get(
     getInventoryById
 );
 
-
-// ======================================================
 // UPDATE
-// ======================================================
-
 router.put(
     "/:id",
     verifyToken,
@@ -170,11 +147,7 @@ router.put(
     updateInventory
 );
 
-
-// ======================================================
 // DELETE
-// ======================================================
-
 router.delete(
     "/:id",
     verifyToken,
