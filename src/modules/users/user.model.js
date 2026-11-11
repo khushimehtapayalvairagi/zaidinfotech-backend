@@ -255,6 +255,7 @@ role: {
         "SALES",
         "TECHNICIAN",
         "INVENTORY",
+        "ACCOUNTANT",
         "IT_SUPPORT",
         "HR_EXECUTIVE",
         "CUSTOMER"
@@ -271,6 +272,7 @@ role: {
       enum: [
         "ADMINISTRATION",
         "FRONT_DESK",
+        "ACCOUNTING",
         "REPAIR",
         "IT_SUPPORT",
         "HR",

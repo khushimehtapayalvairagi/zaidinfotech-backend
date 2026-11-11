@@ -397,6 +397,42 @@ export const createWalkInRentalService = async (
           .slice(0, 200)
       : "";
 
+  // =====================================================
+  // [CHANGE] BRANCH + SALESPERSON
+  //
+  // WHY: The frontend already sends branchId (dropdown) but this
+  // service never read it, and soldBy was never saved either.
+  // Because the Rental schema has `default: null` for both
+  // fields, they were silently saved as null.
+  //
+  // WHAT:
+  //  - branchId : taken from the request body (selected in UI),
+  //               validated as a proper Mongo ObjectId.
+  //  - soldBy   : taken from `createdBy` (the authenticated user
+  //               set by verifyToken), NOT from the request body.
+  //               This way the salesperson cannot be faked from
+  //               the browser (localStorage can be edited).
+  //
+  // Only the IDs are stored. Names are resolved at read time with
+  // populate() (see rental.repository.js).
+  // =====================================================
+
+  const branchId = String(data.branchId || "").trim();
+
+  if (!branchId) {
+    throw new Error("Branch is required");
+  }
+
+  if (!mongoose.isValidObjectId(branchId)) {
+    throw new Error("Invalid branch selected");
+  }
+
+  const soldBy = String(createdBy || "").trim();
+
+  if (!mongoose.isValidObjectId(soldBy)) {
+    throw new Error("Invalid salesperson");
+  }
+
   // Load products
   const rentalProducts = await RentalProduct.find({
     _id: {
@@ -763,6 +799,12 @@ export const createWalkInRentalService = async (
           rentalNumber: generateRentalNumber(),
           orderId,
 
+          // [CHANGE] Save branch + salesperson on EVERY rental unit.
+          // Previously these two fields were missing here, so Mongoose
+          // filled them with the schema default (null).
+          branchId,
+          soldBy,
+
           customerId: null,
 
           productId:
@@ -1049,6 +1091,10 @@ export const createWalkInRentalService = async (
   }
 
   // Final response
+  // [CHANGE] Added populate("branchId") and populate("soldBy") so the
+  // API response contains branch name + salesperson name instead of
+  // raw IDs. This only affects the response; the saved document still
+  // stores IDs only.
   let rentals = await Rental.find({ orderId })
     .populate({
       path: "productId",
@@ -1058,9 +1104,12 @@ export const createWalkInRentalService = async (
       ]
     })
     .populate("rentalProductId")
+    .populate("branchId", "name")
+    .populate("soldBy", "firstName lastName name email")
     .sort({ createdAt: 1 });
 
   if (!rentals.length && createdRentals.length) {
+    // [CHANGE] Same two populate lines added to the fallback query.
     rentals = await Rental.find({
       _id: {
         $in: createdRentals.map(
@@ -1076,6 +1125,8 @@ export const createWalkInRentalService = async (
         ]
       })
       .populate("rentalProductId")
+      .populate("branchId", "name")
+      .populate("soldBy", "firstName lastName name email")
       .sort({ createdAt: 1 });
   }
 

@@ -9,8 +9,12 @@ import {
 
 
 // =====================================================
-// EXPENSE NUMBER
+// HELPERS
 // =====================================================
+
+const round2 = (value) =>
+    Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 
 const generateExpenseNumber = () => {
 
@@ -18,6 +22,88 @@ const generateExpenseNumber = () => {
         Date.now();
 
     return `EXP-${timestamp}`;
+
+};
+
+
+// =====================================================
+// GST CALCULATION (single source of truth)
+// =====================================================
+//
+// GST      : total = base + (base * gst% / 100)
+// NON_GST  : total = base, gst = 0
+//
+// `amount` is the final amount.
+// Old clients that only send `amount` are treated as
+// base amount.
+// =====================================================
+
+export const calculateExpenseAmounts = ({
+    gstType,
+    baseAmount,
+    amount,
+    gstPercentage
+}) => {
+
+    const type =
+        String(gstType || "NON_GST")
+            .trim()
+            .toUpperCase();
+
+    if (!["GST", "NON_GST"].includes(type)) {
+        throw new Error(
+            "Invalid GST type. Use GST or NON_GST"
+        );
+    }
+
+    const base =
+        Number(
+            baseAmount !== undefined &&
+            baseAmount !== null &&
+            baseAmount !== ""
+                ? baseAmount
+                : amount
+        );
+
+    if (!Number.isFinite(base) || base <= 0) {
+        throw new Error(
+            "Valid expense amount is required"
+        );
+    }
+
+    if (type === "NON_GST") {
+        return {
+            gstType: "NON_GST",
+            baseAmount: round2(base),
+            gstPercentage: 0,
+            gstAmount: 0,
+            amount: round2(base)
+        };
+    }
+
+    const pct =
+        Number(gstPercentage);
+
+    if (
+        !Number.isFinite(pct) ||
+        pct < 0 ||
+        pct > 100
+    ) {
+        throw new Error(
+            "GST percentage must be between 0 and 100"
+        );
+    }
+
+    const gstAmount =
+        round2(base * pct / 100);
+
+    return {
+        gstType: "GST",
+        baseAmount: round2(base),
+        gstPercentage: pct,
+        gstAmount,
+        amount: round2(base + gstAmount)
+    };
 
 };
 
@@ -43,20 +129,14 @@ export const createExpenseService = async (
         );
     }
 
-    if (
-        data.amount === undefined ||
-        Number(data.amount) <= 0
-    ) {
-        throw new Error(
-            "Valid expense amount is required"
-        );
-    }
-
     if (!data.paymentMethod) {
         throw new Error(
             "Payment method is required"
         );
     }
+
+    const amounts =
+        calculateExpenseAmounts(data);
 
     const expenseData = {
 
@@ -72,8 +152,12 @@ export const createExpenseService = async (
         description:
             data.description || "",
 
-        amount:
-            Number(data.amount),
+        ...amounts,
+
+        vendorGstNumber:
+            amounts.gstType === "GST"
+                ? (data.vendorGstNumber || "")
+                : "",
 
         paymentMethod:
             data.paymentMethod,
@@ -147,6 +231,19 @@ export const getAllExpensesService = async (
 // UPDATE
 // =====================================================
 
+const UPDATABLE_FIELDS = [
+    "category",
+    "title",
+    "description",
+    "paymentMethod",
+    "expenseDate",
+    "receiptNumber",
+    "vendorName",
+    "vendorGstNumber",
+    "status",
+    "remark"
+];
+
 export const updateExpenseService = async (
     id,
     data
@@ -161,22 +258,52 @@ export const updateExpenseService = async (
         );
     }
 
-    if (data.amount !== undefined) {
+    const update = {};
 
-        data.amount =
-            Number(data.amount);
+    for (const key of UPDATABLE_FIELDS) {
+        if (data[key] !== undefined) {
+            update[key] = data[key];
+        }
+    }
 
-        if (data.amount <= 0) {
-            throw new Error(
-                "Expense amount must be greater than zero"
-            );
+    const touchesAmount =
+        data.amount !== undefined ||
+        data.baseAmount !== undefined ||
+        data.gstType !== undefined ||
+        data.gstPercentage !== undefined;
+
+    if (touchesAmount) {
+
+        const amounts =
+            calculateExpenseAmounts({
+
+                gstType:
+                    data.gstType ??
+                    expense.gstType ??
+                    "NON_GST",
+
+                baseAmount:
+                    data.baseAmount ??
+                    data.amount ??
+                    expense.baseAmount ??
+                    expense.amount,
+
+                gstPercentage:
+                    data.gstPercentage ??
+                    expense.gstPercentage
+            });
+
+        Object.assign(update, amounts);
+
+        if (amounts.gstType === "NON_GST") {
+            update.vendorGstNumber = "";
         }
 
     }
 
     return await updateExpenseDB(
         id,
-        data
+        update
     );
 
 };

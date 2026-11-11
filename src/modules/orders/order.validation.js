@@ -222,6 +222,23 @@ export const createOrderValidation = Joi.object({
     .default("ONLINE"),
 
 
+  
+  // ====================================================
+  // BRANCH (walk-in orders)
+  // ====================================================
+
+  branchId: Joi.string()
+    .hex()
+    .length(24)
+    .allow("", null)
+    .optional()
+    .default(null)
+    .messages({
+      "string.hex": "Invalid branch",
+      "string.length": "Invalid branch",
+    }),
+
+
   // ====================================================
   // CUSTOMER SOURCE TRACKING (NEW)
   // "How did you come to know about ZAID Infotech?"

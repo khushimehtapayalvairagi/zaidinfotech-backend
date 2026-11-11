@@ -28,6 +28,31 @@ const rentalSchema = new mongoose.Schema(
             index: true
         },
 
+
+                // =====================================================
+        // BRANCH
+        // Only the id is stored. The name comes from the Branch model.
+        // =====================================================
+
+        branchId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Branch",
+            default: null,
+            index: true
+        },
+
+        // =====================================================
+        // SALESPERSON
+        // Employee who created / sold this rental.
+        // =====================================================
+
+        soldBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true
+        },
+
         // =====================================================
         // CUSTOMER
         // =====================================================
@@ -647,6 +672,12 @@ rentalSchema.index({
 
 rentalSchema.index({
     "companyDetails.phone": 1
+});
+
+
+rentalSchema.index({
+    branchId: 1,
+    status: 1
 });
 
 // Order ke saare rentals ko jaldi find karne ke liye.

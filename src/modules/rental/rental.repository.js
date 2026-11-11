@@ -22,7 +22,13 @@ export const getRentalByIdDB = async (id) => {
         .populate("customerId", "name email phone")
         .populate("productId")
         .populate("rentalProductId")
-        .populate("securityDepositPaymentId");
+        .populate("securityDepositPaymentId")
+
+        // [CHANGE] Branch + salesperson (soldBy) are stored as IDs only.
+        // populate() swaps the ID for the name at READ time so the UI can
+        // show them. The database document is NOT modified by populate.
+        .populate("branchId", "name")
+        .populate("soldBy", "firstName lastName name email");
 
 };
 
@@ -57,6 +63,12 @@ export const getAllRentalsDB = async () => {
         .populate("customerId", "name email phone")
         .populate("productId")
         .populate("rentalProductId")
+
+        // [CHANGE] Show branch name + salesperson name in the
+        // admin / orders list (same populate as getRentalByIdDB).
+        .populate("branchId", "name")
+        .populate("soldBy", "firstName lastName name email")
+
         .sort({
             createdAt: -1
         });

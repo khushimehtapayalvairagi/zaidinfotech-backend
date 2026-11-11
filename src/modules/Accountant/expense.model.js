@@ -37,6 +37,45 @@ const expenseSchema = new mongoose.Schema(
             default: ""
         },
 
+        // --------------------------------------------------
+        // GST / NON-GST
+        // --------------------------------------------------
+
+        gstType: {
+            type: String,
+            enum: ["GST", "NON_GST"],
+            default: "NON_GST"
+        },
+
+        // Amount BEFORE GST (no default on purpose:
+        // old records don't have it, they fall back to `amount`)
+        baseAmount: {
+            type: Number,
+            min: 0
+        },
+
+        gstPercentage: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100
+        },
+
+        gstAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
+        vendorGstNumber: {
+            type: String,
+            default: "",
+            trim: true,
+            uppercase: true
+        },
+
+        // FINAL amount paid (base + GST).
+        // Reports / totals keep using this field.
         amount: {
             type: Number,
             required: true,
@@ -48,7 +87,8 @@ const expenseSchema = new mongoose.Schema(
             enum: [
                 "CASH",
                 "BANK",
-                "UPI"
+                "UPI",
+                "CARD"
             ],
             required: true
         },

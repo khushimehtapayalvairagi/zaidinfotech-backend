@@ -1,6 +1,3 @@
-
-
-
 import Order from "./order.model.js";
 
 
@@ -104,7 +101,6 @@ export const findOrdersByUserId =
 
   };
 
-
 // ======================================================
 // FIND ALL ORDERS
 // ADMIN
@@ -123,6 +119,11 @@ export const findAllOrders =
       .populate(
         "soldBy",
         "firstName lastName name email role"
+      )
+
+      .populate(
+        "branchId",
+        "name code"
       )
 
       .populate({

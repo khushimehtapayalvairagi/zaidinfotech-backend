@@ -42,6 +42,13 @@ const EMPLOYEE_MANAGEMENT_ROLES = [
   "HR_EXECUTIVE",
 ];
 
+
+// Roles that can fetch the employee list (e.g. to pick a salesperson)
+const EMPLOYEE_LIST_ROLES = [
+  ...EMPLOYEE_MANAGEMENT_ROLES,
+  "IT_SUPPORT", // <-- use the exact role string your IT support users have
+];
+
 // ======================================================
 // PUBLIC ROUTES
 // ======================================================
@@ -116,11 +123,12 @@ router.post(
 // ADMIN + SUPER_ADMIN + HR_EXECUTIVE
 // ======================================================
 
+
 // GET ALL EMPLOYEES
 router.get(
   "/employees",
   verifyToken,
-  allowRoles(...EMPLOYEE_MANAGEMENT_ROLES),
+  allowRoles(...EMPLOYEE_LIST_ROLES),
   getEmployees
 );
 
