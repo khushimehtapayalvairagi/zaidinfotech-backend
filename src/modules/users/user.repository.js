@@ -66,23 +66,47 @@ export const findById = async (id) => {
 };
 
 // Update
+
 export const update = async (id, data) => {
-  return await User.findByIdAndUpdate(id, data, {
-    new: true,
-  }).select("-password");
+  return await User.findOneAndUpdate(
+    {
+      _id: id,
+      isDeleted: false,
+    },
+    data,
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("-password");
 };
 
+
 // Soft Delete
+
 export const softDelete = async (id) => {
-  return await User.findByIdAndUpdate(
-    id,
+  return await User.findOneAndUpdate(
     {
-      isDeleted: true,
-      status: "INACTIVE",
+      _id: id,
+      isDeleted: false,
     },
-    { new: true }
-  );
+    {
+      $set: {
+        isDeleted: true,
+        status: "DELETED",
+        isOnline: false,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+        emailVerificationOtp: null,
+        emailVerificationExpires: null,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
 };
+
 
 // ===============================
 // Get All Employees

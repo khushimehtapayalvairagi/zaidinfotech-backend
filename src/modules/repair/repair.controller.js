@@ -204,9 +204,19 @@ export const updateRepairStatus = async (req, res, next) => {
             });
         }
 
+        const userId = req.user?._id || req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "User not authenticated.",
+            });
+        }
+
         const repair = await repairService.updateRepairStatus(
             req.params.id,
-            status
+            status,
+            { id: userId, role: req.user?.role }
         );
 
         return res.status(200).json({
@@ -218,7 +228,6 @@ export const updateRepairStatus = async (req, res, next) => {
         next(error);
     }
 };
-
 // ======================================================
 // MARK REPAIR DELIVERED
 // ======================================================
@@ -516,6 +525,11 @@ export const updateRepairPayment = async (req, res, next) => {
                     paymentMethod,
                     paymentId,
                     paymentStatus,
+                },
+                // CHANGE: logged-in user is passed so the
+                // Payment record knows who received the money
+                {
+                    id: req.user?._id || req.user?.id,
                 }
             );
 
@@ -523,6 +537,28 @@ export const updateRepairPayment = async (req, res, next) => {
             success: true,
             message: "Repair payment updated successfully.",
             data: repair,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ======================================================
+// CHANGE: NEW
+// GET PAYMENT RECORDS OF A REPAIR / JOB CARD
+// ======================================================
+
+export const getRepairPayments = async (req, res, next) => {
+    try {
+        const payments =
+            await repairService.getPaymentsByRepair(
+                req.params.id
+            );
+
+        return res.status(200).json({
+            success: true,
+            count: payments.length,
+            data: payments,
         });
     } catch (error) {
         next(error);

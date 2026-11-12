@@ -125,6 +125,18 @@ router.get(
 );
 
 // ======================================================
+// CHANGE: NEW
+// GET PAYMENT RECORDS OF A JOB CARD
+// (reads from the central Payment collection)
+// ======================================================
+
+router.get(
+  "/:id/payments",
+  verifyToken,
+  repairController.getRepairPayments
+);
+
+// ======================================================
 // UPDATE JOB CARD
 // ======================================================
 

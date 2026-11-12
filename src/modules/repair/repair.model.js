@@ -378,6 +378,7 @@ const repairSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
     // ==================================================
     // SEQUENTIAL JOB NUMBER
     // 001, 002, 003 ... (mobile number se nahi banta)
@@ -481,6 +482,40 @@ const repairSchema = new mongoose.Schema(
       type: [repairServiceSchema],
       default: [],
     },
+
+    // ==================================================
+    // GST / NON-GST INVOICE
+    // repairCost = base amount, GST upar se judta hai
+    // "" allowed so old records never fail validation
+    // ==================================================
+
+    invoiceType: {
+      type: String,
+      enum: ["GST", "NON_GST", ""],
+      default: "NON_GST",
+      index: true,
+    },
+
+    gstPercentage: {
+      type: Number,
+      default: 18,
+      min: 0,
+      max: 100,
+    },
+
+    gstAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Total payable (base + GST)
+    totalAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     // ==================================================
     // SPARE PARTS
     // ==================================================
@@ -525,6 +560,16 @@ const repairSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    completedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+},
+completedAt: {
+    type: Date,
+    default: null,
+},
   },
   {
     timestamps: true,
@@ -568,6 +613,7 @@ repairSchema.index({
   assignedTechnician: 1,
   status: 1,
 });
+
 
 // ======================================================
 // MODEL

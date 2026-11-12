@@ -96,19 +96,54 @@ export const getUserById = async (req, res) => {
 // ===============================
 // Update User
 // ===============================
+
+// ======================================================
+// UPDATE EMPLOYEE
+// PUT /api/users/employee/:id
+// ======================================================
+
 export const updateUser = async (req, res) => {
   try {
-    const user = await userService.updateUser(
+    const employee = await userService.updateUser(
       req.params.id,
       req.body
     );
 
     return res.status(200).json({
       success: true,
-      message: "User Updated Successfully",
-      data: user,
+      message: "Employee updated successfully",
+      data: employee,
     });
   } catch (error) {
+    console.error("UPDATE EMPLOYEE ERROR:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ======================================================
+// DELETE EMPLOYEE (SOFT DELETE)
+// DELETE /api/users/employee/:id
+// ======================================================
+
+export const deleteUser = async (req, res) => {
+  try {
+    const employee = await userService.deleteUser(
+      req.params.id
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee deleted successfully",
+      data: employee,
+    });
+  } catch (error) {
+    console.error("DELETE EMPLOYEE ERROR:", error);
+
     return res.status(400).json({
       success: false,
       message: error.message,
@@ -119,21 +154,21 @@ export const updateUser = async (req, res) => {
 // ===============================
 // Soft Delete User
 // ===============================
-export const deleteUser = async (req, res) => {
-  try {
-    await userService.deleteUser(req.params.id);
+// export const deleteUser = async (req, res) => {
+//   try {
+//     await userService.deleteUser(req.params.id);
 
-    return res.status(200).json({
-      success: true,
-      message: "User Deleted Successfully",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       message: "User Deleted Successfully",
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const register = async (req, res) => {
   try {
     // Validate Request

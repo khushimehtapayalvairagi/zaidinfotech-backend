@@ -16,6 +16,11 @@ import {
   notifyUserService,
 } from "../notification/notification.service.js";
 
+// CHANGE: imports for saving repair payments in the Payment collection
+import Payment from "../payments/payment.model.js";
+import { createPayment } from "../payments/payment.service.js";
+import { PAYMENT_STATUS } from "../../common/constants/paymentStatus.js";
+
 // ======================================================
 // HELPER: VALIDATE OBJECT ID
 // ======================================================
@@ -119,6 +124,35 @@ const validateCost = (value, fieldName) => {
   }
 
   return cost;
+};
+
+// ======================================================
+// CHANGE: REPAIR PAYMENT METHOD -> PAYMENT COLLECTION METHOD
+//
+// Repair model allows: CASH, UPI, CARD, BANK_TRANSFER,
+// RAZORPAY, OTHER.
+// Payment model allows: COD, UPI, CARD, NET_BANKING,
+// WALLET, CASH.
+//
+// OTHER (and empty) have no equivalent, so they return
+// null and no Payment record is created for them.
+// ======================================================
+
+const REPAIR_TO_PAYMENT_METHOD = {
+  CASH: "CASH",
+  UPI: "UPI",
+  CARD: "CARD",
+  BANK_TRANSFER: "NET_BANKING",
+  RAZORPAY: "UPI",
+};
+
+const toAccountingMethod = (value) => {
+  const key = String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+
+  return REPAIR_TO_PAYMENT_METHOD[key] || null;
 };
 
 // ======================================================
@@ -231,6 +265,131 @@ const normalizeTechnicianNotes = (value) =>
   String(value || "")
     .trim()
     .slice(0, 3000);
+
+// ======================================================
+// INVOICE TYPE / GST HELPERS (Prem's version)
+//
+// NOTE: This helper is kept as-is so no code is lost, but it
+// is NOT called anywhere now. The lead's normalizeRepairGst()
+// below does the same job (and also defaults empty type to
+// NON_GST), and it is the one used by createRepair and
+// updateRepair so that GST totals are calculated correctly.
+// Calling both would process invoiceType / gstPercentage twice.
+// ======================================================
+
+const INVOICE_TYPES = ["GST", "NON_GST"];
+
+const normalizeInvoiceFields = (input = {}) => {
+  const result = {};
+
+  if (input.invoiceType !== undefined) {
+    const type = String(input.invoiceType || "")
+      .trim()
+      .toUpperCase();
+
+    if (type && !INVOICE_TYPES.includes(type)) {
+      throw new Error("Invalid invoice type.");
+    }
+
+    result.invoiceType = type;
+  }
+
+  if (input.gstPercentage !== undefined) {
+    const gst = Number(input.gstPercentage ?? 0);
+
+    if (
+      !Number.isFinite(gst) ||
+      gst < 0 ||
+      gst > 100
+    ) {
+      throw new Error("Invalid GST percentage.");
+    }
+
+    result.gstPercentage = gst;
+  }
+
+  return result;
+};
+
+    // ======================================================
+// GST / NON-GST HELPERS
+// repairCost = base amount. GST invoice me GST upar se judta hai.
+// ======================================================
+
+const REPAIR_INVOICE_TYPES = ["GST", "NON_GST"];
+
+const round2 = (value) =>
+  Math.round((Number(value || 0) + Number.EPSILON) * 100) /
+  100;
+
+const normalizeRepairGst = (input = {}) => {
+  const result = {};
+
+  if (input.invoiceType !== undefined) {
+    const type =
+      String(input.invoiceType || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[\s-]+/g, "_") || "NON_GST";
+
+    if (!REPAIR_INVOICE_TYPES.includes(type)) {
+      throw new Error(
+        "Invalid invoice type. Use GST or NON_GST."
+      );
+    }
+
+    result.invoiceType = type;
+  }
+
+  if (
+    input.gstPercentage !== undefined &&
+    input.gstPercentage !== null &&
+    input.gstPercentage !== ""
+  ) {
+    const percentage = Number(input.gstPercentage);
+
+    if (
+      !Number.isFinite(percentage) ||
+      percentage < 0 ||
+      percentage > 100
+    ) {
+      throw new Error(
+        "GST percentage must be between 0 and 100."
+      );
+    }
+
+    result.gstPercentage = percentage;
+  }
+
+  return result;
+};
+
+const calcRepairTotals = (cost, type, percentage) => {
+  const baseAmount = Math.max(Number(cost) || 0, 0);
+
+  const isGst = String(type || "").toUpperCase() === "GST";
+
+  const hasPercentage =
+    percentage !== undefined &&
+    percentage !== null &&
+    percentage !== "" &&
+    Number.isFinite(Number(percentage));
+
+  const rate = isGst
+    ? hasPercentage
+      ? Number(percentage)
+      : 18
+    : 0;
+
+  const gstAmount = round2((baseAmount * rate) / 100);
+
+  return {
+    baseAmount,
+    gstRate: rate,
+    gstAmount,
+    totalAmount: round2(baseAmount + gstAmount),
+  };
+};
 
 // ======================================================
 // ADD SPARE PART TO REPAIR
@@ -484,6 +643,15 @@ export const createRepair = async (repairData) => {
   const warrantyFields =
     normalizeWarrantyFields(repairData);
 
+    
+  const gstFields = normalizeRepairGst(repairData);
+
+  const gstTotals = calcRepairTotals(
+    finalRepairCost,
+    gstFields.invoiceType,
+    gstFields.gstPercentage
+  );
+
   const repair =
     await repairRepository.createRepair({
       jobSerial: jobNumber.jobSerial,
@@ -491,6 +659,13 @@ export const createRepair = async (repairData) => {
       repairNumber: jobNumber.repairNumber,
 
       ...warrantyFields,
+
+      
+      ...gstFields,
+
+      gstAmount: gstTotals.gstAmount,
+
+      totalAmount: gstTotals.totalAmount,
 
       salespersonName: normalizeSalesperson(
         repairData.salespersonName
@@ -534,13 +709,13 @@ export const createRepair = async (repairData) => {
       estimatedCost: finalEstimatedCost,
 
       paymentStatus:
-        finalRepairCost === 0
+        gstTotals.totalAmount === 0
           ? "PAID"
           : "PENDING",
 
       paidAmount: 0,
 
-      balanceAmount: finalRepairCost,
+      balanceAmount: gstTotals.totalAmount,
 
       paymentMethod: "",
 
@@ -994,6 +1169,67 @@ export const updateRepair = async (
     }
   }
 
+  // ==================================================
+  // GST / NON-GST + TOTALS RECALCULATION
+  // repairCost, invoiceType ya gstPercentage badle to
+  // gst amount, total aur balance dobara nikalte hain.
+  // ==================================================
+
+  const gstInput = normalizeRepairGst(updateData);
+
+  delete updateData.invoiceType;
+  delete updateData.gstPercentage;
+
+  Object.assign(updateData, gstInput);
+
+  if (
+    updateData.repairCost !== undefined ||
+    updateData.invoiceType !== undefined ||
+    updateData.gstPercentage !== undefined
+  ) {
+    const totals = calcRepairTotals(
+      updateData.repairCost !== undefined
+        ? updateData.repairCost
+        : existingRepair.repairCost,
+      updateData.invoiceType !== undefined
+        ? updateData.invoiceType
+        : existingRepair.invoiceType,
+      updateData.gstPercentage !== undefined
+        ? updateData.gstPercentage
+        : existingRepair.gstPercentage
+    );
+
+    const alreadyPaid = Number(
+      existingRepair.paidAmount || 0
+    );
+
+    updateData.gstAmount = totals.gstAmount;
+
+    updateData.totalAmount = totals.totalAmount;
+
+    updateData.balanceAmount = Math.max(
+      round2(totals.totalAmount - alreadyPaid),
+      0
+    );
+
+    if (
+      ["PENDING", "PARTIAL", "PAID"].includes(
+        existingRepair.paymentStatus
+      )
+    ) {
+      if (
+        totals.totalAmount <= 0 ||
+        alreadyPaid >= totals.totalAmount
+      ) {
+        updateData.paymentStatus = "PAID";
+      } else if (alreadyPaid > 0) {
+        updateData.paymentStatus = "PARTIAL";
+      } else {
+        updateData.paymentStatus = "PENDING";
+      }
+    }
+  }
+
   const repair =
     await repairRepository.updateRepair(
       id,
@@ -1012,9 +1248,17 @@ export const updateRepair = async (
 // UPDATE REPAIR STATUS
 // ======================================================
 
+
+// ======================================================
+// UPDATE REPAIR STATUS
+// Tracks the authenticated user who marks a repair
+// as Completed.
+// ======================================================
+
 export const updateRepairStatus = async (
   id,
-  status
+  status,
+  actor = {}
 ) => {
   validateObjectId(
     id,
@@ -1035,143 +1279,52 @@ export const updateRepairStatus = async (
     throw new Error("Invalid repair status.");
   }
 
+  // Find existing repair first
+  const existingRepair =
+    await repairRepository.getRepairById(id);
+
+  if (!existingRepair) {
+    throw new Error("Repair request not found.");
+  }
+
+  const updateData = {};
+
+  // Record the authenticated user when transitioning
+  // into Completed status.
+  if (
+    status === "Completed" &&
+    existingRepair.status !== "Completed"
+  ) {
+    if (!actor.id) {
+      throw new Error(
+        "Authenticated user is required to complete a repair."
+      );
+    }
+
+    validateObjectId(
+      actor.id,
+      "Invalid completing user ID."
+    );
+
+    updateData.completedBy = actor.id;
+    updateData.completedAt = new Date();
+  }
+
+  // Use repository method so common population is preserved
   const repair =
     await repairRepository.updateRepairStatus(
       id,
-      status
+      status,
+      updateData
     );
 
   if (!repair) {
-    throw new Error(
-      "Repair request not found."
-    );
-  }
-
-  // ==================================================
-  // NOTIFICATIONS
-  // ==================================================
-
-  try {
-    if (status === "Completed") {
-      if (repair.user) {
-        await notifyUserService({
-          userId:
-            repair.user._id || repair.user,
-
-          type: "REPAIR_COMPLETED",
-
-          title: "Repair Completed",
-
-          message:
-            "Your repair has been completed successfully.",
-
-          relatedId: repair._id,
-
-          relatedModel: "Repair",
-        });
-      }
-
-      if (repair.assignedTechnician) {
-        await notifyUserService({
-          userId:
-            repair.assignedTechnician._id ||
-            repair.assignedTechnician,
-
-          type: "REPAIR_COMPLETED",
-
-          title: "Repair Completed",
-
-          message:
-            "The repair has been marked as completed.",
-
-          relatedId: repair._id,
-
-          relatedModel: "Repair",
-        });
-      }
-
-      await notifyAdminsService({
-        type: "REPAIR_COMPLETED",
-
-        title: "Repair Completed",
-
-        message:
-          `Repair for ${repair.customerName || "customer"} has been completed.`,
-
-        relatedId: repair._id,
-
-        relatedModel: "Repair",
-      });
-    }
-
-    if (status === "Cancelled") {
-      if (repair.assignedTechnician) {
-        await notifyUserService({
-          userId:
-            repair.assignedTechnician._id ||
-            repair.assignedTechnician,
-
-          type: "REPAIR_CANCELLED",
-
-          title: "Repair Cancelled",
-
-          message:
-            `Repair for ${repair.customerName || "customer"} has been cancelled.`,
-
-          relatedId: repair._id,
-
-          relatedModel: "Repair",
-        });
-      }
-
-      await notifyAdminsService({
-        type: "REPAIR_CANCELLED",
-
-        title: "Repair Cancelled",
-
-        message:
-          `Repair for ${repair.customerName || "customer"} has been cancelled.`,
-
-        relatedId: repair._id,
-
-        relatedModel: "Repair",
-      });
-    }
-
-    if (
-      [
-        "In Progress",
-        "Assigned",
-        "Waiting for Parts",
-      ].includes(status)
-    ) {
-      if (repair.user) {
-        await notifyUserService({
-          userId:
-            repair.user._id || repair.user,
-
-          type: "REPAIR_STATUS_CHANGED",
-
-          title: "Repair Status Updated",
-
-          message:
-            `Your repair status is now "${status}".`,
-
-          relatedId: repair._id,
-
-          relatedModel: "Repair",
-        });
-      }
-    }
-  } catch (notificationError) {
-    console.error(
-      "REPAIR STATUS NOTIFICATION ERROR:",
-      notificationError
-    );
+    throw new Error("Unable to update repair status.");
   }
 
   return repair;
 };
+
 
 // ======================================================
 // MARK DELIVERED
@@ -1302,11 +1455,22 @@ export const getRepairsByTechnician = async (
 
 // ======================================================
 // UPDATE REPAIR PAYMENT
+//
+// CHANGE: now also creates a record in the central
+// Payment collection (same as the rental module does),
+// for the money received in THIS request.
+//
+// - The 3rd argument "actor" is optional, so any existing
+//   caller that passes only 2 arguments keeps working.
+// - If the Payment record cannot be created, the repair
+//   update still succeeds (error is only logged).
+// - Total payable = base repair cost + GST (lead's logic).
 // ======================================================
 
 export const updateRepairPayment = async (
   id,
-  paymentData
+  paymentData,
+  actor = {}
 ) => {
   validateObjectId(
     id,
@@ -1324,10 +1488,17 @@ export const updateRepairPayment = async (
     );
   }
 
-  const repairCost = Math.max(
-    Number(repair.repairCost || 0),
-    0
+  // CHANGE: remember what was already paid before this request
+  const previousPaid = Number(
+    repair.paidAmount || 0
   );
+
+  // Total payable = base + GST (GST invoice ho to)
+  const repairCost = calcRepairTotals(
+    repair.repairCost,
+    repair.invoiceType,
+    repair.gstPercentage
+  ).totalAmount;
 
   let paidAmount = Number(
     paymentData.paidAmount
@@ -1367,10 +1538,42 @@ export const updateRepairPayment = async (
     paymentStatus = "PARTIAL";
   }
 
+  // ==================================================
+  // CHANGE: MONEY RECEIVED IN THIS REQUEST
+  // paidAmount is a running total, so the new Payment
+  // record stores only the difference.
+  // ==================================================
+
+  const paidNow =
+    Math.round(
+      (paidAmount - previousPaid) * 100
+    ) / 100;
+
+  const shouldRecordPayment =
+    paidNow > 0 &&
+    !["FAILED", "REFUNDED"].includes(
+      paymentStatus
+    );
+
+  const accountingMethod = toAccountingMethod(
+    paymentData.paymentMethod !== undefined
+      ? paymentData.paymentMethod
+      : repair.paymentMethod
+  );
+
   repair.paidAmount = paidAmount;
 
   repair.balanceAmount = balanceAmount;
 
+  const savedTotals = calcRepairTotals(
+    repair.repairCost,
+    repair.invoiceType,
+    repair.gstPercentage
+  );
+
+  repair.gstAmount = savedTotals.gstAmount;
+
+  repair.totalAmount = savedTotals.totalAmount;
   repair.paymentStatus = paymentStatus;
 
   if (
@@ -1395,7 +1598,81 @@ export const updateRepairPayment = async (
 
   await repair.save();
 
+  // ==================================================
+  // CHANGE: ACCOUNTING PAYMENT RECORD
+  // Same pattern as the rental module. A failure here
+  // does not undo the repair payment update.
+  // ==================================================
+
+  if (shouldRecordPayment && !accountingMethod) {
+    console.warn(
+      "REPAIR PAYMENT RECORD SKIPPED: unsupported payment method:",
+      repair.paymentMethod
+    );
+  } else if (shouldRecordPayment) {
+    try {
+      await createPayment({
+        user: repair.user || actor?.id,
+
+        paymentFor: "REPAIR",
+
+        referenceId: repair._id,
+
+        amount: paidNow,
+
+        currency: "INR",
+
+        paymentMethod: accountingMethod,
+
+        paymentStatus:
+          PAYMENT_STATUS.SUCCESS,
+
+        invoiceType: repair.invoiceType,
+
+        gateway: "OFFLINE",
+
+        transactionId:
+          repair.paymentId || "",
+
+        gatewayPaymentId: "",
+
+        gatewayResponse: {},
+
+        paymentDate: new Date(),
+
+        paidAt: new Date(),
+      });
+    } catch (paymentError) {
+      console.error(
+        "REPAIR PAYMENT RECORD (Payment collection) FAILED:",
+        paymentError?.message
+      );
+    }
+  }
+
   return repair;
+};
+
+// ======================================================
+// CHANGE: NEW
+// GET PAYMENT RECORDS OF A REPAIR / JOB CARD
+// ======================================================
+
+export const getPaymentsByRepair = async (
+  repairId
+) => {
+  validateObjectId(
+    repairId,
+    "Invalid Job Card ID."
+  );
+
+  return await Payment.find({
+    paymentFor: "REPAIR",
+    referenceId: repairId,
+    isDeleted: { $ne: true },
+  }).sort({
+    createdAt: -1,
+  });
 };
 
 

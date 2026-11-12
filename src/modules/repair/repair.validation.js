@@ -35,9 +35,7 @@ const priorities = [
 
 export const createRepairValidation = Joi.object({
 
-  // ==================================================
   // CUSTOMER USER
-  // ==================================================
 
   user: objectId
     .allow(null, "")
@@ -47,9 +45,7 @@ export const createRepairValidation = Joi.object({
       "string.length": "Invalid customer user ID.",
     }),
 
-  // ==================================================
   // PRODUCT
-  // ==================================================
 
   product: objectId
     .allow(null, "")
@@ -59,10 +55,7 @@ export const createRepairValidation = Joi.object({
       "string.length": "Invalid product ID.",
     }),
 
-  // ==================================================
   // BRANCH
-  // REQUIRED FOR EVERY NEW JOB CARD
-  // ==================================================
 
   branchId: objectId
     .required()
@@ -73,9 +66,7 @@ export const createRepairValidation = Joi.object({
       "any.required": "Branch selection is required for new Job Cards.",
     }),
 
-  // ==================================================
   // CUSTOMER DETAILS
-  // ==================================================
 
   customerName: Joi.string()
     .trim()
@@ -112,10 +103,7 @@ export const createRepairValidation = Joi.object({
       "string.max": "Customer email cannot exceed 150 characters.",
     }),
 
-  // ==================================================
   // CUSTOMER SOURCE
-  // How did customer come to know about ZAID Infotech?
-  // ==================================================
 
   customerSource: Joi.string()
     .trim()
@@ -137,9 +125,7 @@ export const createRepairValidation = Joi.object({
         "Customer source details cannot exceed 200 characters.",
     }),
 
-  // ==================================================
   // JOB DATE
-  // ==================================================
 
   jobDate: Joi.date()
     .allow(null, "")
@@ -148,9 +134,7 @@ export const createRepairValidation = Joi.object({
       "date.base": "Please provide a valid job date.",
     }),
 
-  // ==================================================
   // DEVICE DETAILS
-  // ==================================================
 
   deviceType: Joi.string()
     .trim()
@@ -176,9 +160,7 @@ export const createRepairValidation = Joi.object({
     .allow("")
     .optional(),
 
-  // ==================================================
   // ISSUE DETAILS
-  // ==================================================
 
   issueDescription: Joi.string()
     .trim()
@@ -192,9 +174,7 @@ export const createRepairValidation = Joi.object({
       "any.required": "Issue description is required.",
     }),
 
-  // ==================================================
   // PRIORITY
-  // ==================================================
 
   priority: Joi.string()
     .valid(...priorities)
@@ -203,9 +183,7 @@ export const createRepairValidation = Joi.object({
       "any.only": "Invalid repair priority.",
     }),
 
-  // ==================================================
   // COST
-  // ==================================================
 
   estimatedCost: Joi.number()
     .min(0)
@@ -223,9 +201,30 @@ export const createRepairValidation = Joi.object({
       "number.min": "Repair cost cannot be negative.",
     }),
 
-  // ==================================================
+  // GST / INVOICE TYPE
+
+  invoiceType: Joi.string()
+    .trim()
+    .uppercase()
+    .valid("GST", "NON_GST")
+    .allow("", null)
+    .optional()
+    .messages({
+      "any.only": "Invalid invoice type.",
+    }),
+
+  gstPercentage: Joi.number()
+    .min(0)
+    .max(100)
+    .allow(null)
+    .optional()
+    .messages({
+      "number.base": "GST percentage must be a number.",
+      "number.min": "GST percentage cannot be negative.",
+      "number.max": "GST percentage cannot exceed 100.",
+    }),
+
   // ESTIMATED COMPLETION
-  // ==================================================
 
   estimatedCompletionDate: Joi.date()
     .allow(null, "")
@@ -234,9 +233,7 @@ export const createRepairValidation = Joi.object({
       "date.base": "Invalid estimated completion date.",
     }),
 
-  // ==================================================
   // TECHNICIAN
-  // ==================================================
 
   technicianName: Joi.string()
     .trim()
@@ -252,9 +249,7 @@ export const createRepairValidation = Joi.object({
       "string.length": "Invalid assigned technician ID.",
     }),
 
-  // ==================================================
   // REMARKS
-  // ==================================================
 
   remarks: Joi.string()
     .trim()
@@ -262,9 +257,7 @@ export const createRepairValidation = Joi.object({
     .allow("")
     .optional(),
 
-  // ==================================================
   // STATUS
-  // ==================================================
 
   status: Joi.string()
     .valid(...repairStatuses)
@@ -273,9 +266,7 @@ export const createRepairValidation = Joi.object({
       "any.only": "Invalid repair status.",
     }),
 
-      // ==================================================
   // WARRANTY
-  // ==================================================
 
   warrantyStatus: Joi.string()
     .valid("IN_WARRANTY", "OUT_OF_WARRANTY", "NOT_SPECIFIED")
@@ -304,51 +295,17 @@ export const createRepairValidation = Joi.object({
     .allow("", null)
     .optional(),
 
-  // ==================================================
   // SALESPERSON + TECHNICIAN NOTES
-  // ==================================================
 
   salespersonName: Joi.string()
     .trim()
     .max(100)
     .allow("", null)
     .optional(),
+
   technicianNotes: Joi.string()
     .trim()
     .max(3000)
-    .allow("", null)
-    .optional(),
-
-  warrantyStatus: Joi.string()
-    .valid("IN_WARRANTY", "OUT_OF_WARRANTY", "NOT_SPECIFIED")
-    .allow("", null)
-    .optional()
-    .messages({
-      "any.only": "Invalid warranty status.",
-    }),
-
-  warrantyProvider: Joi.string()
-    .trim()
-    .max(100)
-    .allow("", null)
-    .optional(),
-
-  warrantyExpiryDate: Joi.date()
-    .allow(null, "")
-    .optional()
-    .messages({
-      "date.base": "Invalid warranty expiry date.",
-    }),
-
-  warrantyDetails: Joi.string()
-    .trim()
-    .max(500)
-    .allow("", null)
-    .optional(),
-
-  salespersonName: Joi.string()
-    .trim()
-    .max(100)
     .allow("", null)
     .optional(),
 
@@ -360,10 +317,7 @@ export const createRepairValidation = Joi.object({
 
 export const updateRepairValidation = Joi.object({
 
-  // ==================================================
   // BRANCH
-  // OPTIONAL ON UPDATE
-  // ==================================================
 
   branchId: objectId
     .optional()
@@ -372,9 +326,7 @@ export const updateRepairValidation = Joi.object({
       "string.length": "Invalid branch selected.",
     }),
 
-  // ==================================================
   // CUSTOMER USER
-  // ==================================================
 
   user: objectId
     .allow(null, "")
@@ -384,9 +336,7 @@ export const updateRepairValidation = Joi.object({
       "string.length": "Invalid customer user ID.",
     }),
 
-  // ==================================================
   // PRODUCT
-  // ==================================================
 
   product: objectId
     .allow(null, "")
@@ -396,9 +346,7 @@ export const updateRepairValidation = Joi.object({
       "string.length": "Invalid product ID.",
     }),
 
-  // ==================================================
   // CUSTOMER DETAILS
-  // ==================================================
 
   customerName: Joi.string()
     .trim()
@@ -407,7 +355,7 @@ export const updateRepairValidation = Joi.object({
     .optional()
     .messages({
       "string.empty": "Customer name cannot be empty.",
-      "string.min": "Customer name must contain at least 2 characters.",
+      "string.min": "Customer name cannot exceed 2 characters.",
       "string.max": "Customer name cannot exceed 100 characters.",
     }),
 
@@ -418,7 +366,7 @@ export const updateRepairValidation = Joi.object({
     .optional()
     .messages({
       "string.empty": "Customer phone cannot be empty.",
-      "string.min": "Customer phone must contain at least 7 characters.",
+      "string.min": "Customer phone cannot exceed 7 characters.",
       "string.max": "Customer phone cannot exceed 20 characters.",
     }),
 
@@ -433,9 +381,7 @@ export const updateRepairValidation = Joi.object({
       "string.max": "Customer email cannot exceed 150 characters.",
     }),
 
-  // ==================================================
   // CUSTOMER SOURCE
-  // ==================================================
 
   customerSource: Joi.string()
     .trim()
@@ -457,9 +403,7 @@ export const updateRepairValidation = Joi.object({
         "Customer source details cannot exceed 200 characters.",
     }),
 
-  // ==================================================
   // JOB DATE
-  // ==================================================
 
   jobDate: Joi.date()
     .allow(null, "")
@@ -468,9 +412,7 @@ export const updateRepairValidation = Joi.object({
       "date.base": "Please provide a valid job date.",
     }),
 
-  // ==================================================
   // DEVICE DETAILS
-  // ==================================================
 
   deviceType: Joi.string()
     .trim()
@@ -495,9 +437,7 @@ export const updateRepairValidation = Joi.object({
     .allow("", null)
     .optional(),
 
-  // ==================================================
   // ISSUE DETAILS
-  // ==================================================
 
   issueDescription: Joi.string()
     .trim()
@@ -510,19 +450,13 @@ export const updateRepairValidation = Joi.object({
       "string.max": "Issue description cannot exceed 500 characters.",
     }),
 
-  // ==================================================
   // TECHNICIAN NOTES
-  // Existing frontend field preserved
-  // ==================================================
 
   technicianNotes: Joi.string()
     .allow("", null)
     .optional(),
 
-  // ==================================================
   // FINAL COST
-  // Existing frontend field preserved
-  // ==================================================
 
   finalCost: Joi.number()
     .min(0)
@@ -532,14 +466,12 @@ export const updateRepairValidation = Joi.object({
       "number.min": "Final cost cannot be negative.",
     }),
 
-  // ==================================================
   // SERVICES
-  // Existing frontend field preserved
-  // ==================================================
 
   services: Joi.array()
     .items(
       Joi.object({
+
         serviceId: Joi.string()
           .allow(null, "")
           .optional(),
@@ -566,13 +498,12 @@ export const updateRepairValidation = Joi.object({
 
         isCustom: Joi.boolean()
           .optional(),
+
       })
     )
     .optional(),
 
-  // ==================================================
   // COST
-  // ==================================================
 
   repairCost: Joi.number()
     .min(0)
@@ -590,9 +521,7 @@ export const updateRepairValidation = Joi.object({
       "number.min": "Estimated cost cannot be negative.",
     }),
 
-  // ==================================================
   // PRIORITY
-  // ==================================================
 
   priority: Joi.string()
     .valid(...priorities)
@@ -601,9 +530,7 @@ export const updateRepairValidation = Joi.object({
       "any.only": "Invalid repair priority.",
     }),
 
-  // ==================================================
   // STATUS
-  // ==================================================
 
   status: Joi.string()
     .valid(...repairStatuses)
@@ -612,9 +539,7 @@ export const updateRepairValidation = Joi.object({
       "any.only": "Invalid repair status.",
     }),
 
-  // ==================================================
   // REMARKS
-  // ==================================================
 
   remarks: Joi.string()
     .trim()
@@ -622,9 +547,7 @@ export const updateRepairValidation = Joi.object({
     .allow("")
     .optional(),
 
-  // ==================================================
   // ESTIMATED COMPLETION DATE
-  // ==================================================
 
   estimatedCompletionDate: Joi.date()
     .allow(null, "")

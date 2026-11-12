@@ -613,7 +613,7 @@ export const getPaymentCount = async () => {
 
 // =====================================================
 // DETERMINE SALE SOURCE
-// (unchanged)
+// (unchanged, except the REPAIR block)
 // =====================================================
 
 const determineSaleSource = async (
@@ -653,30 +653,23 @@ const determineSaleSource = async (
 
     // -------------------------------------------------
     // REPAIR
+    // CHANGE: the Repair model has no repairSource /
+    // source field, so every repair payment used to be
+    // saved as ONLINE. Job cards are created at the
+    // shop, so they are WALK_IN.
     // -------------------------------------------------
 
     if (paymentFor === "REPAIR") {
 
         const repair =
             await Repair.findById(referenceId)
-                .select("repairSource source");
+                .select("_id");
 
         if (!repair) {
             throw new Error("Repair not found");
         }
 
-        const source =
-            repair.repairSource ||
-            repair.source;
-
-        if (
-            String(source || "").toUpperCase() === "WALK_IN" ||
-            String(source || "").toUpperCase() === "WALKIN"
-        ) {
-            return "WALK_IN";
-        }
-
-        return "ONLINE";
+        return "WALK_IN";
     }
 
 

@@ -222,22 +222,47 @@ export const createOrderValidation = Joi.object({
     .default("ONLINE"),
 
 
-  
   // ====================================================
-  // BRANCH (walk-in orders)
+  // ORDER SOURCE
   // ====================================================
 
-  branchId: Joi.string()
-    .hex()
-    .length(24)
+  orderSource: Joi.string()
+    .valid("ONLINE", "WALK_IN")
+    .default("ONLINE"),
+
+  // ====================================================
+  // BRANCH ID
+  // ====================================================
+
+  branchId: Joi.when("orderSource", {
+    is: "WALK_IN",
+
+    then: Joi.string()
+      .hex()
+      .length(24)
+      .required()
+      .messages({
+        "any.required": "Branch selection is required",
+        "string.empty": "Please select a branch",
+        "string.hex": "Invalid branch ID",
+        "string.length": "Invalid branch ID",
+      }),
+
+    otherwise: Joi.string()
+      .hex()
+      .length(24)
+      .allow(null, "")
+      .default(null),
+  }),
+
+  // ====================================================
+  // CUSTOMER SOURCE TRACKING
+  // ====================================================
+
+  customerSource: Joi.string()
+    .valid(...CUSTOMER_SOURCE_KEYS)
     .allow("", null)
-    .optional()
-    .default(null)
-    .messages({
-      "string.hex": "Invalid branch",
-      "string.length": "Invalid branch",
-    }),
-
+    .default(""),
 
   // ====================================================
   // CUSTOMER SOURCE TRACKING (NEW)
