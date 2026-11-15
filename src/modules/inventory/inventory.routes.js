@@ -40,7 +40,9 @@ const inventoryRoles = [
 
 const warehouseRoles = [
     "ADMIN",
-    "INVENTORY"
+    "INVENTORY",
+    "SALES"
+
 ];
 
 
