@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
 
+import mongoose from "mongoose";
 import { CUSTOMER_SOURCE_KEYS } from "../../common/constants/customerSource.js";
 
 const rentalSchema = new mongoose.Schema(
@@ -12,13 +12,11 @@ const rentalSchema = new mongoose.Schema(
             type: String,
             unique: true,
             required: true,
-            trim: true,
-            index: true
+            trim: true
         },
 
         // =====================================================
         // ORDER ID — WALK-IN RENTAL ORDER REFERENCE
-        // IMPORTANT: Required for finding all rentals of an order.
         // =====================================================
 
         orderId: {
@@ -28,10 +26,8 @@ const rentalSchema = new mongoose.Schema(
             index: true
         },
 
-
-                // =====================================================
+        // =====================================================
         // BRANCH
-        // Only the id is stored. The name comes from the Branch model.
         // =====================================================
 
         branchId: {
@@ -43,7 +39,6 @@ const rentalSchema = new mongoose.Schema(
 
         // =====================================================
         // SALESPERSON
-        // Employee who created / sold this rental.
         // =====================================================
 
         soldBy: {
@@ -96,16 +91,7 @@ const rentalSchema = new mongoose.Schema(
         },
 
         // =====================================================
-        // CUSTOMER SOURCE (OPTIONAL)
-        // "How did you come to know about ZAID Infotech?"
-        //
-        // customerSource      -> key from CUSTOMER_SOURCES
-        //                        (e.g. GOOGLE, REFERRAL, OTHER)
-        //                        null when not selected
-        // customerSourceOther -> free text, used only when
-        //                        customerSource is OTHER
-        //
-        // Old rentals have null (field did not exist before).
+        // CUSTOMER SOURCE
         // =====================================================
 
         customerSource: {
@@ -196,80 +182,80 @@ const rentalSchema = new mongoose.Schema(
                 uppercase: true
             }
         },
-// =====================================================
-// NEGOTIATED RENTAL PRICING
-// =====================================================
 
-originalMonthlyRent: {
-    type: Number,
-    default: 0,
-    min: 0
-},
+        // =====================================================
+        // NEGOTIATED RENTAL PRICING
+        // =====================================================
 
-pricingType: {
-    type: String,
-    enum: ["STANDARD", "NEGOTIATED"],
-    default: "STANDARD"
-},
+        originalMonthlyRent: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-billingType: {
-    type: String,
-    enum: ["GST", "NON_GST"],
-    default: "GST"
-},
+        pricingType: {
+            type: String,
+            enum: ["STANDARD", "NEGOTIATED"],
+            default: "STANDARD"
+        },
 
+        billingType: {
+            type: String,
+            enum: ["GST", "NON_GST"],
+            default: "GST"
+        },
 
-negotiationReason: {
-    type: String,
-    default: "",
-    trim: true
-},
+        negotiationReason: {
+            type: String,
+            default: "",
+            trim: true
+        },
 
-pricingUpdatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: null
-},
+        pricingUpdatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null
+        },
 
-pricingUpdatedAt: {
-    type: Date,
-    default: null
-},
+        pricingUpdatedAt: {
+            type: Date,
+            default: null
+        },
 
-pricingHistory: {
-    type: [
-        new mongoose.Schema(
-            {
-                oldMonthlyRent: Number,
-                newMonthlyRent: Number,
+        pricingHistory: {
+            type: [
+                new mongoose.Schema(
+                    {
+                        oldMonthlyRent: Number,
+                        newMonthlyRent: Number,
 
-                oldBillingType: String,
-                newBillingType: String,
+                        oldBillingType: String,
+                        newBillingType: String,
 
-                oldGstPercentage: Number,
-                newGstPercentage: Number,
+                        oldGstPercentage: Number,
+                        newGstPercentage: Number,
 
-                reason: {
-                    type: String,
-                    default: ""
-                },
+                        reason: {
+                            type: String,
+                            default: ""
+                        },
 
-                changedBy: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "User",
-                    default: null
-                },
+                        changedBy: {
+                            type: mongoose.Schema.Types.ObjectId,
+                            ref: "User",
+                            default: null
+                        },
 
-                changedAt: {
-                    type: Date,
-                    default: Date.now
-                }
-            },
-            { _id: true }
-        )
-    ],
-    default: []
-},
+                        changedAt: {
+                            type: Date,
+                            default: Date.now
+                        }
+                    },
+                    { _id: true }
+                )
+            ],
+            default: []
+        },
 
         // =====================================================
         // RENTAL PRICING
@@ -292,47 +278,46 @@ pricingHistory: {
             required: true,
             min: 0
         },
+
         // =====================================================
-// RENTAL RENT PAYMENT SUMMARY
-// =====================================================
+        // RENT PAYMENT SUMMARY
+        // =====================================================
 
-rentSubtotal: {
-  type: Number,
-  default: 0,
-  min: 0
-},
+        rentSubtotal: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-rentGstAmount: {
-  type: Number,
-  default: 0,
-  min: 0
-},
+        rentGstAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-rentTotalAmount: {
-  type: Number,
-  default: 0,
-  min: 0
-},
+        rentTotalAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-rentPaidAmount: {
-  type: Number,
-  default: 0,
-  min: 0
-},
+        rentPaidAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-rentBalanceAmount: {
-  type: Number,
-  default: 0,
-  min: 0
-},
+        rentBalanceAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-rentPaymentStatus: {
-  type: String,
-  enum: ["PENDING", "PARTIAL", "PAID"],
-  default: "PENDING"
-},
-
-        
+        rentPaymentStatus: {
+            type: String,
+            enum: ["PENDING", "PARTIAL", "PAID"],
+            default: "PENDING"
+        },
 
         // =====================================================
         // RENTAL PERIOD
@@ -378,21 +363,22 @@ rentPaymentStatus: {
             type: Date,
             default: null
         },
+
         // =====================================================
-// RENTAL INSTALLMENT COUNTERS
-// =====================================================
+        // RENTAL INSTALLMENT COUNTERS
+        // =====================================================
 
-totalInstallments: {
-    type: Number,
-    default: 0,
-    min: 0
-},
+        totalInstallments: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
-paidInstallments: {
-    type: Number,
-    default: 0,
-    min: 0
-},
+        paidInstallments: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
 
         // =====================================================
         // RENTAL STATUS
@@ -473,7 +459,7 @@ paidInstallments: {
         },
 
         // =====================================================
-        // SECURITY DEPOSIT — PAID AT WALK-IN CREATION TIME
+        // SECURITY DEPOSIT
         // =====================================================
 
         depositPaymentStatus: {
@@ -630,68 +616,62 @@ paidInstallments: {
     }
 );
 
-
 // =====================================================
 // GST / NON-GST VALIDATION
 // =====================================================
 
 // NON_GST rental mein GST always 0 rahega.
-// GST rental mein configured GST percentage preserve hoga.
 
 rentalSchema.pre("validate", function () {
     if (this.billingType === "NON_GST") {
         this.gstPercentage = 0;
     }
 });
+
 // =====================================================
-// INDEXES
+// COMPOUND INDEXES
 // =====================================================
 
+// Customer rental search
 rentalSchema.index({
     customerId: 1,
     status: 1
 });
 
+// Product rental search
 rentalSchema.index({
     productId: 1,
     status: 1
 });
 
+// Rental source filtering
 rentalSchema.index({
     rentalSource: 1,
     status: 1
 });
 
-rentalSchema.index({
-    rentalNumber: 1
-});
-
+// Individual phone search
 rentalSchema.index({
     "individualDetails.phone": 1
 });
 
+// Company phone search
 rentalSchema.index({
     "companyDetails.phone": 1
 });
 
-
+// Branch rental search
 rentalSchema.index({
     branchId: 1,
     status: 1
-});
-
-// Order ke saare rentals ko jaldi find karne ke liye.
-rentalSchema.index({
-    orderId: 1
 });
 
 // =====================================================
 // MODEL
 // =====================================================
 
-const Rental = mongoose.model(
-    "Rental",
-    rentalSchema
-);
+const Rental =
+    mongoose.models.Rental ||
+    mongoose.model("Rental", rentalSchema);
 
 export default Rental;
