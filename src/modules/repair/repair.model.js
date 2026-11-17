@@ -149,12 +149,12 @@ const repairSchema = new mongoose.Schema(
       trim: true,
     },
 
-    customerEmail: {
-      type: String,
-      trim: true,
-      lowercase: true,
-      default: "",
-    },
+  customerEmail: {
+  type: String,
+  trim: true,
+  lowercase: true,
+  default: undefined,
+},
 
     // ==================================================
     // BRANCH MANAGEMENT
