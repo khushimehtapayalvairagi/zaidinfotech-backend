@@ -9,6 +9,10 @@ import nodemailer from "nodemailer";
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
+const EMAIL_HOST = process.env.EMAIL_HOST;
+const EMAIL_PORT = process.env.EMAIL_PORT;
+const EMAIL_SECURE = process.env.EMAIL_SECURE;
+
 const FRONTEND_URL =
   process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -39,9 +43,9 @@ if (!EMAIL_PASS) {
 // ======================================================
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: EMAIL_HOST,
+  port: Number(EMAIL_PORT),
+  secure: EMAIL_SECURE==='true',
 
   auth: {
     user: EMAIL_USER,
