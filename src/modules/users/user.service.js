@@ -3,12 +3,100 @@ import crypto from "crypto";
 
 import User from "./user.model.js";
 import * as userRepository from "./user.repository.js";
-
+import Counter from "./counter.model.js";
 import {
   sendResetPasswordEmail,
   sendEmailVerificationOtp,
 } from "../services/mail.service.js";
 
+
+// ======================================================
+// SAFE EMPLOYEE ID GENERATOR
+// ======================================================
+
+const generateEmployeeId = async () => {
+  // Find the highest existing Employee ID.
+  // This also protects existing IDs after old data changes.
+
+  const latestEmployee = await User.aggregate([
+    {
+      $match: {
+        employeeId: /^EMP[0-9]+$/,
+      },
+    },
+    {
+      $project: {
+        employeeNumber: {
+          $toLong: {
+            $arrayElemAt: [
+              { $split: ["$employeeId", "EMP"] },
+              1,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $sort: {
+        employeeNumber: -1,
+      },
+    },
+    {
+      $limit: 1,
+    },
+  ]);
+
+  const highestExistingNumber =
+    latestEmployee.length > 0
+      ? latestEmployee[0].employeeNumber
+      : 0;
+
+  // Initialize or synchronize the counter.
+  // Never reduce an existing counter.
+
+  try {
+    await Counter.updateOne(
+      { _id: "employeeId" },
+      {
+        $max: {
+          seq: highestExistingNumber,
+        },
+      },
+      { upsert: true }
+    );
+  } catch (error) {
+    // Another request may initialize the same counter.
+    if (error.code !== 11000) {
+      throw error;
+    }
+
+    await Counter.updateOne(
+      { _id: "employeeId" },
+      {
+        $max: {
+          seq: highestExistingNumber,
+        },
+      }
+    );
+  }
+
+  // Atomic increment: concurrent requests get different numbers.
+
+  const counter = await Counter.findOneAndUpdate(
+    { _id: "employeeId" },
+    {
+      $inc: {
+        seq: 1,
+      },
+    },
+    {
+      new: true,
+      upsert: true,
+    }
+  );
+
+  return `EMP${String(counter.seq).padStart(5, "0")}`;
+};
 
 // ======================================================
 // GENERATE 6 DIGIT OTP
@@ -76,19 +164,20 @@ export const createUser = async (data) => {
   // EMPLOYEE ID
   // ====================================================
 
-  if (
-    userData.role &&
-    userData.role !== "CUSTOMER"
-  ) {
 
-    const totalUsers =
-      await userRepository.countUsers();
+// ======================================================
+// EMPLOYEE ID GENERATION
+// ======================================================
 
-    userData.employeeId =
-      `EMP${String(
-        totalUsers + 1
-      ).padStart(5, "0")}`;
-  }
+if (
+  userData.role &&
+  userData.role !== "CUSTOMER"
+) {
+  userData.employeeId = await generateEmployeeId();
+} else {
+  delete userData.employeeId;
+}
+
 
 
   // ====================================================
