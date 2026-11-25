@@ -185,8 +185,8 @@ export const createOrderValidation = Joi.object({
     .default(0),
 
 
-    
-   shippingCharge: Joi.number()
+
+  shippingCharge: Joi.number()
     .min(0)
     .optional()
     .default(0),
@@ -198,6 +198,9 @@ export const createOrderValidation = Joi.object({
 
   // ====================================================
   // PAYMENT METHOD
+  // CHANGE: no default here. The controller defaults to
+  // CASH for walk-in orders only, so online orders are
+  // not saved as CASH.
   // ====================================================
 
   paymentMethod: Joi.string()
@@ -206,8 +209,17 @@ export const createOrderValidation = Joi.object({
       "CARD",
       "UPI",
       "ONLINE"
-    )
-    .default("CASH"),
+    ),
+
+
+  // ====================================================
+  // NEW: INVOICE TYPE (GST / NON_GST)
+  // Sent by the walk-in order screen. Defaults to GST.
+  // ====================================================
+
+  invoiceType: Joi.string()
+    .valid("GST", "NON_GST")
+    .default("GST"),
 
 
   // ====================================================
@@ -312,19 +324,6 @@ export const createOrderValidation = Joi.object({
 // ======================================================
 // UPDATE ORDER STATUS
 // ======================================================
-
-// export const updateOrderStatusValidation =
-//   Joi.object({
-
-//     status: Joi.string()
-//       .valid(
-//         ...Object.values(
-//           ORDER_STATUS
-//         )
-//       )
-//       .required(),
-
-//   });
 
 export const updateOrderStatusValidation =
 Joi.object({

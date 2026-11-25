@@ -32,6 +32,13 @@ import {
   incrementCouponUsageService
 } from "../coupons/coupon.service.js";
 
+// NEW: used to create the Payment record for walk-in orders
+import * as paymentService from "../payments/payment.service.js";
+
+import {
+  PAYMENT_STATUS
+} from "../../common/constants/paymentStatus.js";
+
 
 const GST_PERCENTAGE = 18; // apne checkout wala GST % yaha rakho
 
@@ -448,7 +455,13 @@ export const createOrder = async (
   const taxableAmount =
     Math.max(totalAmount - couponDiscount, 0);
 
-  const gstPercentage = GST_PERCENTAGE;
+  // CHANGE: Non-GST applies to walk-in (counter) sales only.
+  // Online orders always charge GST, even if NON_GST is sent.
+  const isNonGst =
+    isWalkIn && orderData.invoiceType === "NON_GST";
+
+  const gstPercentage =
+    isNonGst ? 0 : GST_PERCENTAGE;
 
   const gstAmount =
     round2((taxableAmount * gstPercentage) / 100);
@@ -466,6 +479,7 @@ export const createOrder = async (
   orderData.couponDiscount = couponDiscount;
   orderData.taxableAmount = round2(taxableAmount);
   orderData.gstPercentage = gstPercentage;
+  orderData.invoiceType = isNonGst ? "NON_GST" : "GST";   // NEW
   orderData.gstAmount = gstAmount;
   orderData.shippingCharge = round2(shippingCharge);
   orderData.otherCharges = round2(otherCharges);
@@ -591,6 +605,70 @@ export const createOrder = async (
     await orderRepository.createOrder(
       orderData
     );
+
+
+  // ====================================================
+  // NEW: WALK-IN PAYMENT RECORD
+  // Walk-in orders are paid at the counter, so a SUCCESS
+  // payment is created right after the order is saved.
+  // A failure here must NEVER break order creation.
+  // ====================================================
+
+  if (isWalkIn) {
+
+    try {
+
+      const paidNow = new Date();
+
+      await paymentService.createPayment({
+
+        user:
+          orderData.user,
+
+        paymentFor:
+          "ORDER",
+
+        referenceId:
+          order._id,
+
+        amount:
+          orderData.finalAmount,
+
+        paymentMethod:
+          orderData.paymentMethod || "CASH",
+
+        paymentStatus:
+          PAYMENT_STATUS.SUCCESS,
+
+        paymentDate:
+          paidNow,
+
+        paidAt:
+          paidNow,
+
+        receivedBy:
+          createdBy,
+
+        branchId:
+          orderData.branchId || null,
+
+        // NEW: GST / NON_GST selected at the counter
+        invoiceType:
+          orderData.invoiceType || "GST"
+
+      });
+
+    }
+    catch (paymentError) {
+
+      console.error(
+        "WALK-IN PAYMENT RECORD ERROR:",
+        paymentError
+      );
+
+    }
+
+  }
 
 
   // ====================================================

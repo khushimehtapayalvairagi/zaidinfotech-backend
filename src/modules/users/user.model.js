@@ -258,7 +258,8 @@ role: {
         "ACCOUNTANT",
         "IT_SUPPORT",
         "HR_EXECUTIVE",
-        "CUSTOMER"
+        "CUSTOMER",
+        "OTHER"
        
     ],
     required: function () {

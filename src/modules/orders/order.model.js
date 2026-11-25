@@ -284,6 +284,19 @@ const orderSchema = new mongoose.Schema(
     },
 
 
+    // ====================================================
+    // NEW: INVOICE TYPE (GST / NON_GST)
+    // Old orders have no value here; they were all GST,
+    // so the default is GST.
+    // ====================================================
+
+    invoiceType: {
+      type: String,
+      enum: ["GST", "NON_GST"],
+      default: "GST",
+    },
+
+
     taxableAmount: {
       type: Number,
       min: 0,
@@ -350,6 +363,19 @@ const orderSchema = new mongoose.Schema(
 
       default: "PENDING",
 
+    },
+
+
+    // ====================================================
+    // PAYMENT METHOD
+    // CASH / UPI / CARD etc.
+    // No default on purpose: old orders and online orders
+    // stay empty instead of being shown as CASH.
+    // ====================================================
+
+    paymentMethod: {
+      type: String,
+      trim: true,
     },
 
 

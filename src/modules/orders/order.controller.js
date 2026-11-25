@@ -92,6 +92,18 @@ export const createOrder = async (req, res) => {
 
 
     // ================================================
+    // NEW: INVOICE TYPE (GST / NON_GST)
+    // Only "NON_GST" is accepted, everything else
+    // falls back to "GST".
+    // ================================================
+
+    const invoiceType =
+      req.body.invoiceType === "NON_GST"
+        ? "NON_GST"
+        : "GST";
+
+
+    // ================================================
     // ORDER DATA
     // ================================================
 
@@ -110,8 +122,12 @@ export const createOrder = async (req, res) => {
       couponCode: req.body.couponCode || "",
 
       // Payment method
+      // CHANGE: default to CASH only for walk-in orders.
+      // Online orders stay empty (the real method is on the
+      // Payment record), so they are not saved as CASH.
       paymentMethod:
-        req.body.paymentMethod || "CASH",
+        req.body.paymentMethod ||
+        (orderSource === "WALK_IN" ? "CASH" : undefined),
 
       // Payment status
       paymentStatus:
@@ -144,6 +160,9 @@ export const createOrder = async (req, res) => {
       customerSource,
 
       customerSourceOther,
+
+      // NEW: Invoice type
+      invoiceType,
 
     };
 
