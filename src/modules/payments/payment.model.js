@@ -32,7 +32,8 @@ const paymentSchema = new mongoose.Schema(
             default: "ONLINE",
             index: true
         },
-                // =====================================================
+
+        // =====================================================
         // INVOICE TYPE
         // GST / NON_GST
         // =====================================================
@@ -40,6 +41,30 @@ const paymentSchema = new mongoose.Schema(
             type: String,
             enum: ["GST", "NON_GST"],
             default: "GST",
+            index: true
+        },
+
+        // =====================================================
+        // NEW: RECEIVED BY
+        // Staff member who took the payment (walk-in / counter).
+        // null for online payments and all old payments.
+        // =====================================================
+        receivedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true
+        },
+
+        // =====================================================
+        // NEW: BRANCH
+        // Branch where the payment was collected.
+        // null for online payments and all old payments.
+        // =====================================================
+        branchId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Branch",
+            default: null,
             index: true
         },
 
